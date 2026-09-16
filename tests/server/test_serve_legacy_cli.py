@@ -5,7 +5,7 @@ from pathlib import Path
 import pytest
 
 
-@pytest.mark.parametrize("version", [(3, 8, 20), (3, 9, 13), (3, 10, 0), (3, 11, 0), (3, 14, 0), (4, 0, 0)])
+@pytest.mark.parametrize("version", [(3, 7, 17), (3, 8, 20)])
 def test_cli_rejects_unsupported_python_before_dependency_imports(monkeypatch, version):
     path = Path(__file__).resolve().parents[2] / "scripts" / "serve-legacy.py"
     spec = importlib.util.spec_from_file_location("serve_legacy_unsupported_python_test", path)
@@ -19,10 +19,24 @@ def test_cli_rejects_unsupported_python_before_dependency_imports(monkeypatch, v
         spec.loader.exec_module(module)
 
     message = str(raised.value)
-    assert "Python >=3.12,<3.14" in message
+    assert "Python >=3.9." in message
+    assert "uv sync --locked --python 3.14" in message
     assert "wrong-python.exe" in message
     assert ".venv" in message
     assert "Use specified interpreter" in message
+
+
+@pytest.mark.parametrize("version", [(3, 9, 0), (3, 10, 0), (3, 11, 0), (3, 12, 0), (3, 13, 0), (3, 14, 0), (3, 15, 0), (4, 0, 0)])
+def test_cli_allows_newer_python_to_reach_dependency_imports(monkeypatch, version):
+    path = Path(__file__).resolve().parents[2] / "scripts" / "serve-legacy.py"
+    spec = importlib.util.spec_from_file_location("serve_legacy_supported_python_test", path)
+    module = importlib.util.module_from_spec(spec)
+    monkeypatch.setattr(sys, "version_info", version)
+    monkeypatch.setitem(sys.modules, "uvicorn", None)
+
+    # Stop at the first dependency without exposing real dependencies to a fake version.
+    with pytest.raises(ModuleNotFoundError, match="uvicorn"):
+        spec.loader.exec_module(module)
 
 
 @pytest.fixture

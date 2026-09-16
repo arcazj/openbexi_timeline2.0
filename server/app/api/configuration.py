@@ -1,3 +1,5 @@
+from typing import Optional
+
 from fastapi import APIRouter, Depends, Request
 from fastapi.responses import JSONResponse
 from starlette.concurrency import run_in_threadpool
@@ -31,7 +33,7 @@ def configuration_router(authenticated, read_body):
         return JSONResponse(result, headers={"ETag": f'"{result["generation"]}:{int(result["resource"]["revision"])}"'})
 
     @router.get("/configuration/usage")
-    async def usage_opaque(request: Request, family: str, id: str, version: int | None = None, cursor: str | None = None, limit: int = 100):
+    async def usage_opaque(request: Request, family: str, id: str, version: Optional[int] = None, cursor: Optional[str] = None, limit: int = 100):
         return await invoke(request, "usage", family, id, version, cursor=cursor, limit=limit)
 
     @router.post("/configuration/commands")
@@ -59,7 +61,7 @@ def configuration_router(authenticated, read_body):
         return await invoke(request, "preview_impact", resource_id, await read_body(request))
 
     @router.get("/{family:configuration_family}/{resource_id}/usage")
-    async def usage(family: str, resource_id: str, request: Request, version: int | None = None, cursor: str | None = None, limit: int = 100):
+    async def usage(family: str, resource_id: str, request: Request, version: Optional[int] = None, cursor: Optional[str] = None, limit: int = 100):
         return await invoke(request, "usage", family, resource_id, version, cursor=cursor, limit=limit)
 
     @router.get("/{family:configuration_family}/{resource_id}/versions")

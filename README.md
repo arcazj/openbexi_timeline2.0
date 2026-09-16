@@ -62,7 +62,7 @@ For development, run `npm run dev`. The terminal prints the URL, normally `http:
 
 ### Python Server: Read-Only Local Data
 
-Prerequisites: **Python 3.12 or 3.13** and [uv](https://docs.astral.sh/uv/). Run commands from the repository root.
+Prerequisites: **Python 3.9 or newer** and [uv](https://docs.astral.sh/uv/). Run commands from the repository root. There is no project-level Python upper limit; future Python releases still depend on third-party package support.
 
 ```sh
 uv sync --locked
@@ -70,6 +70,8 @@ npm ci
 npm run build
 uv run python scripts/serve-legacy.py --yaml yaml/test-data/default-dataset.yml
 ```
+
+To use Python 3.9 explicitly, run `uv sync --locked --python 3.9`, then select this checkout's `.venv/Scripts/python.exe` on Windows or `.venv/bin/python` on macOS/Linux as the run configuration's interpreter. You can substitute any supported newer Python version.
 
 Open the **client URL printed in the terminal**, normally `http://127.0.0.1:8781` for this profile. This is a complete, included example with no external archive dependency. It binds to loopback and needs no pasted bearer token.
 
@@ -178,7 +180,7 @@ npm run test:e2e
 npm run test:matrix
 ```
 
-The default Windows browser suite uses installed Microsoft Edge; the focused matrix also exercises Chromium and Firefox. See [testing setup and evidence](docs/testing.md). CI verifies Windows/Linux and Python 3.12/3.13; the existence of a workflow is not proof that its latest run passed.
+The default Windows browser suite uses installed Microsoft Edge; the focused matrix also exercises Chromium and Firefox. See [testing setup and evidence](docs/testing.md). CI verifies Windows/Linux and Python 3.9–3.14; the existence of a workflow is not proof that its latest run passed.
 
 `npm run build:demo` prepares only the intended static files under `artifacts/demo/`. `npm run test:demo` checks the application at a project-site URL, including offline behavior, mobile layout, and nonblank canvas rendering. See [publishing](docs/publishing.md) for the separate public deployment gate.
 

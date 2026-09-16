@@ -4,7 +4,7 @@ version = "1.0.0"
 description = "Single-writer JSON timeline service"
 license = "PolyForm-Noncommercial-1.0.0"
 license-files = ["LICENSE", "NOTICE"]
-requires-python = ">=3.12,<3.14"
+requires-python = ">=3.9"
 dependencies = [
   "fastapi>=0.115,<1",
   "pydantic>=2,<3",
@@ -12,12 +12,14 @@ dependencies = [
   "portalocker>=3,<4",
   "fonttools[woff]>=4,<5",
   "jsonschema>=4,<5",
-  "jsonschema-rs==0.56.0",
+  "jsonschema-rs==0.34.0; python_version < '3.10'",
+  "jsonschema-rs==0.56.0; python_version >= '3.10'",
   "jsonpatch==1.33",
   "rfc8785>=0.1,<1",
   "tzdata>=2025.2,<2027",
   "PyYAML>=6,<7",
-  "google-re2==1.1.20251105",
+  "google-re2==1.1.20250805; python_version < '3.10'",
+  "google-re2==1.1.20251105; python_version >= '3.10'",
 ]
 
 [dependency-groups]
@@ -29,7 +31,7 @@ pythonpath = ["."]
 
 [tool.ruff]
 line-length = 110
-target-version = "py312"
+target-version = "py39"
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F"]

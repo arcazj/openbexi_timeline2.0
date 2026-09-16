@@ -6,6 +6,7 @@ import logging
 import uuid
 from contextlib import asynccontextmanager
 from pathlib import Path
+from typing import Optional
 
 from fastapi import Depends, FastAPI, Request, Response
 from fastapi.exceptions import RequestValidationError
@@ -407,7 +408,7 @@ def create_app(data_root=None, token=None, seed_path=None, metrics_path=None, le
         return preparation_response(await query_call(request, "get_layout", query_id, layout_id))
 
     @app.get(query_base + "/layouts/{layout_id}/rows", dependencies=[Depends(authenticated)])
-    async def rows(query_id: str, layout_id: str, request: Request, cursor: str | None = None, pageIndex: str | None = None):
+    async def rows(query_id: str, layout_id: str, request: Request, cursor: Optional[str] = None, pageIndex: Optional[str] = None):
         if pageIndex is not None:
             if cursor is not None:
                 raise DomainError("invalid_pagination", "Specify either cursor or pageIndex, not both.", 422)
@@ -591,7 +592,7 @@ def create_app(data_root=None, token=None, seed_path=None, metrics_path=None, le
         return await run_in_threadpool(app.state.configuration.export_snapshot, request.state.identity)
 
     @app.get(BASE + "/audit", dependencies=[Depends(authenticated)])
-    async def audit(request: Request, limit: int = 100, cursor: str | None = None):
+    async def audit(request: Request, limit: int = 100, cursor: Optional[str] = None):
         if legacy_config:
             raise DomainError("legacy_read_only", "Legacy authorities have no managed write audit log.", 409)
         return await run_in_threadpool(app.state.audit.page, request.state.identity, limit, cursor)

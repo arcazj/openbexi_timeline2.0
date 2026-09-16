@@ -15,6 +15,7 @@ import uuid
 from collections import OrderedDict
 from dataclasses import dataclass, field
 from pathlib import Path, PureWindowsPath
+from typing import Optional, Union
 
 from ..models.domain import DomainError, instant_ms, iso_from_ms, json_bytes, now_iso, validate_snapshot
 from .legacy_json import legacy_instant, parse_legacy_json
@@ -37,12 +38,12 @@ ICON_MAP.update(HAZARD_ICONS)
 @dataclass(frozen=True)
 class LegacySource:
     id: str
-    root: Path | str
-    namespace: str | None = None
-    timezone: str | None = None
+    root: Union[Path, str]
+    namespace: Optional[str] = None
+    timezone: Optional[str] = None
     dialect: str = "strict"
     abbreviations: dict = field(default_factory=dict)
-    data_model: str | None = None
+    data_model: Optional[str] = None
 
 
 @dataclass(frozen=True)

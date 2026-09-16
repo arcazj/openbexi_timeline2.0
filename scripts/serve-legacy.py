@@ -9,16 +9,17 @@ import sys
 from pathlib import Path
 
 # Check before dependency imports so an old IDE interpreter gets an actionable error.
-if not (3, 12) <= sys.version_info[:2] < (3, 14):
+if sys.version_info[:2] < (3, 9):
     interpreter = Path(__file__).resolve().parents[1] / ".venv" / (
         "Scripts/python.exe" if os.name == "nt" else "bin/python"
     )
     raise SystemExit(
-        "OpenBEXI requires Python >=3.12,<3.14.\n"
+        "OpenBEXI requires Python >=3.9.\n"
         f"Current interpreter: {sys.executable} (Python {'.'.join(map(str, sys.version_info[:3]))}).\n"
-        f"Select the existing project interpreter in your IDE: {interpreter}\n"
-        "In IntelliJ IDEA, set Run > Edit Configurations > OpenBEXI Local Sources > "
-        "Use specified interpreter. Do not use the system Python 3.9 SDK."
+        "From the project root, run: uv sync --locked --python 3.14\n"
+        f"Select the project interpreter in your IDE: {interpreter}\n"
+        "In IntelliJ IDEA, set Run > Edit Configurations > your OpenBEXI configuration > "
+        "Use specified interpreter to this path."
     )
 
 import uvicorn  # noqa: E402

@@ -75,8 +75,8 @@ supplies lane background styling, not the individual event marker color.
 
 For same-machine use without entering a bearer token, follow [Local Server Paths](local-source-paths.md). The `--local-browser` switch is opt-in, read-only, loopback-only and requires the browser's exact server origin. The bearer-token commands below remain available for explicit authenticated connections.
 
-Run these commands from `C:\projects\open_timeline2.0` in PowerShell. Python 3.12
-or 3.13, Node.js 22+, and `uv` are required for development/building.
+Run these commands from `C:\projects\open_timeline2.0` in PowerShell. Python 3.9
+or newer, Node.js 22+, and `uv` are required for development/building.
 
 ```powershell
 uv sync --locked

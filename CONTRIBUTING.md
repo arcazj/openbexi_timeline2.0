@@ -4,7 +4,7 @@ OpenBEXI Timeline 2.0 is released as version 1.0.0. Discuss large changes in an 
 
 ## Development
 
-Use Node.js 22+ and Python 3.12/3.13. From the repository root:
+Use Node.js 22+ and Python 3.9 or newer. From the repository root:
 
 ```sh
 npm ci

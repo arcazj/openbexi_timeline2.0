@@ -1,6 +1,7 @@
 import asyncio
 import json
 import time
+from typing import Optional
 
 import anyio
 from fastapi import APIRouter, Depends, Request
@@ -40,11 +41,11 @@ def changes_router(authenticated):
     router = APIRouter(prefix="/api/v1/workspaces/default", dependencies=[Depends(authenticated)])
 
     @router.get("/changes")
-    async def changes(request: Request, generation: str, afterRevision: int, limit: int = 100, scope: str | None = None):
+    async def changes(request: Request, generation: str, afterRevision: int, limit: int = 100, scope: Optional[str] = None):
         return await run_in_threadpool(request.app.state.changes.page, request.state.identity, generation, afterRevision, limit, scope)
 
     @router.get("/changes/stream")
-    async def stream(request: Request, generation: str, afterRevision: int, limit: int = 100, scope: str | None = None):
+    async def stream(request: Request, generation: str, afterRevision: int, limit: int = 100, scope: Optional[str] = None):
         service, identity = request.app.state.changes, request.state.identity
         admitted = await run_in_threadpool(service.admit_stream, identity, generation, afterRevision, limit, scope)
         lease = admitted["lease"]

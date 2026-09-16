@@ -158,12 +158,11 @@ the regular legacy model, token-free local mode and port 8769. It leaves the
 existing `main` configuration unchanged. Use **OpenBEXI Local Sources**, not a
 direct run of `server/app/main.py`.
 
-This machine's project SDK and shared run configuration now use the registered
-Python 3.12.14 environment named `C:\projects\open_timeline2.0\.venv`.
-For a new IDEA installation, register the existing Python 3.12 virtual environment
-before the first run. In **File > Project Structure > SDKs**, add a Python SDK from disk and select
-the existing interpreter `C:\projects\open_timeline2.0\.venv\Scripts\python.exe`.
-Do not create a replacement environment or select the system Python 3.9 SDK.
+Use a project environment with Python 3.9 or newer. From the checkout root,
+run `uv sync --locked --python 3.9` (or substitute a newer Python version).
+For a new IDEA installation, register that environment before the first run.
+In **File > Project Structure > SDKs**, add a Python SDK from disk and select
+this checkout's `.venv\Scripts\python.exe`.
 Then open **Run > Edit Configurations > OpenBEXI Local Sources**, choose that
 registered interpreter under **Use specified interpreter**, and apply. See the
 [JetBrains Python SDK guide](https://www.jetbrains.com/help/idea/configuring-python-sdk.html)
@@ -179,15 +178,17 @@ append `--port 8772`, then use the URL printed at startup.
 
 ### Wrong Interpreter Error
 
-`validator_for() got an unexpected keyword argument 'offline'` can indicate
-that IDEA is using a different environment from the project's `.venv`. In the
-reported case, the system Python 3.9 environment had `jsonschema-rs 0.34.0`,
-while the project environment has Python 3.12 and the pinned `jsonschema-rs
-0.56.0`. Select the project interpreter in the actual Run/Debug configuration;
-changing a terminal's environment does not change IDEA's interpreter. Do not
-remove `offline=True` from schema validation to accommodate the older package.
-The legacy launcher now rejects unsupported Python versions before importing
-server dependencies and prints the interpreter path to select.
+If an import fails or `validator_for()` reports an unexpected keyword, run
+`uv sync --locked --python 3.9` with your chosen Python version and select the
+project interpreter in the actual Run/Debug configuration. Changing a terminal's
+environment does not change IDEA's interpreter.
+
+The lock selects `jsonschema-rs 0.34.0` and `google-re2 1.1.20250805` on Python
+3.9, and the newer pinned releases on Python 3.10+. Schema validation rejects
+external references on every supported version; Python 3.9 uses a rejecting
+retriever because its validator release predates the `offline` option.
+The legacy launcher rejects Python versions below 3.9 before importing server
+dependencies and prints the interpreter path to select.
 
 ## Select Paths
 

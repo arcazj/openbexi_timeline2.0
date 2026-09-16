@@ -47,7 +47,7 @@ This CI-only setting does not modify installed browser profiles, bypass canvas
 assertions, or establish that default Firefox settings work on every GPU-less
 computer. The application requires an available WebGL2 implementation.
 The [container target](container.md) provides isolated Linux execution. The checked-in
-GitHub workflow runs Windows/Linux and Python 3.12/3.13 with immutable action pins,
+GitHub workflow runs Windows/Linux and Python 3.9–3.14 with immutable action pins,
 read-only repository permission and no publishing step. It has not been remotely
 executed merely because its YAML is present. Action usage follows the upstream
 [checkout](https://github.com/actions/checkout),

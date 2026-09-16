@@ -5,7 +5,7 @@ from __future__ import annotations
 import copy
 import hashlib
 import re
-from datetime import UTC, datetime
+from datetime import datetime, timezone
 
 import rfc8785
 
@@ -41,7 +41,7 @@ def legacy_model_focus(value=None):
         return {"mode": "current", "timestamp": None}
     try:
         ms = instant_ms(value)
-        stamp = datetime.fromtimestamp(ms / 1000, UTC).isoformat(timespec="milliseconds").replace("+00:00", "Z")
+        stamp = datetime.fromtimestamp(ms / 1000, timezone.utc).isoformat(timespec="milliseconds").replace("+00:00", "Z")
         return {"mode": "fixed", "timestamp": stamp}
     except (DomainError, TypeError, ValueError, OverflowError):
         pass
@@ -51,7 +51,7 @@ def legacy_model_focus(value=None):
         raise _problem("Model reference date requires offset ISO or an explicit legacy UTC date")
     weekday, month, day, year, hour, minute, second = match.groups()
     try:
-        date = datetime(int(year), MONTHS.index(month) + 1, int(day), int(hour), int(minute), int(second), tzinfo=UTC)
+        date = datetime(int(year), MONTHS.index(month) + 1, int(day), int(hour), int(minute), int(second), tzinfo=timezone.utc)
         if DAYS[date.weekday()] != weekday:
             raise ValueError("weekday")
         return {"mode": "fixed", "timestamp": date.isoformat(timespec="milliseconds").replace("+00:00", "Z")}

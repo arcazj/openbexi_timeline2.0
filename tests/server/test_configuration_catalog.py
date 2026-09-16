@@ -122,7 +122,8 @@ def python_result(request):
 
 def assert_parity(requests):
     actual = javascript(requests)
-    for index, (request, result) in enumerate(zip(requests, actual, strict=True)):
+    assert len(actual) == len(requests)
+    for index, (request, result) in enumerate(zip(requests, actual)):
         expected = python_result(request)
         assert result == expected, f"Case {index}: {request['method']}"
 

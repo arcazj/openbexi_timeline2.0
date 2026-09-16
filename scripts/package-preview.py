@@ -74,11 +74,10 @@ def package_preview(root, tag, *, publication_approved=False):
         "datasets": manifest.get("testDatasets", []),
     }
     inventory = output / "release-manifest.json"
-    inventory.write_text(json.dumps(release, indent=2) + "\n", encoding="utf-8", newline="\n")
-    (output / "SHA256SUMS").write_text(
-        "".join(f"{sha256(file.read_bytes())}  {file.name}\n" for file in (archive, inventory)),
-        encoding="utf-8", newline="\n",
-    )
+    with inventory.open("w", encoding="utf-8", newline="\n") as stream:
+        stream.write(json.dumps(release, indent=2) + "\n")
+    with (output / "SHA256SUMS").open("w", encoding="utf-8", newline="\n") as stream:
+        stream.write("".join(f"{sha256(file.read_bytes())}  {file.name}\n" for file in (archive, inventory)))
     return archive
 
 

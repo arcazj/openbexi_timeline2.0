@@ -25,7 +25,8 @@ def main():
             raise SystemExit("OpenAPI artifact is stale: run python scripts/export-openapi.py")
         print("OpenAPI artifact matches registered handlers and shared schemas.")
     else:
-        args.output.write_text(content, encoding="utf-8", newline="\n")
+        with args.output.open("w", encoding="utf-8", newline="\n") as stream:
+            stream.write(content)
         print(f"Generated {args.output.relative_to(ROOT) if args.output.is_relative_to(ROOT) else args.output}")
 
 

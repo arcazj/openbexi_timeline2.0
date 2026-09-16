@@ -8,7 +8,7 @@ import stat
 import threading
 import uuid
 from concurrent.futures import ThreadPoolExecutor
-from itertools import batched
+from typing import Optional
 from pathlib import Path
 
 import portalocker
@@ -226,7 +226,8 @@ class JsonRepository:
             return records
         executor = ThreadPoolExecutor(max_workers=_READ_WORKERS, thread_name_prefix="timeline-json-read")
         try:
-            for batch in batched(paths, _READ_BATCH_SIZE):
+            for start in range(0, len(paths), _READ_BATCH_SIZE):
+                batch = paths[start:start + _READ_BATCH_SIZE]
                 pending = [executor.submit(_read_record_file, path, self._receipt()) for path in batch]
                 # Consume in filename order, including failures, regardless of completion order.
                 for path, future in zip(batch, pending):
@@ -663,8 +664,8 @@ class JsonRepository:
                 raise DomainError("generation_conflict", "This historical outcome belongs to a previous workspace generation.", 409)
             return copy.deepcopy(stored["result"])
 
-    def mutate(self, operation: str, record_id: str | None, payload: dict, generation: str | None,
-               if_match: str | None, command_id: str | None, principal: str, *, expected_kind=None,
+    def mutate(self, operation: str, record_id: Optional[str], payload: dict, generation: Optional[str],
+               if_match: Optional[str], command_id: Optional[str], principal: str, *, expected_kind=None,
                request_route=None, authorize_record=None):
         from ..models.record_commands import patch_record, replacement
         if not generation or not command_id or (operation != "create" and not if_match):

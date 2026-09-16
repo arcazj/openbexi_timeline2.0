@@ -82,8 +82,10 @@ def validate_root_path(root):
             raise DomainError("storage_integrity", "Workspace root ancestry cannot contain links or reparse points.", 503)
 
 
-@dataclass(frozen=True, slots=True)
+@dataclass(frozen=True)
 class ExpectedFile:
+    __slots__ = ("digest", "stamp")
+
     digest: bytes
     stamp: tuple
 

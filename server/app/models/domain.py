@@ -5,12 +5,13 @@ import hashlib
 import hmac
 import json
 import re
+import sys
 import unicodedata
 import uuid
 from datetime import datetime, timedelta, timezone
 from functools import lru_cache
 from pathlib import Path
-from typing import Any
+from typing import Any, Optional, Union
 
 import jsonschema_rs
 from jsonschema import FormatChecker
@@ -135,7 +136,7 @@ def validate_json(value: Any, depth: int = 0):
         raise DomainError("invalid_json", "Value is not a JSON value.", 400)
 
 
-def parse_json(data: bytes | str):
+def parse_json(data: Union[bytes, str]):
     try:
         if isinstance(data, (bytes, bytearray)):
             data = data.decode("utf-8")
@@ -251,7 +252,7 @@ def _validate_record_relationships(record: dict, records: dict, workspace: str):
     raise DomainError("invalid_parent", "Parent nesting exceeds eight levels.")
 
 
-def validate_record(record: dict, records: dict | None = None, workspace: str = "default", *, configuration=None) -> dict:
+def validate_record(record: dict, records: Optional[dict] = None, workspace: str = "default", *, configuration=None) -> dict:
     validate_json(record)
     _validate_record_fields(record, workspace)
     from .record_schema import validate_record_data
@@ -261,7 +262,7 @@ def validate_record(record: dict, records: dict | None = None, workspace: str = 
     return record
 
 
-def make_record(payload: dict, actor: str, workspace: str, previous: dict | None = None):
+def make_record(payload: dict, actor: str, workspace: str, previous: Optional[dict] = None):
     if not isinstance(payload, dict) or set(payload) - RECORD_FIELDS:
         raise DomainError("invalid_record", "Unsupported record fields.")
     if set(payload) - MUTABLE_FIELDS:
@@ -361,7 +362,10 @@ def _reject_schema_retrieval(uri):
 def _compile_schema(schema, documents):
     registry = jsonschema_rs.Registry([(document["$id"], document) for document in documents],
                                       retriever=_reject_schema_retrieval)
-    return jsonschema_rs.validator_for(schema, registry=registry, offline=True, validate_formats=True,
+    # The Python 3.9 release predates offline=True; rejecting retrieval also keeps it local.
+    options = {"offline": True} if sys.version_info >= (3, 10) else {"retriever": _reject_schema_retrieval}
+    return jsonschema_rs.validator_for(schema, registry=registry,
+                                      **options, validate_formats=True,
                                       formats={"uuid": lambda value: UUID_FORMAT_CHECKER.conforms(value, "uuid"), "timeline-instant": instant_format},
                                       ignore_unknown_formats=False,
                                       pattern_options=jsonschema_rs.RegexOptions(size_limit=1024 * 1024,

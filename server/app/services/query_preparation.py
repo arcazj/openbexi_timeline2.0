@@ -7,6 +7,7 @@ import time
 import uuid
 from collections import OrderedDict
 from dataclasses import dataclass, field
+from typing import Optional
 
 from ..models.domain import DomainError, json_bytes
 from .identity import scope_fingerprint
@@ -57,7 +58,7 @@ class _Preparation:
     captured: dict
     placeholder: dict
     deadline: float
-    preferences: dict | None = None
+    preferences: Optional[dict] = None
     cancelled: threading.Event = field(default_factory=threading.Event)
     done: threading.Event = field(default_factory=threading.Event)
     active: bool = False
