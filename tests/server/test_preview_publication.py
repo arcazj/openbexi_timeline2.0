@@ -20,8 +20,9 @@ def module(name):
 def fixture(root):
     (root / "dist").mkdir()
     (root / "docs/releases").mkdir(parents=True)
-    (root / "package.json").write_text('{"version":"0.1.0"}')
-    (root / "LICENSE").write_text('GNU GENERAL PUBLIC LICENSE fixture\n')
+    (root / "package.json").write_text('{"version":"0.1.0","license":"PolyForm-Noncommercial-1.0.0"}')
+    (root / "LICENSE").write_text('PolyForm Noncommercial License 1.0.0 fixture\n')
+    (root / "NOTICE").write_text('Required project notice fixture\n')
     html = b'<!doctype html><title>Fixture</title>'
     (root / "dist/index.html").write_bytes(html)
     (root / "dist/build-manifest.json").write_text(json.dumps({
@@ -41,7 +42,7 @@ def test_preview_archive_is_reproducible_complete_and_checksummed(tmp_path):
     assert archive.read_bytes() == original
     with zipfile.ZipFile(archive) as bundle:
         assert bundle.testzip() is None
-        assert set(bundle.namelist()) == {"index.html", "THIRD-PARTY-NOTICES.json", "README-OFFLINE.md", "RELEASE-NOTES.md", "DATA-NOTICES.md", "LICENSE"}
+        assert set(bundle.namelist()) == {"index.html", "THIRD-PARTY-NOTICES.json", "README-OFFLINE.md", "RELEASE-NOTES.md", "DATA-NOTICES.md", "LICENSE", "NOTICE"}
         assert bundle.read("index.html") == (tmp_path / "dist/index.html").read_bytes()
     for line in (archive.parent / "SHA256SUMS").read_text().splitlines():
         checksum, name = line.split("  ")
@@ -60,7 +61,7 @@ def test_owner_publication_approval_does_not_claim_production_qualification(tmp_
     assert manifest["publicationReviewRequired"] is False
     assert manifest["ownerPublicationApproved"] is True
     assert manifest["releaseApproved"] is False
-    assert manifest["license"] == "GPL-3.0-only"
+    assert manifest["license"] == "PolyForm-Noncommercial-1.0.0"
 
 
 def test_preview_requires_project_license(tmp_path):
@@ -74,8 +75,8 @@ def test_docker_build_context_and_both_build_stages_include_project_license():
     assert '!LICENSE' in (ROOT / '.dockerignore').read_text().splitlines()
     docker = (ROOT / 'Dockerfile').read_text()
     client, python = docker.split(' AS python-base', 1)
-    assert 'COPY README.md LICENSE ./' in client
-    assert 'COPY pyproject.toml uv.lock LICENSE ./' in python
+    assert 'COPY README.md LICENSE NOTICE ./' in client
+    assert 'COPY pyproject.toml uv.lock LICENSE NOTICE ./' in python
 
 
 @pytest.mark.parametrize("tag", ["v0.1.0", "v0.2.0-preview.1", "../private", "v0.1.0-preview.0", "v0.1.0-preview.1/extra"])

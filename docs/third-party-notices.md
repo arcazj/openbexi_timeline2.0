@@ -1,9 +1,9 @@
 # Third-Party Notices
 
-Project code and authored documentation use [GNU GPL version 3](../LICENSE)
-(`GPL-3.0-only`). The same full license is embedded in the standalone notices and
+Version 1.0.0 project code and authored documentation use [PolyForm Noncommercial 1.0.0](../LICENSE)
+(`PolyForm-Noncommercial-1.0.0`); see [NOTICE](../NOTICE) for copyright, commercial licensing, and scope. The same full license is embedded in the standalone notices and
 available from Help > Licenses. Source and build instructions are available in the
-[source repository](https://github.com/arcazj/open_timeline2.0); use the matching
+[source repository](https://github.com/arcazj/openbexi_timeline2.0); use the matching
 release tag or the commit recorded in `release-manifest.json` for a downloaded ZIP.
 
 The standalone build includes full license/notice text for all locked JavaScript

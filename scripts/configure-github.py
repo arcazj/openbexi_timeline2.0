@@ -10,7 +10,7 @@ import urllib.request
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-REPOSITORY = "arcazj/open_timeline2.0"
+REPOSITORY = "arcazj/openbexi_timeline2.0"
 BASE = f"https://api.github.com/repos/{REPOSITORY}"
 
 
@@ -75,7 +75,7 @@ def main():
     if not args.apply:
         print(json.dumps({"repository": REPOSITORY, "apply": False,
                           "privateVulnerabilityReporting": args.security,
-                          "mainProtection": policy if args.protection else None,
+                          "masterProtection": policy if args.protection else None,
                           "pages": "workflow" if args.pages else None,
                           "approvalVariables": variables}, indent=2))
         return
@@ -100,9 +100,9 @@ def main():
             raise RuntimeError("Private vulnerability reporting could not be verified")
         print("Private vulnerability reporting: enabled and verified")
     if args.protection:
-        api(token, "GET", "/branches/main")
-        api(token, "PUT", "/branches/main/protection", policy)
-        verified = api(token, "GET", "/branches/main/protection")
+        api(token, "GET", "/branches/master")
+        api(token, "PUT", "/branches/master/protection", policy)
+        verified = api(token, "GET", "/branches/master/protection")
         checks = verified.get("required_status_checks", {})
         if set(checks.get("contexts", [])) != set(policy["required_status_checks"]["contexts"]) or not checks.get("strict"):
             raise RuntimeError("Required status checks could not be verified")
@@ -112,7 +112,7 @@ def main():
         for name in ("allow_force_pushes", "allow_deletions"):
             if verified.get(name, {}).get("enabled"):
                 raise RuntimeError(f"Unsafe branch policy: {name}")
-        print("Main branch protection: applied and verified")
+        print("Master branch protection: applied and verified")
     if args.pages:
         try:
             api(token, "GET", "/pages")

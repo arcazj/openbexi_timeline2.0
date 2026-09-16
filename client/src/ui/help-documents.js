@@ -13,7 +13,7 @@ export function documentTarget(href, currentPath, documents, projectUrl) {
   if (url.origin === 'https://docs.invalid') {
     const path = decodeURIComponent(url.pathname.slice(1));
     if (documents[path]) return { document: path };
-    return { url: `${projectUrl}/blob/main/${url.pathname.slice(1)}${url.hash}` };
+    return { url: `${projectUrl}/blob/master/${url.pathname.slice(1)}${url.hash}` };
   }
   if (!['https:', 'http:'].includes(url.protocol) || url.username || url.password) return null;
   return { url: url.href };

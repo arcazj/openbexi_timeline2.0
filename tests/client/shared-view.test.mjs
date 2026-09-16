@@ -37,11 +37,11 @@ test('shared views reject unexpected settings, malformed encodings, invalid rang
   assert.throws(() => decodeSharedView(`#view=${Buffer.from(duplicate).toString('base64url')}`));
 });
 test('documentation links resolve locally and reject unsafe external destinations', () => {
-  const docs = { 'README.md': {}, 'docs/api.md': {} }, repo = 'https://github.com/arcazj/open_timeline2.0';
+  const docs = { 'README.md': {}, 'docs/api.md': {} }, repo = 'https://github.com/arcazj/openbexi_timeline2.0';
   assert.deepEqual(documentTarget('../README.md', 'docs/api.md', docs, repo), { document: 'README.md' });
   assert.deepEqual(documentTarget('docs/api.md', 'README.md', docs, repo), { document: 'docs/api.md' });
   for (const target of ['javascript:alert(1)', 'data:text/html,hello', 'file:///C:/data', 'https://token:secret@example.org']) assert.equal(documentTarget(target, 'README.md', docs, repo), null);
-  assert.match(documentTarget('missing.md', 'README.md', docs, repo).url, /\/blob\/main\/missing.md$/);
+  assert.match(documentTarget('missing.md', 'README.md', docs, repo).url, /\/blob\/master\/missing.md$/);
 });
 test('offline Swagger forbids network access and execution, and escapes script terminators', () => {
   const html = swaggerDocument({ spec: { info: { title: '</script><script>alert(1)</script>' } }, swagger: { js: '/* </script> */', css: '/* </style> */' } });

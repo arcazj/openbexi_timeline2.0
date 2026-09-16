@@ -465,7 +465,7 @@ def _operation(path, method, name):
 
 def build_contract(app):
     inventory = route_inventory(app)
-    contract = get_openapi(title="OpenBEXI Timeline implemented JSON API", version="0.1.0", openapi_version="3.1.1", routes=app.routes)
+    contract = get_openapi(title="OpenBEXI Timeline implemented JSON API", version="1.0.0", openapi_version="3.1.1", routes=app.routes)
     contract["jsonSchemaDialect"] = DIALECT
     contract["info"]["description"] = "Current registered Python/JSON handlers only. Single default workspace. This artifact is not a full-release certification; pending normative routes are tracked in docs/api-contract.md."
     contract["servers"] = [{"url": "/", "description": "Same-origin API; separately configured explicit CORS origins are permitted."}]

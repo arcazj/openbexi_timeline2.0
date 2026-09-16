@@ -1,6 +1,6 @@
 # Contributing
 
-OpenBEXI Timeline 2.0 is a development preview. Discuss large changes in an issue before changing storage, provider contracts, migration behavior, or interaction semantics. The project license is undecided; do not assume that dependency licenses license this repository's code or data.
+OpenBEXI Timeline 2.0 is released as version 1.0.0. Discuss large changes in an issue before changing storage, provider contracts, migration behavior, or interaction semantics. Project code and authored documentation use [PolyForm Noncommercial 1.0.0](LICENSE); commercial use requires a separate written license from the copyright holder. Preserve [NOTICE](NOTICE) and all third-party notices. Dependency licenses do not license this repository's code or data.
 
 ## Development
 

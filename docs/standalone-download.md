@@ -18,9 +18,9 @@ are not writable. Local changes never upload or synchronize automatically.
 
 This is a development preview, not a production-qualified server release. Read
 `RELEASE-NOTES.md`, `DATA-NOTICES.md`, `LICENSE`, and `THIRD-PARTY-NOTICES.json`.
-Project code uses GPL-3.0-only; existing third-party terms remain unchanged.
+Current project code uses PolyForm-Noncommercial-1.0.0; commercial use requires a separate written license. Existing third-party terms remain unchanged. Earlier preview downloads retain their included license terms.
 
-Source and documentation: https://github.com/arcazj/open_timeline2.0
+Source and documentation: https://github.com/arcazj/openbexi_timeline2.0
 
 Matching source is available from the same release page's **Source code** archives,
 or by checking out the exact commit in `release-manifest.json`. The source includes

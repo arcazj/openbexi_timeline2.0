@@ -1,9 +1,9 @@
 [project]
 name = "openbexi-timeline"
-version = "0.1.0"
+version = "1.0.0"
 description = "Single-writer JSON timeline service"
-license = "GPL-3.0-only"
-license-files = ["LICENSE"]
+license = "PolyForm-Noncommercial-1.0.0"
+license-files = ["LICENSE", "NOTICE"]
 requires-python = ">=3.12,<3.14"
 dependencies = [
   "fastapi>=0.115,<1",

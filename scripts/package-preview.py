@@ -17,7 +17,8 @@ def sha256(value):
 
 
 def package_preview(root, tag, *, publication_approved=False):
-    version = json.loads((root / "package.json").read_text())["version"]
+    metadata = json.loads((root / "package.json").read_text())
+    version = metadata["version"]
     if not re.fullmatch(r"v" + re.escape(version) + r"-preview\.[1-9][0-9]*", tag):
         raise ValueError(f"Tag must be v{version}-preview.N with a positive preview number")
     manifest = json.loads((root / "dist/build-manifest.json").read_text())
@@ -31,6 +32,7 @@ def package_preview(root, tag, *, publication_approved=False):
         "RELEASE-NOTES.md": (root / f"docs/releases/{tag}.md").read_bytes(),
         "DATA-NOTICES.md": (root / "docs/data-licensing.md").read_bytes(),
         "LICENSE": (root / "LICENSE").read_bytes(),
+        "NOTICE": (root / "NOTICE").read_bytes(),
     }
     output = root / "artifacts/releases" / tag
     if not output.resolve().is_relative_to(root.resolve() / "artifacts/releases"):
@@ -62,8 +64,8 @@ def package_preview(root, tag, *, publication_approved=False):
         "releaseApproved": False, "ownerPublicationApproved": publication_approved,
         "publicationReviewRequired": not publication_approved,
         "qualificationScope": "development-preview; not production or full G0-G5 certification",
-        "license": "GPL-3.0-only",
-        "sourceUrl": f"https://github.com/arcazj/open_timeline2.0/tree/{commit}" if commit else None,
+        "license": metadata["license"],
+        "sourceUrl": f"https://github.com/arcazj/openbexi_timeline2.0/tree/{commit}" if commit else None,
         "commit": commit, "workingTreeDirty": None if status is None else bool(status),
         "gitMetadataAvailable": commit is not None and status is not None,
         "bundleSha256": sha256(html), "archiveSha256": sha256(archive.read_bytes()),
@@ -82,7 +84,7 @@ def package_preview(root, tag, *, publication_approved=False):
 
 def main():
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--tag", default="v0.1.0-preview.1")
+    parser.add_argument("--tag", required=True, help="Existing v<package-version>-preview.N tag")
     parser.add_argument("--publication-approved", action="store_true",
                         help="Record explicit owner redistribution approval, not production qualification")
     args = parser.parse_args()

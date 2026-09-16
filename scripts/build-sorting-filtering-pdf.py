@@ -56,7 +56,7 @@ def inline(items, source=SOURCE, revision="docs/sorting-filtering-specification"
                 target = (source.parent / path).resolve() if path else source
                 if not target.is_relative_to(ROOT):
                     raise ValueError("Link outside repository")
-                href = "https://github.com/arcazj/open_timeline2.0/blob/" + quote(revision, safe="/") + "/" + quote(target.relative_to(ROOT).as_posix(), safe="/") + ("#" + quote(fragment) if marker else "")
+                href = "https://github.com/arcazj/openbexi_timeline2.0/blob/" + quote(revision, safe="/") + "/" + quote(target.relative_to(ROOT).as_posix(), safe="/") + ("#" + quote(fragment) if marker else "")
             result.append(f'<a href="{escape(href, quote=True)}" color="#216650">{inline(item["tokens"], source, revision)}</a>')
         elif kind == "br":
             result.append("<br/>")

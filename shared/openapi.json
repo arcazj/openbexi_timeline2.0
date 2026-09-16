@@ -8765,7 +8765,7 @@
   "info": {
     "description": "Current registered Python/JSON handlers only. Single default workspace. This artifact is not a full-release certification; pending normative routes are tracked in docs/api-contract.md.",
     "title": "OpenBEXI Timeline implemented JSON API",
-    "version": "0.1.0"
+    "version": "1.0.0"
   },
   "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
   "openapi": "3.1.1",

@@ -12,6 +12,7 @@ export function embeddedJson(value) {
 
 export async function collectThirdPartyNotices(root) {
   const lock = await json(path.join(root, 'package-lock.json'));
+  const project = await json(path.join(root, 'package.json'));
   if (lock.lockfileVersion !== 3) throw new Error('Notice collection requires package-lock version 3');
   const packages = [], inputs = {};
   const textFile = async relative => {
@@ -35,12 +36,13 @@ export async function collectThirdPartyNotices(root) {
     packages.push({ name: metadata.name, version: metadata.version, license, directory, integrity: locked.integrity ?? null, notices });
   }
   const assets = [
-    { name: 'OpenBEXI Timeline project code and authored documentation', license: 'GPL-3.0-only', source: 'https://github.com/arcazj/open_timeline2.0', notices: [await textFile('LICENSE')] },
+    { name: 'OpenBEXI Timeline project code and authored documentation', license: project.license, source: 'https://github.com/arcazj/openbexi_timeline2.0', notices: [await textFile('LICENSE'), await textFile('NOTICE')] },
     { name: 'Unmodified legacy hazard PNG icons', license: 'GPL-3.0-or-later', source: 'https://github.com/arcazj/openbexi_timeline', notices: [await textFile('client/assets/legacy-hazards/LEGACY-LICENSE.txt')] },
     { name: 'Embedded Noto Sans font files and derived measurement tables', license: 'OFL-1.1', notices: [await textFile('client/assets/FONT-LICENSE.txt')] },
     { name: 'Unicode 15.1 case-folding data and derived lookup tables', license: 'Unicode-3.0', source: 'https://www.unicode.org/license.txt', notices: [await textFile('docs/licenses/UNICODE-LICENSE.txt')] },
   ];
-  const document = { format: 'openbexi-third-party-notices', formatVersion: 1, scope: 'Project GPL-3.0 license, standalone runtime dependencies and embedded asset notices; third-party terms remain distinct', packages, assets };
+  inputs['package.json'] = hash(await readFile(path.join(root, 'package.json')));
+  const document = { format: 'openbexi-third-party-notices', formatVersion: 1, scope: `Project ${project.license} license, standalone runtime dependencies and embedded asset notices; third-party terms remain distinct`, packages, assets };
   return { document, inputs };
 }
 

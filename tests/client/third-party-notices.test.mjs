@@ -12,9 +12,10 @@ test('standalone notices include locked runtime dependencies, transitive license
   assert.ok(!first.document.packages.some(item => item.name === '@playwright/test'));
   assert.ok(first.document.assets.some(item => item.license === 'OFL-1.1'));
   assert.ok(first.document.assets.some(item => item.license === 'Unicode-3.0'));
-  const project = first.document.assets.find(item => item.license === 'GPL-3.0-only');
+  const project = first.document.assets.find(item => item.license === 'PolyForm-Noncommercial-1.0.0');
   assert.equal(project.notices[0].path, 'LICENSE');
-  assert.match(project.notices[0].text, /GNU GENERAL PUBLIC LICENSE/);
+  assert.equal(project.notices[1].path, 'NOTICE');
+  assert.match(project.notices[0].text, /PolyForm Noncommercial License 1\.0\.0/);
   assert.ok(first.document.assets.some(item => item.license === 'GPL-3.0-or-later'));
   for (const item of [...first.document.packages, ...first.document.assets]) for (const notice of item.notices) {
     assert.match(notice.sha256, /^[a-f0-9]{64}$/);

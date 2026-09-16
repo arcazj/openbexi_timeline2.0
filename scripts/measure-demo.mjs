@@ -18,7 +18,7 @@ const gzip = gzipSync(html, { level: 9 });
 const output = path.join(root, 'artifacts/performance');
 await mkdir(output, { recursive: true });
 const server = http.createServer((request, response) => {
-  if (request.url === '/open_timeline2.0/') {
+  if (request.url === '/openbexi_timeline2.0/') {
     response.writeHead(200, { 'Content-Type': 'text/html; charset=utf-8', 'Content-Encoding': 'gzip',
       'Content-Length': gzip.length, 'Cache-Control': 'no-store' });
     response.end(gzip);
@@ -26,7 +26,7 @@ const server = http.createServer((request, response) => {
 });
 server.listen(0, '127.0.0.1');
 await once(server, 'listening');
-const url = hosted ? 'https://arcazj.github.io/open_timeline2.0/' : `http://127.0.0.1:${server.address().port}/open_timeline2.0/`;
+const url = hosted ? 'https://arcazj.github.io/openbexi_timeline2.0/' : `http://127.0.0.1:${server.address().port}/openbexi_timeline2.0/`;
 const profiles = [
   { name: 'desktop', width: 1600, height: 900, cpuSlowdown: 1, latencyMs: 0, downloadMbps: null },
   { name: 'mobile-slow-4g', width: 390, height: 844, cpuSlowdown: 4, latencyMs: 150, downloadMbps: 1.6 },

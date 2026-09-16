@@ -121,7 +121,7 @@ def create_app(data_root=None, token=None, seed_path=None, metrics_path=None, le
             if repository:
                 repository.close()
 
-    app = FastAPI(title="OpenBEXI Timeline JSON API", version="0.1.0", lifespan=lifespan,
+    app = FastAPI(title="OpenBEXI Timeline JSON API", version="1.0.0", lifespan=lifespan,
                   docs_url=None, redoc_url=None, openapi_url=None)
     app.state.startup = StartupStatus()
     cors_origins = [origin.strip() for origin in os.environ.get("OPENBEXI_CORS_ORIGINS", "").split(",") if origin.strip()]

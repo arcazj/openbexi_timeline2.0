@@ -4,35 +4,29 @@
 
 A JavaScript and Three.js timeline with a Python API, JSON-file storage, and a complete offline edition. Navigate a detailed timeline and its synchronized overview, inspect overlapping sessions, and switch between Timeline, Table, and Split views without changing your data source.
 
-[Live demo](#live-demo) | [Quick start](#quick-start) | [Screenshots](#screenshots) | [Documentation](#documentation) | [Contributing](CONTRIBUTING.md)
+[Release 1.0.0](https://github.com/arcazj/openbexi_timeline2.0/releases/tag/v1.0.0) | [Quick start](#quick-start) | [Screenshots](#screenshots) | [Documentation](#documentation) | [Contributing](CONTRIBUTING.md)
 
 ![OpenBEXI Timeline with event markers, duration bars, colored zones, synchronized overview, and vertical pagination](docs/ui/test-data/default-dataset.png)
 
 *Actual application capture using the bundled operations dataset, not a design mockup.*
 
-> **Status: development preview, version 0.1.0.** Useful, tested workflows are implemented, but full legacy parity, production hardening, and all release qualification gates are not complete. See [implementation status](docs/implementation-status.md) and [verification evidence](docs/preview-commit-verification.md).
+> **Version 1.0.0.** This source release publishes the current implementation. No fresh tests, build, or release qualification were performed for this release, at the owner's request. Full legacy parity, production hardening, and documented qualification work remain incomplete. See [release notes](docs/releases/v1.0.0.md), [implementation status](docs/implementation-status.md), and [historical verification evidence](docs/preview-commit-verification.md).
 
-## Live Demo
+## Demo and Offline Application
 
-**Demo address:** [arcazj.github.io/open_timeline2.0](https://arcazj.github.io/open_timeline2.0/)
+**Planned demo address:** [arcazj.github.io/openbexi_timeline2.0](https://arcazj.github.io/openbexi_timeline2.0/). Deployment at this new repository address has not been verified for version 1.0.0.
 
-**Live on GitHub Pages.** The [first deployment](https://github.com/arcazj/open_timeline2.0/actions/runs/34821760189) passed on September 14, 2026. The [demo workflow](.github/workflows/demo.yml) builds and tests the real application, then publishes it without a Python server. A working demo is not full production qualification; see the [publishing guide](docs/publishing.md) and [verification evidence](docs/preview-commit-verification.md).
+The [demo workflow](.github/workflows/demo.yml) can build and test the application, then publish it without a Python server. Previous deployment and verification records describe earlier commits; they do not establish a working version 1.0.0 deployment. See the [publishing guide](docs/publishing.md) and [historical verification evidence](docs/preview-commit-verification.md).
 
 The demo is the standalone application, not a video or a server-backed service. It includes six complete local datasets. Open **Help and sharing > Test local data**, select a dataset, and choose **Open dataset**. Importing JSON is local to the browser; connecting to a server is an explicit, separate action. Changes to editable snapshots live in memory: export JSON before closing. Historical fixture snapshots are read-only.
 
 For an immediately usable offline copy, follow the two-command build below and open `dist/index.html`. A successful demo workflow also provides an `openbexi-standalone` download under its run's **Artifacts** section.
 
-### Downloadable Preview
+### Download Version 1.0.0
 
-The [preview release workflow](.github/workflows/preview-release.yml) packages a standalone ZIP, `SHA256SUMS`, and a commit-linked release manifest. Public releases require owner approval and successful Windows/Linux candidate checks. See [Preview 1 release notes](docs/releases/v0.1.0-preview.1.md); this is not a stable release announcement.
+Download the tagged source from the [version 1.0.0 release](https://github.com/arcazj/openbexi_timeline2.0/releases/tag/v1.0.0), or clone the repository using the quick-start instructions below. The release uses the `master` branch and tag `v1.0.0` in the new `arcazj/openbexi_timeline2.0` repository.
 
-To generate the package locally after building:
-
-```sh
-uv run python scripts/package-preview.py --tag v0.1.0-preview.1
-```
-
-The output is `artifacts/releases/v0.1.0-preview.1/`. Extract the ZIP and open `index.html`; no Python or Node.js installation is needed to use the downloaded application.
+This is a source release; it does not include a newly built standalone ZIP. Follow [Offline Application](#offline-application) to build `dist/index.html`. The [release notes](docs/releases/v1.0.0.md) describe the included features, license change, and known limitations. Earlier [preview release notes](docs/releases/v0.1.0-preview.1.md) remain historical records.
 
 ## What You Can Do
 
@@ -56,8 +50,8 @@ Legacy browsing can save application-owned filters, views and preferences in a s
 Prerequisite for building: **Node.js 22+** with npm. Python is not required.
 
 ```sh
-git clone https://github.com/arcazj/open_timeline2.0.git
-cd open_timeline2.0
+git clone https://github.com/arcazj/openbexi_timeline2.0.git
+cd openbexi_timeline2.0
 npm ci
 npm run build
 ```
@@ -146,7 +140,7 @@ These images were captured from the implemented application. Reference-inspired 
 
 [![Selected session with a read-only linked descriptor beside the timeline and overview](docs/ui/sorting-v2/descriptor-desktop.png)](docs/ui/sorting-v2/descriptor-desktop.png)
 
-The sorting/filtering candidate retains the legacy right-hand descriptor, including linked sidecar metadata. See the [desktop and offline mobile gallery](docs/sorting-filtering/implementation-status.md#actual-candidate-screenshots), [capture provenance](docs/ui/sorting-v2/screenshots.json), and [illustrated candidate guide (PDF)](output/pdf/sorting-filtering-candidate.pdf). These captures document the candidate build, not the currently deployed main-branch demo or a stable release.
+The sorting/filtering implementation retains the legacy right-hand descriptor, including linked sidecar metadata. See the [desktop and offline mobile gallery](docs/sorting-filtering/implementation-status.md#actual-candidate-screenshots), [capture provenance](docs/ui/sorting-v2/screenshots.json), and [illustrated candidate guide (PDF)](output/pdf/sorting-filtering-candidate.pdf). These captures document an earlier candidate build; they are not fresh version 1.0.0 evidence or proof of the current `master`-branch deployment.
 
 More: [six-dataset gallery and mobile captures](docs/local-test-data.md), [earthquake and volcano rendering](docs/hazard-rendering-parity.md), [namespace lanes and search](docs/legacy-json-preview.md), and [screenshot PDF](output/pdf/local-test-data.pdf). The screenshot PDF records its own capture build; rebuilding the application does not retroactively requalify that evidence.
 
@@ -168,6 +162,8 @@ dist/                   Generated standalone output; not committed
 The renderer talks to one data-provider interface. Server mode retrieves bounded records and metadata for the current view; Local mode queries the complete selected snapshot in a browser worker. Both use consistent interval, filter, layout, density, and pagination rules. Data persists as JSON files, not SQL, MongoDB, or another database.
 
 ## Testing
+
+These commands remain available for development. They were not run as a publication requirement for version 1.0.0, and no fresh build or test results are claimed for this release.
 
 ```sh
 npm run check:repo
@@ -194,6 +190,7 @@ The [initial measurements](docs/demo-performance.md) were about 1.1 seconds on d
 
 | Topic | Guide |
 | --- | --- |
+| Version 1.0.0 | [Release notes](docs/releases/v1.0.0.md), [GitHub release](https://github.com/arcazj/openbexi_timeline2.0/releases/tag/v1.0.0) |
 | Architecture and data | [Architecture](docs/architecture.md), [data model](docs/data-model.md), [provider contracts](docs/provider-standalone-contract.md) |
 | Navigation and presentation | [Calendar and momentum](docs/calendar-navigation.md), [local scaling](docs/local-scaling.md), [models](docs/model-management.md), [filters and search](docs/filters-and-search.md) |
 | Sorting/filtering candidate | [Implemented workflow and descriptor gallery](docs/sorting-filtering/implementation-status.md), [candidate PDF](output/pdf/sorting-filtering-candidate.pdf), [read-only source preferences](docs/sorting-filtering/legacy-preferences.md), [regex qualification](docs/sorting-filtering/regex-qualification.md) |
@@ -207,6 +204,6 @@ The [initial measurements](docs/demo-performance.md) were about 1.1 seconds on d
 
 Local imports are currently bounded to **25,000 records / 64 MiB** and reject oversized datasets instead of truncating them. Local edits are not a durable server backup and do not synchronize automatically. Cross-platform accessibility, full legacy behavior, large-dataset performance, and production deployment still have open qualification work.
 
-Project code and authored documentation are licensed under [GNU GPL version 3](LICENSE) (`GPL-3.0-only`). Existing third-party licenses, including the legacy assets' GPL-3.0-or-later notices, remain intact. The owner approved publication of the bundled datasets and images on September 14, 2026; this does not relicense third-party material. See the [redistribution record](docs/data-licensing.md), [third-party notices](docs/third-party-notices.md), and [dataset provenance](data/README.md).
+Owner-controlled project code and authored documentation are available under [PolyForm Noncommercial 1.0.0](LICENSE) (`PolyForm-Noncommercial-1.0.0`). Commercial use requires a separate written license; contact [Jean-Christophe Arcaz](mailto:arcazj@gmail.com). See [NOTICE](NOTICE) for attribution and commercial licensing details. Third-party code, data, fonts, images, and legacy assets are excluded from this license and retain their existing terms, including the legacy assets' GPL-3.0-or-later notices. This license change does not revoke rights granted under earlier GPL releases. The owner approved publication of the bundled datasets and images on September 14, 2026; this does not relicense third-party material. See the [redistribution record](docs/data-licensing.md), [third-party notices](docs/third-party-notices.md), and [dataset provenance](data/README.md).
 
-The [data and asset review](docs/data-licensing.md) identifies the outstanding permissions separately. Dependency update PRs are configured for npm, uv, GitHub Actions, and Docker; they are reviewed rather than automatically merged. [Private vulnerability reporting](SECURITY.md) is enabled.
+The [data and asset review](docs/data-licensing.md) identifies the outstanding permissions separately. Dependency update PRs are configured for npm, uv, GitHub Actions, and Docker; they are reviewed rather than automatically merged. See [SECURITY.md](SECURITY.md) for private vulnerability reporting instructions.

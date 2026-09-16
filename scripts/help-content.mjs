@@ -29,5 +29,5 @@ export async function collectHelpContent(root) {
   const metadata = JSON.parse(await read('package.json'));
   const spec = JSON.parse(await read('shared/openapi.json'));
   const swagger = { js: await read('node_modules/swagger-ui-dist/swagger-ui-bundle.js'), css: await read('node_modules/swagger-ui-dist/swagger-ui.css') };
-  return { inputs, document: { version: metadata.version, projectUrl: 'https://github.com/arcazj/open_timeline2.0', documents, spec, swagger } };
+  return { inputs, document: { version: metadata.version, projectUrl: 'https://github.com/arcazj/openbexi_timeline2.0', documents, spec, swagger } };
 }

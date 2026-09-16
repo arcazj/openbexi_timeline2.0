@@ -1,9 +1,27 @@
 # Data and Asset Publication Review
 
+## Version 1.0.0
+
+On September 15, 2026, the owner authorized release 1.0.0 to
+[arcazj/openbexi_timeline2.0](https://github.com/arcazj/openbexi_timeline2.0), on
+`master`, with commercial use restricted. Project code and authored documentation
+in this release use [PolyForm Noncommercial 1.0.0](../LICENSE)
+(`PolyForm-Noncommercial-1.0.0`). Commercial use outside its permitted purposes
+requires a separate written license; see [NOTICE](../NOTICE).
+
+The owner directed publication without prepublication verification. No new tests,
+build, or release qualification are claimed for 1.0.0. The earlier redistribution
+record below is retained as history. Earlier GPL grants remain in effect for
+copies distributed under them. Third-party licenses and source attribution remain
+unchanged; the project license does not add commercial restrictions to third-party
+material independently licensed on other terms.
+
+## Historical preview authorization (September 14, 2026)
+
 The repository owner confirmed on September 14, 2026: "retain GPL-3.0 and I approve
 dataset/image redistribution" and authorized qualification and push to GitHub.
-Project code and authored documentation use GNU GPL version 3 (`GPL-3.0-only`),
-with the complete text in [LICENSE](../LICENSE). This records the owner's
+That preview's project code and authored documentation used GNU GPL version 3 (`GPL-3.0-only`),
+with its text retained in [the historical license](licenses/PREVIOUS-GPL-3.0.txt). This records the owner's
 publication authorization for the current preview, including its bundled datasets,
 images, and documentation captures. It is not an independent legal opinion or a
 new license for third-party material. Existing attribution and licenses remain

@@ -3,7 +3,7 @@ import { readFile, readdir } from 'node:fs/promises';
 import { pathToFileURL } from 'node:url';
 import path from 'node:path';
 
-const site = 'https://openbexi-demo.test/open_timeline2.0/';
+const site = 'https://openbexi-demo.test/openbexi_timeline2.0/';
 const artifact = path.resolve('artifacts/demo/index.html');
 const html = () => readFile(artifact, 'utf8');
 const ready = page => expect.poll(() => page.evaluate(() => window.__timelineDebug?.ready)).toBe(true);
