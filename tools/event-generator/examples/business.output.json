@@ -1,0 +1,1978 @@
+{
+  "dateTimeFormat": "iso8601",
+  "events": [
+    {
+      "id": "66aca538-8ae8-41ee-9cd5-804cc843dd62",
+      "namespace": "office",
+      "original_start": "Thu Jan 08 10:32:09 UTC 2026",
+      "start": "Thu Jan 08 10:32:09 UTC 2026",
+      "original_end": "Thu Jan 08 10:44:09 UTC 2026",
+      "end": "Thu Jan 08 10:47:09 UTC 2026",
+      "data": {
+        "namespace": "office",
+        "title": "Session_0_read_descriptor",
+        "status": "FINISHED",
+        "type": "maintenance",
+        "priority": "low",
+        "description": "",
+        "system": "system1",
+        "tolerance": "562"
+      },
+      "render": {
+        "color": "#768382"
+      },
+      "activities": [
+        {
+          "id": "e583cc16-1f1b-44ff-8345-09f0f64e0bde",
+          "namespace": "office",
+          "original_start": "Thu Jan 08 10:32:09 UTC 2026",
+          "start": "Thu Jan 08 10:32:09 UTC 2026",
+          "original_end": "Thu Jan 08 10:44:09 UTC 2026",
+          "end": "Thu Jan 08 10:47:09 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_0_0_read_descriptor",
+            "status": "FINISHED",
+            "priority": "low",
+            "description": "",
+            "tolerance": "562"
+          },
+          "render": {
+            "color": "#768382"
+          }
+        },
+        {
+          "id": "331485fb-ed1f-46ea-a19d-7e8ad43293e5",
+          "namespace": "office",
+          "original_start": "Thu Jan 08 10:32:09 UTC 2026",
+          "start": "Thu Jan 08 10:32:09 UTC 2026",
+          "original_end": "Thu Jan 08 10:44:09 UTC 2026",
+          "end": "Thu Jan 08 10:47:09 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_0_1_read_descriptor",
+            "status": "FINISHED",
+            "priority": "low",
+            "description": "",
+            "tolerance": "562"
+          },
+          "render": {
+            "color": "#768382"
+          }
+        }
+      ]
+    },
+    {
+      "id": "83db620a-8bc9-496e-a947-c9aa805a6743",
+      "namespace": "office",
+      "original_start": "Tue Jan 13 11:55:47 UTC 2026",
+      "start": "Tue Jan 13 11:55:47 UTC 2026",
+      "original_end": "Tue Jan 13 12:43:47 UTC 2026",
+      "end": "Tue Jan 13 12:55:47 UTC 2026",
+      "data": {
+        "namespace": "office",
+        "title": "Session_1_read_descriptor",
+        "status": "STARTED",
+        "type": "meeting",
+        "priority": "low",
+        "description": "",
+        "system": "system2",
+        "tolerance": "1000",
+        "dependencies": [
+          "66aca538-8ae8-41ee-9cd5-804cc843dd62"
+        ]
+      },
+      "render": {
+        "color": "#607116"
+      },
+      "activities": [
+        {
+          "id": "2d9fb615-dc01-4c93-9eae-8cb2410830c1",
+          "namespace": "office",
+          "original_start": "Tue Jan 13 11:55:47 UTC 2026",
+          "start": "Tue Jan 13 11:55:47 UTC 2026",
+          "original_end": "Tue Jan 13 12:43:47 UTC 2026",
+          "end": "Tue Jan 13 12:55:47 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Session_1_0_read_descriptor",
+            "status": "STARTED",
+            "priority": "low",
+            "description": "",
+            "tolerance": "1000"
+          },
+          "render": {
+            "color": "#607116"
+          }
+        }
+      ]
+    },
+    {
+      "id": "e29b83f0-cf5e-4135-9092-546b1aff5efa",
+      "namespace": "office",
+      "original_start": "Tue Jan 13 11:28:21 UTC 2026",
+      "start": "Tue Jan 13 11:28:21 UTC 2026",
+      "original_end": "Tue Jan 13 12:16:21 UTC 2026",
+      "end": "Tue Jan 13 12:28:21 UTC 2026",
+      "data": {
+        "namespace": "office",
+        "title": "Session_2_read_descriptor",
+        "status": "STARTED",
+        "type": "meeting",
+        "priority": "low",
+        "description": "",
+        "system": "system3",
+        "tolerance": "925"
+      },
+      "render": {
+        "color": "#350152"
+      },
+      "activities": [
+        {
+          "id": "fa58dc8e-c34e-4132-a8c1-4423c2e4d355",
+          "namespace": "office",
+          "original_start": "Tue Jan 13 11:28:21 UTC 2026",
+          "start": "Tue Jan 13 11:28:21 UTC 2026",
+          "original_end": "Tue Jan 13 12:16:21 UTC 2026",
+          "end": "Tue Jan 13 12:28:21 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_2_0",
+            "status": "STARTED",
+            "priority": "low",
+            "description": "description_Activity_2_0_activity_0",
+            "tolerance": "925"
+          },
+          "render": {
+            "color": "#350152"
+          }
+        },
+        {
+          "id": "a3958d23-eb2e-4efb-800d-19b3a7845a07",
+          "namespace": "office",
+          "original_start": "Tue Jan 13 11:28:21 UTC 2026",
+          "start": "Tue Jan 13 11:28:21 UTC 2026",
+          "original_end": "Tue Jan 13 12:16:21 UTC 2026",
+          "end": "Tue Jan 13 12:28:21 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_2_1",
+            "status": "STARTED",
+            "priority": "low",
+            "description": "description_Activity_2_1_activity_1",
+            "tolerance": "925"
+          },
+          "render": {
+            "color": "#350152"
+          }
+        }
+      ]
+    },
+    {
+      "id": "1de6ee15-3f1a-4be8-8068-9175e897f16c",
+      "namespace": "office",
+      "original_start": "Thu Jan 08 13:21:48 UTC 2026",
+      "start": "Thu Jan 08 13:21:48 UTC 2026",
+      "original_end": "Thu Jan 08 14:09:48 UTC 2026",
+      "end": "Thu Jan 08 14:21:48 UTC 2026",
+      "data": {
+        "namespace": "office",
+        "title": "Session_3_read_descriptor",
+        "status": "FINISHED",
+        "type": "meeting",
+        "priority": "low",
+        "description": "",
+        "system": "system1",
+        "tolerance": "671",
+        "dependencies": [
+          "66aca538-8ae8-41ee-9cd5-804cc843dd62"
+        ]
+      },
+      "render": {
+        "color": "#188315"
+      },
+      "activities": [
+        {
+          "id": "d728b527-4fc4-418e-8383-82094f97d0bf",
+          "namespace": "office",
+          "original_start": "Thu Jan 08 13:21:48 UTC 2026",
+          "start": "Thu Jan 08 13:21:48 UTC 2026",
+          "original_end": "Thu Jan 08 14:09:48 UTC 2026",
+          "end": "Thu Jan 08 14:21:48 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_3_0",
+            "status": "FINISHED",
+            "priority": "low",
+            "description": "description_Activity_3_0_activity_0",
+            "tolerance": "671"
+          },
+          "render": {
+            "color": "#188315"
+          }
+        },
+        {
+          "id": "945d6205-0e64-476d-aff2-d3c1cdc767f8",
+          "namespace": "office",
+          "original_start": "Thu Jan 08 13:21:48 UTC 2026",
+          "start": "Thu Jan 08 13:21:48 UTC 2026",
+          "original_end": "Thu Jan 08 14:09:48 UTC 2026",
+          "end": "Thu Jan 08 14:21:48 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_3_1",
+            "status": "FINISHED",
+            "priority": "low",
+            "description": "description_Activity_3_1_activity_1",
+            "tolerance": "671"
+          },
+          "render": {
+            "color": "#188315"
+          }
+        }
+      ]
+    },
+    {
+      "id": "adbbf1e7-2b79-4cb4-914e-1b67253646c7",
+      "namespace": "office",
+      "original_start": "Thu Jan 08 15:20:18 UTC 2026",
+      "start": "Thu Jan 08 15:20:18 UTC 2026",
+      "original_end": "Thu Jan 08 15:32:18 UTC 2026",
+      "end": "Thu Jan 08 15:35:18 UTC 2026",
+      "data": {
+        "namespace": "office",
+        "title": "Session_4",
+        "status": "FINISHED",
+        "type": "meeting",
+        "priority": "low",
+        "description": "description_4 Session_4",
+        "system": "system2",
+        "tolerance": "741"
+      },
+      "render": {
+        "color": "#770625"
+      },
+      "activities": [
+        {
+          "id": "8b63a9c1-1a88-4af3-82b6-fbf5e17fb808",
+          "namespace": "office",
+          "original_start": "Thu Jan 08 15:20:18 UTC 2026",
+          "start": "Thu Jan 08 15:20:18 UTC 2026",
+          "original_end": "Thu Jan 08 15:32:18 UTC 2026",
+          "end": "Thu Jan 08 15:35:18 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_4_0",
+            "status": "FINISHED",
+            "priority": "low",
+            "description": "description_Activity_4_0_activity_0",
+            "tolerance": "741"
+          },
+          "render": {
+            "color": "#770625"
+          }
+        },
+        {
+          "id": "a6386199-b69e-4139-8734-040989ec8b34",
+          "namespace": "office",
+          "original_start": "Thu Jan 08 15:20:18 UTC 2026",
+          "start": "Thu Jan 08 15:20:18 UTC 2026",
+          "original_end": "Thu Jan 08 15:32:18 UTC 2026",
+          "end": "Thu Jan 08 15:35:18 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_4_1_read_descriptor",
+            "status": "FINISHED",
+            "priority": "low",
+            "description": "",
+            "tolerance": "741"
+          },
+          "render": {
+            "color": "#770625"
+          }
+        },
+        {
+          "id": "f0ed3f3d-9078-47b4-b67f-976e2dad65f6",
+          "namespace": "office",
+          "original_start": "Thu Jan 08 15:20:18 UTC 2026",
+          "start": "Thu Jan 08 15:20:18 UTC 2026",
+          "original_end": "Thu Jan 08 15:32:18 UTC 2026",
+          "end": "Thu Jan 08 15:35:18 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_4_2_read_descriptor",
+            "status": "FINISHED",
+            "priority": "low",
+            "description": "",
+            "tolerance": "741"
+          },
+          "render": {
+            "color": "#770625"
+          }
+        },
+        {
+          "id": "f97da446-fb58-432b-af93-62d1fed59c48",
+          "namespace": "office",
+          "original_start": "Thu Jan 08 15:20:18 UTC 2026",
+          "start": "Thu Jan 08 15:20:18 UTC 2026",
+          "original_end": "Thu Jan 08 15:32:18 UTC 2026",
+          "end": "Thu Jan 08 15:35:18 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_4_3",
+            "status": "FINISHED",
+            "priority": "low",
+            "description": "description_Activity_4_3_activity_3",
+            "tolerance": "741"
+          },
+          "render": {
+            "color": "#770625"
+          }
+        }
+      ]
+    },
+    {
+      "id": "fef3f317-9a4d-44e0-b2eb-99f4e2a273f2",
+      "namespace": "office",
+      "original_start": "Tue Jan 13 13:27:23 UTC 2026",
+      "start": "Tue Jan 13 13:27:23 UTC 2026",
+      "original_end": "Tue Jan 13 13:39:23 UTC 2026",
+      "end": "Tue Jan 13 13:42:23 UTC 2026",
+      "data": {
+        "namespace": "office",
+        "title": "Session_5_read_descriptor",
+        "status": "STARTED",
+        "type": "maintenance",
+        "priority": "high",
+        "description": "",
+        "system": "system3",
+        "tolerance": "290",
+        "dependencies": [
+          "e29b83f0-cf5e-4135-9092-546b1aff5efa"
+        ]
+      },
+      "render": {
+        "color": "#632385"
+      },
+      "activities": [
+        {
+          "id": "021de00b-9cd6-4137-a03e-58a15c360412",
+          "namespace": "office",
+          "original_start": "Tue Jan 13 13:27:23 UTC 2026",
+          "start": "Tue Jan 13 13:27:23 UTC 2026",
+          "original_end": "Tue Jan 13 13:39:23 UTC 2026",
+          "end": "Tue Jan 13 13:42:23 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_5_0",
+            "status": "STARTED",
+            "priority": "high",
+            "description": "description_Activity_5_0_activity_0",
+            "tolerance": "290"
+          },
+          "render": {
+            "color": "#632385"
+          }
+        },
+        {
+          "id": "77337fd8-039f-4161-ad68-dc932846c086",
+          "namespace": "office",
+          "original_start": "Tue Jan 13 13:27:23 UTC 2026",
+          "start": "Tue Jan 13 13:27:23 UTC 2026",
+          "original_end": "Tue Jan 13 13:39:23 UTC 2026",
+          "end": "Tue Jan 13 13:42:23 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_5_1_read_descriptor",
+            "status": "STARTED",
+            "priority": "high",
+            "description": "",
+            "tolerance": "290"
+          },
+          "render": {
+            "color": "#632385"
+          }
+        },
+        {
+          "id": "2cc13a49-874d-4e06-810d-f0aa1f68c424",
+          "namespace": "office",
+          "original_start": "Tue Jan 13 13:27:23 UTC 2026",
+          "start": "Tue Jan 13 13:27:23 UTC 2026",
+          "original_end": "Tue Jan 13 13:39:23 UTC 2026",
+          "end": "Tue Jan 13 13:42:23 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_5_2",
+            "status": "STARTED",
+            "priority": "high",
+            "description": "description_Activity_5_2_activity_2",
+            "tolerance": "290"
+          },
+          "render": {
+            "color": "#632385"
+          }
+        },
+        {
+          "id": "2ae46fe4-744c-48af-96c4-c2d6a16a2587",
+          "namespace": "office",
+          "original_start": "Tue Jan 13 13:27:23 UTC 2026",
+          "start": "Tue Jan 13 13:27:23 UTC 2026",
+          "original_end": "Tue Jan 13 13:39:23 UTC 2026",
+          "end": "Tue Jan 13 13:42:23 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_5_3_read_descriptor",
+            "status": "STARTED",
+            "priority": "high",
+            "description": "",
+            "tolerance": "290"
+          },
+          "render": {
+            "color": "#632385"
+          }
+        }
+      ]
+    },
+    {
+      "id": "180be405-6b51-4cbe-b962-1cbbe50e6ea8",
+      "namespace": "office",
+      "original_start": "Thu Jan 08 11:28:46 UTC 2026",
+      "start": "Thu Jan 08 11:28:46 UTC 2026",
+      "original_end": "Thu Jan 08 12:16:46 UTC 2026",
+      "end": "Thu Jan 08 12:28:46 UTC 2026",
+      "data": {
+        "namespace": "office",
+        "title": "Session_6",
+        "status": "FINISHED",
+        "type": "meeting",
+        "priority": "high",
+        "description": "description_6 Session_6",
+        "system": "system1",
+        "tolerance": "792"
+      },
+      "render": {
+        "color": "#171707"
+      },
+      "activities": [
+        {
+          "id": "a613e5f1-ab71-4db1-9710-db632f90c993",
+          "namespace": "office",
+          "original_start": "Thu Jan 08 11:28:46 UTC 2026",
+          "start": "Thu Jan 08 11:28:46 UTC 2026",
+          "original_end": "Thu Jan 08 12:16:46 UTC 2026",
+          "end": "Thu Jan 08 12:28:46 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_6_0_read_descriptor",
+            "status": "FINISHED",
+            "priority": "high",
+            "description": "",
+            "tolerance": "792"
+          },
+          "render": {
+            "color": "#171707"
+          }
+        },
+        {
+          "id": "8cdfe476-639b-4542-b1cd-7b958afc0795",
+          "namespace": "office",
+          "original_start": "Thu Jan 08 11:28:46 UTC 2026",
+          "start": "Thu Jan 08 11:28:46 UTC 2026",
+          "original_end": "Thu Jan 08 12:16:46 UTC 2026",
+          "end": "Thu Jan 08 12:28:46 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_6_1",
+            "status": "FINISHED",
+            "priority": "high",
+            "description": "description_Activity_6_1_activity_1",
+            "tolerance": "792"
+          },
+          "render": {
+            "color": "#171707"
+          }
+        },
+        {
+          "id": "4c3d7ba5-ba4c-4eb6-b52e-52a6b252c2fe",
+          "namespace": "office",
+          "original_start": "Thu Jan 08 11:28:46 UTC 2026",
+          "start": "Thu Jan 08 11:28:46 UTC 2026",
+          "original_end": "Thu Jan 08 12:16:46 UTC 2026",
+          "end": "Thu Jan 08 12:28:46 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_6_2_read_descriptor",
+            "status": "FINISHED",
+            "priority": "high",
+            "description": "",
+            "tolerance": "792"
+          },
+          "render": {
+            "color": "#171707"
+          }
+        },
+        {
+          "id": "558ee733-2fd5-40ce-acda-40dd93c72201",
+          "namespace": "office",
+          "original_start": "Thu Jan 08 11:28:46 UTC 2026",
+          "start": "Thu Jan 08 11:28:46 UTC 2026",
+          "original_end": "Thu Jan 08 12:16:46 UTC 2026",
+          "end": "Thu Jan 08 12:28:46 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_6_3",
+            "status": "FINISHED",
+            "priority": "high",
+            "description": "description_Activity_6_3_activity_3",
+            "tolerance": "792"
+          },
+          "render": {
+            "color": "#171707"
+          }
+        }
+      ]
+    },
+    {
+      "id": "d322000b-9d36-4c3d-88e1-359b637c2e06",
+      "namespace": "office",
+      "original_start": "Wed Jan 07 16:29:26 UTC 2026",
+      "start": "Wed Jan 07 16:29:26 UTC 2026",
+      "original_end": "Wed Jan 07 16:41:26 UTC 2026",
+      "end": "Wed Jan 07 16:44:26 UTC 2026",
+      "data": {
+        "namespace": "office",
+        "title": "Session_7",
+        "status": "RUNNING",
+        "type": "meeting",
+        "priority": "low",
+        "description": "description_7 Session_7",
+        "system": "system2",
+        "tolerance": "173"
+      },
+      "render": {
+        "color": "#015402"
+      },
+      "activities": [
+        {
+          "id": "4ae9dce3-2a17-4a45-b766-767923cb1566",
+          "namespace": "office",
+          "original_start": "Wed Jan 07 16:29:26 UTC 2026",
+          "start": "Wed Jan 07 16:29:26 UTC 2026",
+          "original_end": "Wed Jan 07 16:41:26 UTC 2026",
+          "end": "Wed Jan 07 16:44:26 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_7_0_read_descriptor",
+            "status": "RUNNING",
+            "priority": "low",
+            "description": "",
+            "tolerance": "173"
+          },
+          "render": {
+            "color": "#015402"
+          }
+        },
+        {
+          "id": "a236cc39-c378-4faf-932b-099c358fcca1",
+          "namespace": "office",
+          "original_start": "Wed Jan 07 16:29:26 UTC 2026",
+          "start": "Wed Jan 07 16:29:26 UTC 2026",
+          "original_end": "Wed Jan 07 16:41:26 UTC 2026",
+          "end": "Wed Jan 07 16:44:26 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_7_1_read_descriptor",
+            "status": "RUNNING",
+            "priority": "low",
+            "description": "",
+            "tolerance": "173"
+          },
+          "render": {
+            "color": "#015402"
+          }
+        },
+        {
+          "id": "1b00485f-738e-4f2a-bffb-015d1b7fb484",
+          "namespace": "office",
+          "original_start": "Wed Jan 07 16:29:26 UTC 2026",
+          "start": "Wed Jan 07 16:29:26 UTC 2026",
+          "original_end": "Wed Jan 07 16:41:26 UTC 2026",
+          "end": "Wed Jan 07 16:44:26 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_7_2",
+            "status": "RUNNING",
+            "priority": "low",
+            "description": "description_Activity_7_2_activity_2",
+            "tolerance": "173"
+          },
+          "render": {
+            "color": "#015402"
+          }
+        }
+      ]
+    },
+    {
+      "id": "e46b85df-0d2a-4cf3-89ef-9b10a3560db6",
+      "namespace": "office",
+      "original_start": "Thu Jan 08 10:57:57 UTC 2026",
+      "start": "Thu Jan 08 10:57:57 UTC 2026",
+      "original_end": "Thu Jan 08 11:09:57 UTC 2026",
+      "end": "Thu Jan 08 11:12:57 UTC 2026",
+      "data": {
+        "namespace": "office",
+        "title": "Session_8",
+        "status": "RUNNING",
+        "type": "maintenance",
+        "priority": "low",
+        "description": "description_8 Session_8",
+        "system": "system3",
+        "tolerance": "729"
+      },
+      "render": {
+        "color": "#626048"
+      },
+      "activities": [
+        {
+          "id": "6c6c1f53-1548-4877-b5da-54c749e3bba1",
+          "namespace": "office",
+          "original_start": "Thu Jan 08 10:57:57 UTC 2026",
+          "start": "Thu Jan 08 10:57:57 UTC 2026",
+          "original_end": "Thu Jan 08 11:09:57 UTC 2026",
+          "end": "Thu Jan 08 11:12:57 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Session_8_0_read_descriptor",
+            "status": "RUNNING",
+            "priority": "low",
+            "description": "",
+            "tolerance": "729"
+          },
+          "render": {
+            "color": "#626048"
+          }
+        }
+      ]
+    },
+    {
+      "id": "4b1bc9e5-5a34-445c-86cc-76d023899385",
+      "namespace": "office",
+      "original_start": "Tue Jan 13 16:22:18 UTC 2026",
+      "start": "Tue Jan 13 16:22:18 UTC 2026",
+      "original_end": "Tue Jan 13 16:34:18 UTC 2026",
+      "end": "Tue Jan 13 16:37:18 UTC 2026",
+      "data": {
+        "namespace": "office",
+        "title": "Session_9_read_descriptor",
+        "status": "FINISHED",
+        "type": "meeting",
+        "priority": "low",
+        "description": "",
+        "system": "system1",
+        "tolerance": "665"
+      },
+      "render": {
+        "color": "#627228"
+      },
+      "activities": [
+        {
+          "id": "0f55b319-495b-4103-9459-e699198c7be6",
+          "namespace": "office",
+          "original_start": "Tue Jan 13 16:22:18 UTC 2026",
+          "start": "Tue Jan 13 16:22:18 UTC 2026",
+          "original_end": "Tue Jan 13 16:34:18 UTC 2026",
+          "end": "Tue Jan 13 16:37:18 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Session_9_0",
+            "status": "FINISHED",
+            "priority": "low",
+            "description": "description_Session_9_0_activity_0",
+            "tolerance": "665"
+          },
+          "render": {
+            "color": "#627228"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ef35b9f8-3406-4f75-a4fe-97883c983d5b",
+      "namespace": "office",
+      "original_start": "Thu Jan 08 13:26:35 UTC 2026",
+      "start": "Thu Jan 08 13:26:35 UTC 2026",
+      "original_end": "Thu Jan 08 13:38:35 UTC 2026",
+      "end": "Thu Jan 08 13:41:35 UTC 2026",
+      "data": {
+        "namespace": "office",
+        "title": "Session_10_read_descriptor",
+        "status": "FINISHED",
+        "type": "meeting",
+        "priority": "low",
+        "description": "",
+        "system": "system2",
+        "tolerance": "456"
+      },
+      "render": {
+        "color": "#052104"
+      },
+      "activities": [
+        {
+          "id": "0665acb0-540a-4089-a47f-0bac78fa2708",
+          "namespace": "office",
+          "original_start": "Thu Jan 08 13:26:35 UTC 2026",
+          "start": "Thu Jan 08 13:26:35 UTC 2026",
+          "original_end": "Thu Jan 08 13:38:35 UTC 2026",
+          "end": "Thu Jan 08 13:41:35 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_10_0_read_descriptor",
+            "status": "FINISHED",
+            "priority": "low",
+            "description": "",
+            "tolerance": "456"
+          },
+          "render": {
+            "color": "#052104"
+          }
+        },
+        {
+          "id": "f3c172b6-aeb5-46c7-aadd-d02a1bd3f899",
+          "namespace": "office",
+          "original_start": "Thu Jan 08 13:26:35 UTC 2026",
+          "start": "Thu Jan 08 13:26:35 UTC 2026",
+          "original_end": "Thu Jan 08 13:38:35 UTC 2026",
+          "end": "Thu Jan 08 13:41:35 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_10_1_read_descriptor",
+            "status": "FINISHED",
+            "priority": "low",
+            "description": "",
+            "tolerance": "456"
+          },
+          "render": {
+            "color": "#052104"
+          }
+        }
+      ]
+    },
+    {
+      "id": "f06365c9-69ac-4d34-beb3-130b8b16219f",
+      "namespace": "office",
+      "original_start": "Fri Jan 02 11:02:25 UTC 2026",
+      "start": "Fri Jan 02 11:02:25 UTC 2026",
+      "original_end": "Fri Jan 02 11:50:25 UTC 2026",
+      "end": "Fri Jan 02 12:02:25 UTC 2026",
+      "data": {
+        "namespace": "office",
+        "title": "Session_11",
+        "status": "STARTED",
+        "type": "meeting",
+        "priority": "high",
+        "description": "description_11 Session_11",
+        "system": "system3",
+        "tolerance": "159"
+      },
+      "render": {
+        "color": "#546301"
+      },
+      "activities": [
+        {
+          "id": "e4e8dc31-0043-44e9-9fec-f7168697c1ea",
+          "namespace": "office",
+          "original_start": "Fri Jan 02 11:02:25 UTC 2026",
+          "start": "Fri Jan 02 11:02:25 UTC 2026",
+          "original_end": "Fri Jan 02 11:50:25 UTC 2026",
+          "end": "Fri Jan 02 12:02:25 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_11_0",
+            "status": "STARTED",
+            "priority": "high",
+            "description": "description_Activity_11_0_activity_0",
+            "tolerance": "159"
+          },
+          "render": {
+            "color": "#546301"
+          }
+        },
+        {
+          "id": "6d8accb4-7c8c-4547-bb52-fec0ddcbeeee",
+          "namespace": "office",
+          "original_start": "Fri Jan 02 11:02:25 UTC 2026",
+          "start": "Fri Jan 02 11:02:25 UTC 2026",
+          "original_end": "Fri Jan 02 11:50:25 UTC 2026",
+          "end": "Fri Jan 02 12:02:25 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_11_1_read_descriptor",
+            "status": "STARTED",
+            "priority": "high",
+            "description": "",
+            "tolerance": "159"
+          },
+          "render": {
+            "color": "#546301"
+          }
+        },
+        {
+          "id": "185cb89c-625b-43f0-a416-1dc70189c56e",
+          "namespace": "office",
+          "original_start": "Fri Jan 02 11:02:25 UTC 2026",
+          "start": "Fri Jan 02 11:02:25 UTC 2026",
+          "original_end": "Fri Jan 02 11:50:25 UTC 2026",
+          "end": "Fri Jan 02 12:02:25 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_11_2_read_descriptor",
+            "status": "STARTED",
+            "priority": "high",
+            "description": "",
+            "tolerance": "159"
+          },
+          "render": {
+            "color": "#546301"
+          }
+        },
+        {
+          "id": "77478d47-1395-4204-a66c-fb9b1f316ebf",
+          "namespace": "office",
+          "original_start": "Fri Jan 02 11:02:25 UTC 2026",
+          "start": "Fri Jan 02 11:02:25 UTC 2026",
+          "original_end": "Fri Jan 02 11:50:25 UTC 2026",
+          "end": "Fri Jan 02 12:02:25 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_11_3_read_descriptor",
+            "status": "STARTED",
+            "priority": "high",
+            "description": "",
+            "tolerance": "159"
+          },
+          "render": {
+            "color": "#546301"
+          }
+        },
+        {
+          "id": "5d95d13c-ad91-4d90-ba28-a5ad51a18c95",
+          "namespace": "office",
+          "original_start": "Fri Jan 02 11:02:25 UTC 2026",
+          "start": "Fri Jan 02 11:02:25 UTC 2026",
+          "original_end": "Fri Jan 02 11:50:25 UTC 2026",
+          "end": "Fri Jan 02 12:02:25 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_11_4",
+            "status": "STARTED",
+            "priority": "high",
+            "description": "description_Activity_11_4_activity_4",
+            "tolerance": "159"
+          },
+          "render": {
+            "color": "#546301"
+          }
+        }
+      ]
+    },
+    {
+      "id": "d3af9463-f7e8-49f1-b915-2fe0a0ef5c34",
+      "namespace": "office",
+      "original_start": "Wed Jan 28 15:59:34 UTC 2026",
+      "start": "Wed Jan 28 15:59:34 UTC 2026",
+      "original_end": "Wed Jan 28 16:47:34 UTC 2026",
+      "end": "Wed Jan 28 16:59:34 UTC 2026",
+      "data": {
+        "namespace": "office",
+        "title": "Session_12",
+        "status": "RUNNING",
+        "type": "meeting",
+        "priority": "low",
+        "description": "description_12 Session_12",
+        "system": "system1",
+        "tolerance": "262"
+      },
+      "render": {
+        "color": "#361432"
+      },
+      "activities": [
+        {
+          "id": "5551e862-9c14-4f7e-bc89-0a5782159c50",
+          "namespace": "office",
+          "original_start": "Wed Jan 28 15:59:34 UTC 2026",
+          "start": "Wed Jan 28 15:59:34 UTC 2026",
+          "original_end": "Wed Jan 28 16:47:34 UTC 2026",
+          "end": "Wed Jan 28 16:59:34 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_12_0_read_descriptor",
+            "status": "RUNNING",
+            "priority": "low",
+            "description": "",
+            "tolerance": "262"
+          },
+          "render": {
+            "color": "#361432"
+          }
+        },
+        {
+          "id": "bc9c235a-ef3b-40a3-a6c7-e535d19f7471",
+          "namespace": "office",
+          "original_start": "Wed Jan 28 15:59:34 UTC 2026",
+          "start": "Wed Jan 28 15:59:34 UTC 2026",
+          "original_end": "Wed Jan 28 16:47:34 UTC 2026",
+          "end": "Wed Jan 28 16:59:34 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_12_1",
+            "status": "RUNNING",
+            "priority": "low",
+            "description": "description_Activity_12_1_activity_1",
+            "tolerance": "262"
+          },
+          "render": {
+            "color": "#361432"
+          }
+        },
+        {
+          "id": "fe757021-6a5a-49d5-aac0-21020945f8da",
+          "namespace": "office",
+          "original_start": "Wed Jan 28 15:59:34 UTC 2026",
+          "start": "Wed Jan 28 15:59:34 UTC 2026",
+          "original_end": "Wed Jan 28 16:47:34 UTC 2026",
+          "end": "Wed Jan 28 16:59:34 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_12_2",
+            "status": "RUNNING",
+            "priority": "low",
+            "description": "description_Activity_12_2_activity_2",
+            "tolerance": "262"
+          },
+          "render": {
+            "color": "#361432"
+          }
+        },
+        {
+          "id": "1ca28b65-6b29-4cc5-9c8b-0b0658f10309",
+          "namespace": "office",
+          "original_start": "Wed Jan 28 15:59:34 UTC 2026",
+          "start": "Wed Jan 28 15:59:34 UTC 2026",
+          "original_end": "Wed Jan 28 16:47:34 UTC 2026",
+          "end": "Wed Jan 28 16:59:34 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_12_3",
+            "status": "RUNNING",
+            "priority": "low",
+            "description": "description_Activity_12_3_activity_3",
+            "tolerance": "262"
+          },
+          "render": {
+            "color": "#361432"
+          }
+        },
+        {
+          "id": "924162b6-bae1-4b4f-91f1-688c43a1f5f1",
+          "namespace": "office",
+          "original_start": "Wed Jan 28 15:59:34 UTC 2026",
+          "start": "Wed Jan 28 15:59:34 UTC 2026",
+          "original_end": "Wed Jan 28 16:47:34 UTC 2026",
+          "end": "Wed Jan 28 16:59:34 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_12_4_read_descriptor",
+            "status": "RUNNING",
+            "priority": "low",
+            "description": "",
+            "tolerance": "262"
+          },
+          "render": {
+            "color": "#361432"
+          }
+        }
+      ]
+    },
+    {
+      "id": "315e737d-23d1-4a82-b059-91b474de2810",
+      "namespace": "office",
+      "original_start": "Fri Jan 30 15:59:34 UTC 2026",
+      "start": "Fri Jan 30 15:59:34 UTC 2026",
+      "original_end": "Fri Jan 30 16:47:34 UTC 2026",
+      "end": "Fri Jan 30 16:59:34 UTC 2026",
+      "data": {
+        "namespace": "office",
+        "title": "Session_13_read_descriptor",
+        "status": "FINISHED",
+        "type": "meeting",
+        "priority": "low",
+        "description": "",
+        "system": "system1",
+        "tolerance": "345",
+        "recurrence": {
+          "seriesId": "d3af9463-f7e8-49f1-b915-2fe0a0ef5c34",
+          "previousId": "d3af9463-f7e8-49f1-b915-2fe0a0ef5c34",
+          "intervalDays": 2
+        },
+        "dependencies": [
+          "fef3f317-9a4d-44e0-b2eb-99f4e2a273f2"
+        ]
+      },
+      "render": {
+        "color": "#441816"
+      },
+      "activities": [
+        {
+          "id": "3f8407f4-0034-45ea-ab49-47b7ddce3bf6",
+          "namespace": "office",
+          "original_start": "Fri Jan 30 15:59:34 UTC 2026",
+          "start": "Fri Jan 30 15:59:34 UTC 2026",
+          "original_end": "Fri Jan 30 16:47:34 UTC 2026",
+          "end": "Fri Jan 30 16:59:34 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Session_13_0",
+            "status": "FINISHED",
+            "priority": "low",
+            "description": "description_Session_13_0_activity_0",
+            "tolerance": "345"
+          },
+          "render": {
+            "color": "#441816"
+          }
+        }
+      ]
+    },
+    {
+      "id": "72629715-a1e7-4240-9ebf-63e241780119",
+      "namespace": "office",
+      "original_start": "Fri Jan 30 15:02:20 UTC 2026",
+      "start": "Fri Jan 30 15:02:20 UTC 2026",
+      "original_end": "Fri Jan 30 15:50:20 UTC 2026",
+      "end": "Fri Jan 30 16:02:20 UTC 2026",
+      "data": {
+        "namespace": "office",
+        "title": "Session_14",
+        "status": "STARTED",
+        "type": "meeting",
+        "priority": "low",
+        "description": "description_14 Session_14",
+        "system": "system3",
+        "tolerance": "642"
+      },
+      "render": {
+        "color": "#225775"
+      },
+      "activities": [
+        {
+          "id": "64bf84e9-dc27-4438-8ac4-6b1d7ec8a762",
+          "namespace": "office",
+          "original_start": "Fri Jan 30 15:02:20 UTC 2026",
+          "start": "Fri Jan 30 15:02:20 UTC 2026",
+          "original_end": "Fri Jan 30 15:50:20 UTC 2026",
+          "end": "Fri Jan 30 16:02:20 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_14_0",
+            "status": "STARTED",
+            "priority": "low",
+            "description": "description_Activity_14_0_activity_0",
+            "tolerance": "642"
+          },
+          "render": {
+            "color": "#225775"
+          }
+        },
+        {
+          "id": "d0da7b4b-c25e-4481-9849-0951ed834344",
+          "namespace": "office",
+          "original_start": "Fri Jan 30 15:02:20 UTC 2026",
+          "start": "Fri Jan 30 15:02:20 UTC 2026",
+          "original_end": "Fri Jan 30 15:50:20 UTC 2026",
+          "end": "Fri Jan 30 16:02:20 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_14_1",
+            "status": "STARTED",
+            "priority": "low",
+            "description": "description_Activity_14_1_activity_1",
+            "tolerance": "642"
+          },
+          "render": {
+            "color": "#225775"
+          }
+        }
+      ]
+    },
+    {
+      "id": "85a69e0a-3fe0-457c-8f0c-a03146de6b5f",
+      "namespace": "office",
+      "original_start": "Fri Jan 23 12:28:40 UTC 2026",
+      "start": "Fri Jan 23 12:28:40 UTC 2026",
+      "original_end": "Fri Jan 23 12:40:40 UTC 2026",
+      "end": "Fri Jan 23 12:43:40 UTC 2026",
+      "data": {
+        "namespace": "office",
+        "title": "Session_15",
+        "status": "FINISHED",
+        "type": "meeting",
+        "priority": "low",
+        "description": "description_15 Session_15",
+        "system": "system1",
+        "tolerance": "541",
+        "dependencies": [
+          "66aca538-8ae8-41ee-9cd5-804cc843dd62",
+          "e46b85df-0d2a-4cf3-89ef-9b10a3560db6"
+        ]
+      },
+      "render": {
+        "color": "#268223"
+      },
+      "activities": [
+        {
+          "id": "ff27009a-ff65-4b01-8619-5f743ea7ecd4",
+          "namespace": "office",
+          "original_start": "Fri Jan 23 12:28:40 UTC 2026",
+          "start": "Fri Jan 23 12:28:40 UTC 2026",
+          "original_end": "Fri Jan 23 12:40:40 UTC 2026",
+          "end": "Fri Jan 23 12:43:40 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_15_0",
+            "status": "FINISHED",
+            "priority": "low",
+            "description": "description_Activity_15_0_activity_0",
+            "tolerance": "541"
+          },
+          "render": {
+            "color": "#268223"
+          }
+        },
+        {
+          "id": "7308ccf8-ced6-47ba-bec9-a0c97a05fa5a",
+          "namespace": "office",
+          "original_start": "Fri Jan 23 12:28:40 UTC 2026",
+          "start": "Fri Jan 23 12:28:40 UTC 2026",
+          "original_end": "Fri Jan 23 12:40:40 UTC 2026",
+          "end": "Fri Jan 23 12:43:40 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_15_1",
+            "status": "FINISHED",
+            "priority": "low",
+            "description": "description_Activity_15_1_activity_1",
+            "tolerance": "541"
+          },
+          "render": {
+            "color": "#268223"
+          }
+        },
+        {
+          "id": "2c996db2-738e-437b-814c-635adf129cd4",
+          "namespace": "office",
+          "original_start": "Fri Jan 23 12:28:40 UTC 2026",
+          "start": "Fri Jan 23 12:28:40 UTC 2026",
+          "original_end": "Fri Jan 23 12:40:40 UTC 2026",
+          "end": "Fri Jan 23 12:43:40 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_15_2_read_descriptor",
+            "status": "FINISHED",
+            "priority": "low",
+            "description": "",
+            "tolerance": "541"
+          },
+          "render": {
+            "color": "#268223"
+          }
+        }
+      ]
+    },
+    {
+      "id": "4aab3d6d-4b20-42c4-b23a-755aa3ddffb5",
+      "namespace": "office",
+      "original_start": "Fri Jan 23 11:50:08 UTC 2026",
+      "start": "Fri Jan 23 11:50:08 UTC 2026",
+      "original_end": "Fri Jan 23 12:38:08 UTC 2026",
+      "end": "Fri Jan 23 12:50:08 UTC 2026",
+      "data": {
+        "namespace": "office",
+        "title": "Session_16_read_descriptor",
+        "status": "FINISHED",
+        "type": "maintenance",
+        "priority": "high",
+        "description": "",
+        "system": "system2",
+        "tolerance": "879"
+      },
+      "render": {
+        "color": "#772528"
+      },
+      "activities": [
+        {
+          "id": "c2357070-34a7-4400-a1cc-d2090451ce6c",
+          "namespace": "office",
+          "original_start": "Fri Jan 23 11:50:08 UTC 2026",
+          "start": "Fri Jan 23 11:50:08 UTC 2026",
+          "original_end": "Fri Jan 23 12:38:08 UTC 2026",
+          "end": "Fri Jan 23 12:50:08 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_16_0",
+            "status": "FINISHED",
+            "priority": "high",
+            "description": "description_Activity_16_0_activity_0",
+            "tolerance": "879"
+          },
+          "render": {
+            "color": "#772528"
+          }
+        },
+        {
+          "id": "ede07bb3-5a03-42fb-adac-ccce196d742b",
+          "namespace": "office",
+          "original_start": "Fri Jan 23 11:50:08 UTC 2026",
+          "start": "Fri Jan 23 11:50:08 UTC 2026",
+          "original_end": "Fri Jan 23 12:38:08 UTC 2026",
+          "end": "Fri Jan 23 12:50:08 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_16_1",
+            "status": "FINISHED",
+            "priority": "high",
+            "description": "description_Activity_16_1_activity_1",
+            "tolerance": "879"
+          },
+          "render": {
+            "color": "#772528"
+          }
+        },
+        {
+          "id": "4d1a8703-1835-4085-a85d-45c137ced6a1",
+          "namespace": "office",
+          "original_start": "Fri Jan 23 11:50:08 UTC 2026",
+          "start": "Fri Jan 23 11:50:08 UTC 2026",
+          "original_end": "Fri Jan 23 12:38:08 UTC 2026",
+          "end": "Fri Jan 23 12:50:08 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_16_2",
+            "status": "FINISHED",
+            "priority": "high",
+            "description": "description_Activity_16_2_activity_2",
+            "tolerance": "879"
+          },
+          "render": {
+            "color": "#772528"
+          }
+        }
+      ]
+    },
+    {
+      "id": "6df930fb-358e-4602-b4bd-dfe6cfc04f97",
+      "namespace": "office",
+      "original_start": "Fri Jan 16 15:57:40 UTC 2026",
+      "start": "Fri Jan 16 15:57:40 UTC 2026",
+      "original_end": "Fri Jan 16 16:09:40 UTC 2026",
+      "end": "Fri Jan 16 16:12:40 UTC 2026",
+      "data": {
+        "namespace": "office",
+        "title": "Session_17_read_descriptor",
+        "status": "RUNNING",
+        "type": "maintenance",
+        "priority": "low",
+        "description": "",
+        "system": "system3",
+        "tolerance": "860",
+        "dependencies": [
+          "66aca538-8ae8-41ee-9cd5-804cc843dd62"
+        ]
+      },
+      "render": {
+        "color": "#730033"
+      },
+      "activities": [
+        {
+          "id": "7ea264af-2215-4ca3-9fb7-a7ad904ef693",
+          "namespace": "office",
+          "original_start": "Fri Jan 16 15:57:40 UTC 2026",
+          "start": "Fri Jan 16 15:57:40 UTC 2026",
+          "original_end": "Fri Jan 16 16:09:40 UTC 2026",
+          "end": "Fri Jan 16 16:12:40 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_17_0",
+            "status": "RUNNING",
+            "priority": "low",
+            "description": "description_Activity_17_0_activity_0",
+            "tolerance": "860"
+          },
+          "render": {
+            "color": "#730033"
+          }
+        },
+        {
+          "id": "137598f0-808a-493c-9394-0b6289d46f01",
+          "namespace": "office",
+          "original_start": "Fri Jan 16 15:57:40 UTC 2026",
+          "start": "Fri Jan 16 15:57:40 UTC 2026",
+          "original_end": "Fri Jan 16 16:09:40 UTC 2026",
+          "end": "Fri Jan 16 16:12:40 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_17_1",
+            "status": "RUNNING",
+            "priority": "low",
+            "description": "description_Activity_17_1_activity_1",
+            "tolerance": "860"
+          },
+          "render": {
+            "color": "#730033"
+          }
+        },
+        {
+          "id": "ea77beb4-c53b-45e9-be8c-00993137ffb2",
+          "namespace": "office",
+          "original_start": "Fri Jan 16 15:57:40 UTC 2026",
+          "start": "Fri Jan 16 15:57:40 UTC 2026",
+          "original_end": "Fri Jan 16 16:09:40 UTC 2026",
+          "end": "Fri Jan 16 16:12:40 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_17_2",
+            "status": "RUNNING",
+            "priority": "low",
+            "description": "description_Activity_17_2_activity_2",
+            "tolerance": "860"
+          },
+          "render": {
+            "color": "#730033"
+          }
+        },
+        {
+          "id": "fc023fd7-f96a-4002-a5d2-0fbd100527ac",
+          "namespace": "office",
+          "original_start": "Fri Jan 16 15:57:40 UTC 2026",
+          "start": "Fri Jan 16 15:57:40 UTC 2026",
+          "original_end": "Fri Jan 16 16:09:40 UTC 2026",
+          "end": "Fri Jan 16 16:12:40 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_17_3_read_descriptor",
+            "status": "RUNNING",
+            "priority": "low",
+            "description": "",
+            "tolerance": "860"
+          },
+          "render": {
+            "color": "#730033"
+          }
+        },
+        {
+          "id": "f4daac18-28b5-4e81-ab3c-f8e6874310af",
+          "namespace": "office",
+          "original_start": "Fri Jan 16 15:57:40 UTC 2026",
+          "start": "Fri Jan 16 15:57:40 UTC 2026",
+          "original_end": "Fri Jan 16 16:09:40 UTC 2026",
+          "end": "Fri Jan 16 16:12:40 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_17_4_read_descriptor",
+            "status": "RUNNING",
+            "priority": "low",
+            "description": "",
+            "tolerance": "860"
+          },
+          "render": {
+            "color": "#730033"
+          }
+        }
+      ]
+    },
+    {
+      "id": "cab4da99-8f5a-4555-b94a-c7ddb1ba6d54",
+      "namespace": "office",
+      "original_start": "",
+      "start": "Wed Jan 21 16:53:13 UTC 2026",
+      "original_end": "",
+      "end": "",
+      "data": {
+        "namespace": "office",
+        "title": "Events18_read_descriptor",
+        "status": "FINISHED",
+        "type": "meeting",
+        "priority": "high",
+        "description": "",
+        "system": "system1",
+        "tolerance": "41",
+        "dependencies": [
+          "1de6ee15-3f1a-4be8-8068-9175e897f16c",
+          "fef3f317-9a4d-44e0-b2eb-99f4e2a273f2"
+        ]
+      },
+      "render": {
+        "color": "#810254",
+        "image": "icon/ob_out_of_sync.png"
+      },
+      "activities": [
+        {
+          "id": "e63a58d6-235e-4561-9c5b-358a3df08d72",
+          "namespace": "office",
+          "original_start": "",
+          "start": "Wed Jan 21 16:53:13 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_18_0",
+            "status": "FINISHED",
+            "priority": "high",
+            "description": "description_Activity_18_0_activity_0",
+            "tolerance": "41"
+          },
+          "render": {
+            "color": "#810254",
+            "image": "icon/ob_out_of_sync.png"
+          }
+        },
+        {
+          "id": "0229f2e2-d753-46bc-ae29-bb81abcd852e",
+          "namespace": "office",
+          "original_start": "",
+          "start": "Wed Jan 21 16:53:13 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_18_1_read_descriptor",
+            "status": "FINISHED",
+            "priority": "high",
+            "description": "",
+            "tolerance": "41"
+          },
+          "render": {
+            "color": "#810254",
+            "image": "icon/ob_out_of_sync.png"
+          }
+        },
+        {
+          "id": "8f1e9de0-5879-4db9-b795-ce1b447c684e",
+          "namespace": "office",
+          "original_start": "",
+          "start": "Wed Jan 21 16:53:13 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_18_2",
+            "status": "FINISHED",
+            "priority": "high",
+            "description": "description_Activity_18_2_activity_2",
+            "tolerance": "41"
+          },
+          "render": {
+            "color": "#810254",
+            "image": "icon/ob_out_of_sync.png"
+          }
+        },
+        {
+          "id": "fca0e6a7-2aac-40c2-9d9f-edbf0e0df6f8",
+          "namespace": "office",
+          "original_start": "",
+          "start": "Wed Jan 21 16:53:13 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_18_3_read_descriptor",
+            "status": "FINISHED",
+            "priority": "high",
+            "description": "",
+            "tolerance": "41"
+          },
+          "render": {
+            "color": "#810254",
+            "image": "icon/ob_out_of_sync.png"
+          }
+        },
+        {
+          "id": "bc54e149-32e2-477d-9199-1313be0e85f9",
+          "namespace": "office",
+          "original_start": "",
+          "start": "Wed Jan 21 16:53:13 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_18_4_read_descriptor",
+            "status": "FINISHED",
+            "priority": "high",
+            "description": "",
+            "tolerance": "41"
+          },
+          "render": {
+            "color": "#810254",
+            "image": "icon/ob_out_of_sync.png"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c0ab4fd8-0735-4523-844b-9fb8f9c56a74",
+      "namespace": "office",
+      "original_start": "Fri Jan 23 09:29:16 UTC 2026",
+      "start": "Fri Jan 23 09:29:16 UTC 2026",
+      "original_end": "Fri Jan 23 09:41:16 UTC 2026",
+      "end": "Fri Jan 23 09:44:16 UTC 2026",
+      "data": {
+        "namespace": "office",
+        "title": "Session_19_read_descriptor",
+        "status": "FINISHED",
+        "type": "meeting",
+        "priority": "low",
+        "description": "",
+        "system": "system2",
+        "tolerance": "741",
+        "dependencies": [
+          "83db620a-8bc9-496e-a947-c9aa805a6743"
+        ]
+      },
+      "render": {
+        "color": "#432550"
+      },
+      "activities": [
+        {
+          "id": "63390b78-aed4-415b-9462-c8b1b2f4e673",
+          "namespace": "office",
+          "original_start": "Fri Jan 23 09:29:16 UTC 2026",
+          "start": "Fri Jan 23 09:29:16 UTC 2026",
+          "original_end": "Fri Jan 23 09:41:16 UTC 2026",
+          "end": "Fri Jan 23 09:44:16 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_19_0_read_descriptor",
+            "status": "FINISHED",
+            "priority": "low",
+            "description": "",
+            "tolerance": "741"
+          },
+          "render": {
+            "color": "#432550"
+          }
+        },
+        {
+          "id": "31c29067-5bea-4650-9707-5816f15b56f4",
+          "namespace": "office",
+          "original_start": "Fri Jan 23 09:29:16 UTC 2026",
+          "start": "Fri Jan 23 09:29:16 UTC 2026",
+          "original_end": "Fri Jan 23 09:41:16 UTC 2026",
+          "end": "Fri Jan 23 09:44:16 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_19_1_read_descriptor",
+            "status": "FINISHED",
+            "priority": "low",
+            "description": "",
+            "tolerance": "741"
+          },
+          "render": {
+            "color": "#432550"
+          }
+        },
+        {
+          "id": "25353217-91c1-4fa8-9ce9-9b8af289ac38",
+          "namespace": "office",
+          "original_start": "Fri Jan 23 09:29:16 UTC 2026",
+          "start": "Fri Jan 23 09:29:16 UTC 2026",
+          "original_end": "Fri Jan 23 09:41:16 UTC 2026",
+          "end": "Fri Jan 23 09:44:16 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_19_2_read_descriptor",
+            "status": "FINISHED",
+            "priority": "low",
+            "description": "",
+            "tolerance": "741"
+          },
+          "render": {
+            "color": "#432550"
+          }
+        }
+      ]
+    },
+    {
+      "id": "1f619183-ead7-4a83-8148-fac71e19e067",
+      "namespace": "office",
+      "original_start": "",
+      "start": "Tue Jan 20 11:12:53 UTC 2026",
+      "original_end": "",
+      "end": "",
+      "data": {
+        "namespace": "office",
+        "title": "Events20_read_descriptor",
+        "status": "FINISHED",
+        "type": "meeting",
+        "priority": "high",
+        "description": "",
+        "system": "system3",
+        "tolerance": "627",
+        "dependencies": [
+          "1de6ee15-3f1a-4be8-8068-9175e897f16c"
+        ]
+      },
+      "render": {
+        "color": "#480382",
+        "image": "icon/ob_lost_connection.png"
+      },
+      "activities": [
+        {
+          "id": "d3408fe3-61c6-4f83-9ff0-860838767829",
+          "namespace": "office",
+          "original_start": "",
+          "start": "Tue Jan 20 11:12:53 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_20_0_read_descriptor",
+            "status": "FINISHED",
+            "priority": "high",
+            "description": "",
+            "tolerance": "627"
+          },
+          "render": {
+            "color": "#480382",
+            "image": "icon/ob_lost_connection.png"
+          }
+        },
+        {
+          "id": "1f1e1952-1043-4762-aad7-9eeb148170d8",
+          "namespace": "office",
+          "original_start": "",
+          "start": "Tue Jan 20 11:12:53 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_20_1",
+            "status": "FINISHED",
+            "priority": "high",
+            "description": "description_Activity_20_1_activity_1",
+            "tolerance": "627"
+          },
+          "render": {
+            "color": "#480382",
+            "image": "icon/ob_lost_connection.png"
+          }
+        }
+      ]
+    },
+    {
+      "id": "134642d3-a9eb-483d-8360-2552027cbef4",
+      "namespace": "office",
+      "original_start": "Fri Jan 16 09:45:04 UTC 2026",
+      "start": "Fri Jan 16 09:45:04 UTC 2026",
+      "original_end": "Fri Jan 16 10:33:04 UTC 2026",
+      "end": "Fri Jan 16 10:45:04 UTC 2026",
+      "data": {
+        "namespace": "office",
+        "title": "Session_21_read_descriptor",
+        "status": "RUNNING",
+        "type": "maintenance",
+        "priority": "low",
+        "description": "",
+        "system": "system1",
+        "tolerance": "350",
+        "dependencies": [
+          "83db620a-8bc9-496e-a947-c9aa805a6743"
+        ]
+      },
+      "render": {
+        "color": "#164754"
+      },
+      "activities": [
+        {
+          "id": "56271a8d-9af0-430f-9084-19297c932232",
+          "namespace": "office",
+          "original_start": "Fri Jan 16 09:45:04 UTC 2026",
+          "start": "Fri Jan 16 09:45:04 UTC 2026",
+          "original_end": "Fri Jan 16 10:33:04 UTC 2026",
+          "end": "Fri Jan 16 10:45:04 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_21_0",
+            "status": "RUNNING",
+            "priority": "low",
+            "description": "description_Activity_21_0_activity_0",
+            "tolerance": "350"
+          },
+          "render": {
+            "color": "#164754"
+          }
+        },
+        {
+          "id": "2d02c845-a682-4af4-b0eb-67269a1cc697",
+          "namespace": "office",
+          "original_start": "Fri Jan 16 09:45:04 UTC 2026",
+          "start": "Fri Jan 16 09:45:04 UTC 2026",
+          "original_end": "Fri Jan 16 10:33:04 UTC 2026",
+          "end": "Fri Jan 16 10:45:04 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_21_1",
+            "status": "RUNNING",
+            "priority": "low",
+            "description": "description_Activity_21_1_activity_1",
+            "tolerance": "350"
+          },
+          "render": {
+            "color": "#164754"
+          }
+        },
+        {
+          "id": "73e87c12-ceca-493b-8f4c-35b0da9fb693",
+          "namespace": "office",
+          "original_start": "Fri Jan 16 09:45:04 UTC 2026",
+          "start": "Fri Jan 16 09:45:04 UTC 2026",
+          "original_end": "Fri Jan 16 10:33:04 UTC 2026",
+          "end": "Fri Jan 16 10:45:04 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_21_2_read_descriptor",
+            "status": "RUNNING",
+            "priority": "low",
+            "description": "",
+            "tolerance": "350"
+          },
+          "render": {
+            "color": "#164754"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ed076854-d5fd-4264-86ba-9ccad92af7ab",
+      "namespace": "office",
+      "original_start": "",
+      "start": "Fri Jan 30 15:14:03 UTC 2026",
+      "original_end": "",
+      "end": "",
+      "data": {
+        "namespace": "office",
+        "title": "Events22",
+        "status": "FINISHED",
+        "type": "meeting",
+        "priority": "low",
+        "description": "description_22 Events22",
+        "system": "system2",
+        "tolerance": "361"
+      },
+      "render": {
+        "color": "#224850",
+        "image": "icon/ob_warning.png"
+      },
+      "activities": [
+        {
+          "id": "e8dfc4c6-9edd-4d28-a721-a066fb0a6616",
+          "namespace": "office",
+          "original_start": "",
+          "start": "Fri Jan 30 15:14:03 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_22_0",
+            "status": "FINISHED",
+            "priority": "low",
+            "description": "description_Activity_22_0_activity_0",
+            "tolerance": "361"
+          },
+          "render": {
+            "color": "#224850",
+            "image": "icon/ob_warning.png"
+          }
+        },
+        {
+          "id": "d13439b7-e8c6-4fa4-b42c-da5b5058c6cc",
+          "namespace": "office",
+          "original_start": "",
+          "start": "Fri Jan 30 15:14:03 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_22_1_read_descriptor",
+            "status": "FINISHED",
+            "priority": "low",
+            "description": "",
+            "tolerance": "361"
+          },
+          "render": {
+            "color": "#224850",
+            "image": "icon/ob_warning.png"
+          }
+        },
+        {
+          "id": "30216faa-6d1c-4e59-80d5-5a6900d912de",
+          "namespace": "office",
+          "original_start": "",
+          "start": "Fri Jan 30 15:14:03 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_22_2",
+            "status": "FINISHED",
+            "priority": "low",
+            "description": "description_Activity_22_2_activity_2",
+            "tolerance": "361"
+          },
+          "render": {
+            "color": "#224850",
+            "image": "icon/ob_warning.png"
+          }
+        },
+        {
+          "id": "c904ffeb-48f1-4917-9326-d0807b6529f4",
+          "namespace": "office",
+          "original_start": "",
+          "start": "Fri Jan 30 15:14:03 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_22_3",
+            "status": "FINISHED",
+            "priority": "low",
+            "description": "description_Activity_22_3_activity_3",
+            "tolerance": "361"
+          },
+          "render": {
+            "color": "#224850",
+            "image": "icon/ob_warning.png"
+          }
+        },
+        {
+          "id": "94074244-147f-4eca-a527-73d0cbb21ee2",
+          "namespace": "office",
+          "original_start": "",
+          "start": "Fri Jan 30 15:14:03 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_22_4_read_descriptor",
+            "status": "FINISHED",
+            "priority": "low",
+            "description": "",
+            "tolerance": "361"
+          },
+          "render": {
+            "color": "#224850",
+            "image": "icon/ob_warning.png"
+          }
+        },
+        {
+          "id": "78658f83-ba76-4e22-ab4b-43c18dc2b3b6",
+          "namespace": "office",
+          "original_start": "",
+          "start": "Fri Jan 30 15:14:03 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_22_5_read_descriptor",
+            "status": "FINISHED",
+            "priority": "low",
+            "description": "",
+            "tolerance": "361"
+          },
+          "render": {
+            "color": "#224850",
+            "image": "icon/ob_warning.png"
+          }
+        }
+      ]
+    },
+    {
+      "id": "48d55bec-5762-4f3c-81a2-d4153e77b117",
+      "namespace": "office",
+      "original_start": "Tue Jan 20 10:59:31 UTC 2026",
+      "start": "Tue Jan 20 10:59:31 UTC 2026",
+      "original_end": "Tue Jan 20 11:11:31 UTC 2026",
+      "end": "Tue Jan 20 11:14:31 UTC 2026",
+      "data": {
+        "namespace": "office",
+        "title": "Session_23",
+        "status": "RUNNING",
+        "type": "meeting",
+        "priority": "low",
+        "description": "description_23 Session_23",
+        "system": "system3",
+        "tolerance": "420"
+      },
+      "render": {
+        "color": "#080147"
+      },
+      "activities": [
+        {
+          "id": "f9d662e1-3a3f-49d4-a8ee-71a6de1f6225",
+          "namespace": "office",
+          "original_start": "Tue Jan 20 10:59:31 UTC 2026",
+          "start": "Tue Jan 20 10:59:31 UTC 2026",
+          "original_end": "Tue Jan 20 11:11:31 UTC 2026",
+          "end": "Tue Jan 20 11:14:31 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_23_0_read_descriptor",
+            "status": "RUNNING",
+            "priority": "low",
+            "description": "",
+            "tolerance": "420"
+          },
+          "render": {
+            "color": "#080147"
+          }
+        },
+        {
+          "id": "da80b0b5-d232-4e49-8e7e-81621a76d3a6",
+          "namespace": "office",
+          "original_start": "Tue Jan 20 10:59:31 UTC 2026",
+          "start": "Tue Jan 20 10:59:31 UTC 2026",
+          "original_end": "Tue Jan 20 11:11:31 UTC 2026",
+          "end": "Tue Jan 20 11:14:31 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_23_1_read_descriptor",
+            "status": "RUNNING",
+            "priority": "low",
+            "description": "",
+            "tolerance": "420"
+          },
+          "render": {
+            "color": "#080147"
+          }
+        },
+        {
+          "id": "58736d0a-a8cc-42c8-87fd-40ef66ff7b9a",
+          "namespace": "office",
+          "original_start": "Tue Jan 20 10:59:31 UTC 2026",
+          "start": "Tue Jan 20 10:59:31 UTC 2026",
+          "original_end": "Tue Jan 20 11:11:31 UTC 2026",
+          "end": "Tue Jan 20 11:14:31 UTC 2026",
+          "data": {
+            "namespace": "office",
+            "title": "Activity_23_2",
+            "status": "RUNNING",
+            "priority": "low",
+            "description": "description_Activity_23_2_activity_2",
+            "tolerance": "420"
+          },
+          "render": {
+            "color": "#080147"
+          }
+        }
+      ]
+    }
+  ]
+}

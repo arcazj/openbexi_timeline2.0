@@ -1,0 +1,1886 @@
+{
+  "dateTimeFormat": "iso8601",
+  "events": [
+    {
+      "id": "8faf185f-0582-4631-9e8d-9bf72eb2f327",
+      "namespace": "SOURCE1",
+      "original_start": "Thu Jan 15 00:00:00 UTC 2026",
+      "start": "Thu Jan 15 00:00:00 UTC 2026",
+      "original_end": "Thu Jan 15 00:01:40 UTC 2026",
+      "end": "Thu Jan 15 00:16:40 UTC 2026",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Activity_0_read_descriptor",
+        "status": "STARTED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "1",
+        "tolerance": "100",
+        "description": ""
+      },
+      "render": {
+        "color": "#402185"
+      },
+      "activities": [
+        {
+          "id": "146adb54-8140-4b59-a4cc-5ce364c2219e",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 00:00:00 UTC 2026",
+          "start": "Thu Jan 15 00:00:00 UTC 2026",
+          "original_end": "Thu Jan 15 00:01:40 UTC 2026",
+          "end": "Thu Jan 15 00:16:40 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_0_0",
+            "status": "STARTED",
+            "priority": "1",
+            "tolerance": "100",
+            "description": "description_Activity_0_0_activity_0"
+          },
+          "render": {
+            "color": "#402185"
+          }
+        },
+        {
+          "id": "2ad0449c-6a73-4349-b532-76865770ca50",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 00:00:00 UTC 2026",
+          "start": "Thu Jan 15 00:00:00 UTC 2026",
+          "original_end": "Thu Jan 15 00:01:40 UTC 2026",
+          "end": "Thu Jan 15 00:16:40 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_0_1_read_descriptor",
+            "status": "STARTED",
+            "priority": "1",
+            "tolerance": "100",
+            "description": ""
+          },
+          "render": {
+            "color": "#402185"
+          }
+        },
+        {
+          "id": "92abdf97-5c35-488f-8763-2f4338554573",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 00:00:00 UTC 2026",
+          "start": "Thu Jan 15 00:00:00 UTC 2026",
+          "original_end": "Thu Jan 15 00:01:40 UTC 2026",
+          "end": "Thu Jan 15 00:16:40 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_0_2",
+            "status": "STARTED",
+            "priority": "1",
+            "tolerance": "100",
+            "description": "description_Activity_0_2_activity_2"
+          },
+          "render": {
+            "color": "#402185",
+            "image": "icon/ob_stop.png"
+          }
+        },
+        {
+          "id": "d27bf746-b1e8-4087-89b1-1137d02cdf8e",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 00:00:00 UTC 2026",
+          "start": "Thu Jan 15 00:00:00 UTC 2026",
+          "original_end": "Thu Jan 15 00:01:40 UTC 2026",
+          "end": "Thu Jan 15 00:16:40 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_0_3_read_descriptor",
+            "status": "STARTED",
+            "priority": "1",
+            "tolerance": "100",
+            "description": ""
+          },
+          "render": {
+            "color": "#402185"
+          }
+        }
+      ]
+    },
+    {
+      "id": "695c57dd-ade0-4f38-aa81-b8f95c8c40e9",
+      "namespace": "SOURCE1",
+      "original_start": "Thu Jan 15 00:00:00 UTC 2026",
+      "start": "Thu Jan 15 00:00:00 UTC 2026",
+      "original_end": "Thu Jan 15 00:01:40 UTC 2026",
+      "end": "Thu Jan 15 00:16:40 UTC 2026",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Activity_1_read_descriptor",
+        "status": "FINISHED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "2",
+        "tolerance": "100",
+        "description": ""
+      },
+      "render": {
+        "color": "#285168"
+      },
+      "activities": [
+        {
+          "id": "c5a574d9-bc11-43aa-9d5c-6b97d627f462",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 00:00:00 UTC 2026",
+          "start": "Thu Jan 15 00:00:00 UTC 2026",
+          "original_end": "Thu Jan 15 00:01:40 UTC 2026",
+          "end": "Thu Jan 15 00:16:40 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_1_0_read_descriptor",
+            "status": "FINISHED",
+            "priority": "2",
+            "tolerance": "100",
+            "description": ""
+          },
+          "render": {
+            "color": "#285168"
+          }
+        },
+        {
+          "id": "67f216b2-d47e-4c24-aa8e-113956a5d1cb",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 00:00:00 UTC 2026",
+          "start": "Thu Jan 15 00:00:00 UTC 2026",
+          "original_end": "Thu Jan 15 00:01:40 UTC 2026",
+          "end": "Thu Jan 15 00:16:40 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_1_1",
+            "status": "FINISHED",
+            "priority": "2",
+            "tolerance": "100",
+            "description": "description_Activity_1_1_activity_1"
+          },
+          "render": {
+            "color": "#285168"
+          }
+        },
+        {
+          "id": "9ce179a3-f6b9-409f-a6f4-4baa0eb15950",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 00:00:00 UTC 2026",
+          "start": "Thu Jan 15 00:00:00 UTC 2026",
+          "original_end": "Thu Jan 15 00:01:40 UTC 2026",
+          "end": "Thu Jan 15 00:16:40 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_1_2_read_descriptor",
+            "status": "FINISHED",
+            "priority": "2",
+            "tolerance": "100",
+            "description": ""
+          },
+          "render": {
+            "color": "#285168"
+          }
+        }
+      ]
+    },
+    {
+      "id": "feaf1200-38f2-46c4-aa4b-54a0bef27701",
+      "namespace": "SOURCE1",
+      "original_start": "Thu Jan 15 17:42:42 UTC 2026",
+      "start": "Thu Jan 15 17:43:20 UTC 2026",
+      "original_end": "",
+      "end": "Thu Jan 15 18:46:40 UTC 2026",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Session_2_read_descriptor",
+        "status": "RUNNING",
+        "type": "type1",
+        "system": "system1",
+        "priority": "0",
+        "tolerance": "9",
+        "description": ""
+      },
+      "render": {
+        "color": "#118162"
+      },
+      "activities": [
+        {
+          "id": "1edfc90c-4c18-4ddc-a63c-f3dff53d19f9",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 17:42:42 UTC 2026",
+          "start": "Thu Jan 15 17:43:20 UTC 2026",
+          "original_end": "",
+          "end": "Thu Jan 15 18:46:40 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Session_2_0_read_descriptor",
+            "status": "RUNNING",
+            "priority": "0",
+            "tolerance": "9",
+            "description": ""
+          },
+          "render": {
+            "color": "#118162"
+          }
+        }
+      ]
+    },
+    {
+      "id": "61243d86-c957-4f87-9f2a-6119dd6dc010",
+      "namespace": "SOURCE1",
+      "original_start": "Wed Jan 14 23:30:00 UTC 2026",
+      "start": "Wed Jan 14 23:35:00 UTC 2026",
+      "original_end": "Thu Jan 15 00:23:20 UTC 2026",
+      "end": "Thu Jan 15 00:25:00 UTC 2026",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Session_3",
+        "status": "FINISHED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "4",
+        "tolerance": "1000",
+        "description": "description_3 Session_3"
+      },
+      "render": {
+        "color": "#462873"
+      },
+      "activities": [
+        {
+          "id": "d584d044-9702-4fb3-accd-06b8e1891388",
+          "namespace": "SOURCE1",
+          "original_start": "Wed Jan 14 23:30:00 UTC 2026",
+          "start": "Wed Jan 14 23:35:00 UTC 2026",
+          "original_end": "Thu Jan 15 00:23:20 UTC 2026",
+          "end": "Thu Jan 15 00:25:00 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Session_3_0",
+            "status": "FINISHED",
+            "priority": "4",
+            "tolerance": "1000",
+            "description": "description_Session_3_0_activity_0"
+          },
+          "render": {
+            "color": "#462873"
+          }
+        }
+      ]
+    },
+    {
+      "id": "b71db580-0a34-45d7-8f13-b3bf81917368",
+      "namespace": "SOURCE1",
+      "original_start": "Thu Jan 15 00:33:20 UTC 2026",
+      "start": "Thu Jan 15 00:33:20 UTC 2026",
+      "original_end": "Thu Jan 15 00:05:00 UTC 2026",
+      "end": "Thu Jan 15 00:50:00 UTC 2026",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Activity_4",
+        "status": "FINISHED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "0",
+        "tolerance": "100",
+        "description": "description_4 Activity_4"
+      },
+      "render": {
+        "color": "#470141"
+      },
+      "activities": [
+        {
+          "id": "5d5527e9-3320-439c-b29c-eb7ede74ddf7",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 00:33:20 UTC 2026",
+          "start": "Thu Jan 15 00:33:20 UTC 2026",
+          "original_end": "Thu Jan 15 00:05:00 UTC 2026",
+          "end": "Thu Jan 15 00:50:00 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_4_0_read_descriptor",
+            "status": "FINISHED",
+            "priority": "0",
+            "tolerance": "100",
+            "description": ""
+          },
+          "render": {
+            "color": "#470141"
+          }
+        },
+        {
+          "id": "daf767b3-fbe6-4dac-bc91-7a52972c27b8",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 00:33:20 UTC 2026",
+          "start": "Thu Jan 15 00:33:20 UTC 2026",
+          "original_end": "Thu Jan 15 00:05:00 UTC 2026",
+          "end": "Thu Jan 15 00:50:00 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_4_1",
+            "status": "FINISHED",
+            "priority": "0",
+            "tolerance": "100",
+            "description": "description_Activity_4_1_activity_1"
+          },
+          "render": {
+            "color": "#470141"
+          }
+        },
+        {
+          "id": "487164a5-6c9f-442a-8506-24dd1249964d",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 00:33:20 UTC 2026",
+          "start": "Thu Jan 15 00:33:20 UTC 2026",
+          "original_end": "Thu Jan 15 00:05:00 UTC 2026",
+          "end": "Thu Jan 15 00:50:00 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_4_2",
+            "status": "FINISHED",
+            "priority": "0",
+            "tolerance": "100",
+            "description": "description_Activity_4_2_activity_2"
+          },
+          "render": {
+            "color": "#470141",
+            "image": "icon/ob_warning.png"
+          }
+        },
+        {
+          "id": "c5949c3d-870b-4f84-89b8-e9c45a249aaf",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 00:33:20 UTC 2026",
+          "start": "Thu Jan 15 00:33:20 UTC 2026",
+          "original_end": "Thu Jan 15 00:05:00 UTC 2026",
+          "end": "Thu Jan 15 00:50:00 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_4_3_read_descriptor",
+            "status": "FINISHED",
+            "priority": "0",
+            "tolerance": "100",
+            "description": ""
+          },
+          "render": {
+            "color": "#470141"
+          }
+        },
+        {
+          "id": "f9182a2a-d80e-4ba4-877a-a01a2159a02b",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 00:33:20 UTC 2026",
+          "start": "Thu Jan 15 00:33:20 UTC 2026",
+          "original_end": "Thu Jan 15 00:05:00 UTC 2026",
+          "end": "Thu Jan 15 00:50:00 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_4_4_read_descriptor",
+            "status": "FINISHED",
+            "priority": "0",
+            "tolerance": "100",
+            "description": ""
+          },
+          "render": {
+            "color": "#470141"
+          }
+        },
+        {
+          "id": "3feed787-612a-41d6-9056-1f05ce1de536",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 00:33:20 UTC 2026",
+          "start": "Thu Jan 15 00:33:20 UTC 2026",
+          "original_end": "Thu Jan 15 00:05:00 UTC 2026",
+          "end": "Thu Jan 15 00:50:00 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_4_5_read_descriptor",
+            "status": "FINISHED",
+            "priority": "0",
+            "tolerance": "100",
+            "description": ""
+          },
+          "render": {
+            "color": "#470141"
+          }
+        }
+      ]
+    },
+    {
+      "id": "323dadac-5385-4d0d-ba1c-02a3a92e010b",
+      "namespace": "SOURCE1",
+      "original_start": "Thu Jan 15 00:33:20 UTC 2026",
+      "start": "Thu Jan 15 00:33:20 UTC 2026",
+      "original_end": "Thu Jan 15 00:05:00 UTC 2026",
+      "end": "Thu Jan 15 00:50:00 UTC 2026",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Activity_5",
+        "status": "FINISHED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "1",
+        "tolerance": "100",
+        "description": "description_5 Activity_5"
+      },
+      "render": {
+        "color": "#057621"
+      },
+      "activities": [
+        {
+          "id": "534a9110-a6bc-418a-a81c-67e22c48c460",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 00:33:20 UTC 2026",
+          "start": "Thu Jan 15 00:33:20 UTC 2026",
+          "original_end": "Thu Jan 15 00:05:00 UTC 2026",
+          "end": "Thu Jan 15 00:50:00 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_5_0_read_descriptor",
+            "status": "FINISHED",
+            "priority": "1",
+            "tolerance": "100",
+            "description": ""
+          },
+          "render": {
+            "color": "#057621"
+          }
+        },
+        {
+          "id": "965f2333-09c9-4534-b7e9-fc7a15ae2921",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 00:33:20 UTC 2026",
+          "start": "Thu Jan 15 00:33:20 UTC 2026",
+          "original_end": "Thu Jan 15 00:05:00 UTC 2026",
+          "end": "Thu Jan 15 00:50:00 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_5_1",
+            "status": "FINISHED",
+            "priority": "1",
+            "tolerance": "100",
+            "description": "description_Activity_5_1_activity_1"
+          },
+          "render": {
+            "color": "#057621"
+          }
+        }
+      ]
+    },
+    {
+      "id": "5559ab3a-4c9c-488d-8ca4-fcda46e4873a",
+      "namespace": "SOURCE1",
+      "original_start": "",
+      "start": "Thu Jan 15 00:33:20 UTC 2026",
+      "original_end": "",
+      "end": "Thu Jan 15 01:31:40 UTC 2026",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Session_6_read_descriptor",
+        "status": "STARTED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "3",
+        "tolerance": "100",
+        "description": ""
+      },
+      "render": {
+        "color": "#682407"
+      },
+      "activities": [
+        {
+          "id": "e5e3df96-6aea-4ccc-bd1f-fb3249160c70",
+          "namespace": "SOURCE1",
+          "original_start": "",
+          "start": "Thu Jan 15 00:33:20 UTC 2026",
+          "original_end": "",
+          "end": "Thu Jan 15 01:31:40 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Session_6_0_read_descriptor",
+            "status": "STARTED",
+            "priority": "3",
+            "tolerance": "100",
+            "description": ""
+          },
+          "render": {
+            "color": "#682407"
+          }
+        }
+      ]
+    },
+    {
+      "id": "0c5479f0-626f-4a10-8ae1-a7612dc7c659",
+      "namespace": "SOURCE1",
+      "original_start": "Thu Jan 15 00:40:00 UTC 2026",
+      "start": "Thu Jan 15 00:41:40 UTC 2026",
+      "original_end": "Thu Jan 15 00:04:50 UTC 2026",
+      "end": "Thu Jan 15 00:50:00 UTC 2026",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Session_7_read_descriptor",
+        "status": "FINISHED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "0",
+        "tolerance": "100",
+        "description": ""
+      },
+      "render": {
+        "color": "#475714"
+      },
+      "activities": [
+        {
+          "id": "038d61dc-cf77-4770-8f43-94ee6085bbbe",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 00:40:00 UTC 2026",
+          "start": "Thu Jan 15 00:41:40 UTC 2026",
+          "original_end": "Thu Jan 15 00:04:50 UTC 2026",
+          "end": "Thu Jan 15 00:50:00 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Session_7_0",
+            "status": "FINISHED",
+            "priority": "0",
+            "tolerance": "100",
+            "description": "description_Session_7_0_activity_0"
+          },
+          "render": {
+            "color": "#475714"
+          }
+        }
+      ]
+    },
+    {
+      "id": "37e3c2d8-3d71-4be1-b17e-e77e5a044b1b",
+      "namespace": "SOURCE1",
+      "original_start": "",
+      "start": "Wed Jan 14 23:43:20 UTC 2026",
+      "original_end": "",
+      "end": "",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Events8_read_descriptor",
+        "status": "RUNNING",
+        "type": "type1",
+        "system": "system1",
+        "priority": "3",
+        "tolerance": "100",
+        "description": ""
+      },
+      "render": {
+        "color": "#875821",
+        "image": "icon/ob_green_square.png"
+      },
+      "activities": [
+        {
+          "id": "7ec8a3ec-9f0a-48f2-a68a-e1602cf3ade7",
+          "namespace": "SOURCE1",
+          "original_start": "",
+          "start": "Wed Jan 14 23:43:20 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Events_8_0_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text",
+            "status": "RUNNING",
+            "priority": "3",
+            "tolerance": "100",
+            "description": "description_Events_8_0_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_activity_0"
+          },
+          "render": {
+            "color": "#875821",
+            "image": "icon/ob_green_square.png"
+          }
+        }
+      ]
+    },
+    {
+      "id": "796fd789-9606-464c-b57c-aebb8b6cb8c0",
+      "namespace": "SOURCE1",
+      "original_start": "Thu Jan 15 02:39:32 UTC 2026",
+      "start": "Thu Jan 15 02:40:00 UTC 2026",
+      "original_end": "",
+      "end": "Thu Jan 15 03:26:40 UTC 2026",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Session_9_read_descriptor",
+        "status": "FINISHED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "2",
+        "tolerance": "220",
+        "description": ""
+      },
+      "render": {
+        "color": "#656358"
+      },
+      "activities": [
+        {
+          "id": "0b27316d-77db-45d1-b6ce-18e8eea4ccef",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 02:39:32 UTC 2026",
+          "start": "Thu Jan 15 02:40:00 UTC 2026",
+          "original_end": "",
+          "end": "Thu Jan 15 03:26:40 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Session_9_0_read_descriptor",
+            "status": "FINISHED",
+            "priority": "2",
+            "tolerance": "220",
+            "description": ""
+          },
+          "render": {
+            "color": "#656358"
+          }
+        }
+      ]
+    },
+    {
+      "id": "82bd0a7a-ed3d-49a7-bc54-4c1acdf3acd9",
+      "namespace": "SOURCE1",
+      "original_start": "",
+      "start": "Wed Jan 14 23:43:20 UTC 2026",
+      "original_end": "",
+      "end": "",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Events10_read_descriptor",
+        "status": "RUNNING",
+        "type": "type1",
+        "system": "system1",
+        "priority": "2",
+        "tolerance": "100",
+        "description": ""
+      },
+      "render": {
+        "color": "#612337",
+        "image": "icon/ob_yellow_flag.png"
+      },
+      "activities": [
+        {
+          "id": "a4f26140-e376-462e-94ea-76495ef3657f",
+          "namespace": "SOURCE1",
+          "original_start": "",
+          "start": "Wed Jan 14 23:43:20 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Events_10_0_long_text_long_text_long_text_long_text",
+            "status": "RUNNING",
+            "priority": "2",
+            "tolerance": "100",
+            "description": "description_Events_10_0_long_text_long_text_long_text_long_text_activity_0"
+          },
+          "render": {
+            "color": "#612337",
+            "image": "icon/ob_yellow_flag.png"
+          }
+        }
+      ]
+    },
+    {
+      "id": "69fe55c5-bf73-49c8-9a35-fe3236f94cc5",
+      "namespace": "SOURCE1",
+      "original_start": "Thu Jan 15 15:09:28 UTC 2026",
+      "start": "Thu Jan 15 15:10:00 UTC 2026",
+      "original_end": "",
+      "end": "Thu Jan 15 16:03:20 UTC 2026",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Session_11_read_descriptor",
+        "status": "STARTED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "4",
+        "tolerance": "650",
+        "description": ""
+      },
+      "render": {
+        "color": "#873117"
+      },
+      "activities": [
+        {
+          "id": "2e7abb3d-3119-40e4-b5c0-8d4438011add",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 15:09:28 UTC 2026",
+          "start": "Thu Jan 15 15:10:00 UTC 2026",
+          "original_end": "",
+          "end": "Thu Jan 15 16:03:20 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Session_11_0_read_descriptor",
+            "status": "STARTED",
+            "priority": "4",
+            "tolerance": "650",
+            "description": ""
+          },
+          "render": {
+            "color": "#873117"
+          }
+        }
+      ]
+    },
+    {
+      "id": "26af4259-4b68-4f7f-b339-1aff3ada90a8",
+      "namespace": "SOURCE1",
+      "original_start": "",
+      "start": "Wed Jan 14 23:43:20 UTC 2026",
+      "original_end": "",
+      "end": "",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Events12_read_descriptor",
+        "status": "FINISHED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "2",
+        "tolerance": "100",
+        "description": ""
+      },
+      "render": {
+        "color": "#083178",
+        "image": "icon/ob_start.png"
+      },
+      "activities": [
+        {
+          "id": "fb362b9e-6065-49ad-9439-8cb66b44543a",
+          "namespace": "SOURCE1",
+          "original_start": "",
+          "start": "Wed Jan 14 23:43:20 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Events_12_0_read_descriptor",
+            "status": "FINISHED",
+            "priority": "2",
+            "tolerance": "100",
+            "description": ""
+          },
+          "render": {
+            "color": "#083178",
+            "image": "icon/ob_start.png"
+          }
+        }
+      ]
+    },
+    {
+      "id": "c813d82a-506d-4c74-87a7-503ba3cb6ecb",
+      "namespace": "SOURCE1",
+      "original_start": "Thu Jan 15 02:52:48 UTC 2026",
+      "start": "Thu Jan 15 02:53:20 UTC 2026",
+      "original_end": "",
+      "end": "Thu Jan 15 03:46:40 UTC 2026",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Session_13",
+        "status": "FINISHED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "4",
+        "tolerance": "551",
+        "description": "description_13 Session_13"
+      },
+      "render": {
+        "color": "#576502"
+      },
+      "activities": [
+        {
+          "id": "a6792d4e-836e-4a92-b316-63bed5860d56",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 02:52:48 UTC 2026",
+          "start": "Thu Jan 15 02:53:20 UTC 2026",
+          "original_end": "",
+          "end": "Thu Jan 15 03:46:40 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Session_13_0",
+            "status": "FINISHED",
+            "priority": "4",
+            "tolerance": "551",
+            "description": "description_Session_13_0_activity_0"
+          },
+          "render": {
+            "color": "#576502"
+          }
+        }
+      ]
+    },
+    {
+      "id": "e3e86466-27ba-4236-bc5f-a02c28b91617",
+      "namespace": "SOURCE1",
+      "original_start": "",
+      "start": "Thu Jan 15 02:10:00 UTC 2026",
+      "original_end": "",
+      "end": "",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Events14",
+        "status": "FINISHED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "3",
+        "tolerance": "391",
+        "description": "description_14 Events14"
+      },
+      "render": {
+        "color": "#720783"
+      },
+      "activities": [
+        {
+          "id": "1a415305-85a7-418b-bfa0-624e794bf3d0",
+          "namespace": "SOURCE1",
+          "original_start": "",
+          "start": "Thu Jan 15 02:10:00 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Events_14_0",
+            "status": "FINISHED",
+            "priority": "3",
+            "tolerance": "391",
+            "description": "description_Events_14_0_activity_0"
+          },
+          "render": {
+            "color": "#720783"
+          }
+        }
+      ]
+    },
+    {
+      "id": "4cc9655b-407a-4fbe-b84a-3e27b4fa2cd6",
+      "namespace": "SOURCE1",
+      "original_start": "",
+      "start": "Thu Jan 15 06:30:00 UTC 2026",
+      "original_end": "",
+      "end": "",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Events15_read_descriptor",
+        "status": "FINISHED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "2",
+        "tolerance": "96",
+        "description": ""
+      },
+      "render": {
+        "color": "#811487",
+        "image": "icon/ob_lost_connection.png"
+      },
+      "activities": [
+        {
+          "id": "fd365f02-8dc4-4d94-b33c-147e3ad4198b",
+          "namespace": "SOURCE1",
+          "original_start": "",
+          "start": "Thu Jan 15 06:30:00 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Events_15_0_read_descriptor",
+            "status": "FINISHED",
+            "priority": "2",
+            "tolerance": "96",
+            "description": ""
+          },
+          "render": {
+            "color": "#811487",
+            "image": "icon/ob_lost_connection.png"
+          }
+        }
+      ]
+    },
+    {
+      "id": "95db6998-4648-46fa-b863-e23e907aeead",
+      "namespace": "SOURCE1",
+      "original_start": "Thu Jan 15 21:46:04 UTC 2026",
+      "start": "Thu Jan 15 21:46:40 UTC 2026",
+      "original_end": "",
+      "end": "Thu Jan 15 22:46:40 UTC 2026",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Activity_16_read_descriptor",
+        "status": "STARTED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "3",
+        "tolerance": "56",
+        "description": ""
+      },
+      "render": {
+        "color": "#012655"
+      },
+      "activities": [
+        {
+          "id": "d6ba1a82-ec25-4dd2-9a1f-dd3022fa3d8e",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 21:46:04 UTC 2026",
+          "start": "Thu Jan 15 21:46:40 UTC 2026",
+          "original_end": "",
+          "end": "Thu Jan 15 22:46:40 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_16_0_read_descriptor",
+            "status": "STARTED",
+            "priority": "3",
+            "tolerance": "56",
+            "description": ""
+          },
+          "render": {
+            "color": "#012655"
+          }
+        },
+        {
+          "id": "ab2b1c0f-ab22-46ac-aed7-ad669bdf9626",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 21:46:04 UTC 2026",
+          "start": "Thu Jan 15 21:46:40 UTC 2026",
+          "original_end": "",
+          "end": "Thu Jan 15 22:46:40 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_16_1_long_text_long_text",
+            "status": "STARTED",
+            "priority": "3",
+            "tolerance": "56",
+            "description": "description_Activity_16_1_long_text_long_text_activity_1"
+          },
+          "render": {
+            "color": "#012655"
+          }
+        },
+        {
+          "id": "09d5b07b-b260-4a7e-92d6-3687d155e9c2",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 21:46:04 UTC 2026",
+          "start": "Thu Jan 15 21:46:40 UTC 2026",
+          "original_end": "",
+          "end": "Thu Jan 15 22:46:40 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_16_2",
+            "status": "STARTED",
+            "priority": "3",
+            "tolerance": "56",
+            "description": "description_Activity_16_2_activity_2"
+          },
+          "render": {
+            "color": "#012655"
+          }
+        }
+      ]
+    },
+    {
+      "id": "a316fa4f-bb99-4e4f-afa7-10f66918a824",
+      "namespace": "SOURCE1",
+      "original_start": "Thu Jan 15 03:27:50 UTC 2026",
+      "start": "Thu Jan 15 03:28:20 UTC 2026",
+      "original_end": "",
+      "end": "Thu Jan 15 04:18:20 UTC 2026",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Session_17",
+        "status": "FINISHED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "4",
+        "tolerance": "116",
+        "description": "description_17 Session_17"
+      },
+      "render": {
+        "color": "#251207"
+      },
+      "activities": [
+        {
+          "id": "b1f45049-666a-40ad-875c-d43e39df75f2",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 03:27:50 UTC 2026",
+          "start": "Thu Jan 15 03:28:20 UTC 2026",
+          "original_end": "",
+          "end": "Thu Jan 15 04:18:20 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Session_17_0",
+            "status": "FINISHED",
+            "priority": "4",
+            "tolerance": "116",
+            "description": "description_Session_17_0_activity_0"
+          },
+          "render": {
+            "color": "#251207",
+            "image": "icon/ob_connect.png"
+          }
+        }
+      ]
+    },
+    {
+      "id": "91b4c8c9-3122-49f5-b7db-db0a63595f18",
+      "namespace": "SOURCE1",
+      "original_start": "",
+      "start": "Thu Jan 15 08:00:00 UTC 2026",
+      "original_end": "",
+      "end": "",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Events18_read_descriptor",
+        "status": "FINISHED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "4",
+        "tolerance": "360",
+        "description": ""
+      },
+      "render": {
+        "color": "#028303",
+        "image": "icon/ob_purple_square.png"
+      },
+      "activities": [
+        {
+          "id": "a94bfa6e-70d0-49b5-8c93-6846e98cefdb",
+          "namespace": "SOURCE1",
+          "original_start": "",
+          "start": "Thu Jan 15 08:00:00 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Events_18_0_read_descriptor",
+            "status": "FINISHED",
+            "priority": "4",
+            "tolerance": "360",
+            "description": ""
+          },
+          "render": {
+            "color": "#028303",
+            "image": "icon/ob_purple_square.png"
+          }
+        }
+      ]
+    },
+    {
+      "id": "fc889707-1bb2-4007-9fd6-d60bf9fe7f6b",
+      "namespace": "SOURCE1",
+      "original_start": "Thu Jan 15 19:19:32 UTC 2026",
+      "start": "Thu Jan 15 19:20:00 UTC 2026",
+      "original_end": "",
+      "end": "Thu Jan 15 20:06:40 UTC 2026",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Session_19",
+        "status": "FINISHED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "1",
+        "tolerance": "390",
+        "description": "description_19 Session_19"
+      },
+      "render": {
+        "color": "#588773"
+      },
+      "activities": [
+        {
+          "id": "804d694b-e55b-4fd7-a870-1b9588b81b9a",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 19:19:32 UTC 2026",
+          "start": "Thu Jan 15 19:20:00 UTC 2026",
+          "original_end": "",
+          "end": "Thu Jan 15 20:06:40 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Session_19_0_read_descriptor",
+            "status": "FINISHED",
+            "priority": "1",
+            "tolerance": "390",
+            "description": ""
+          },
+          "render": {
+            "color": "#588773"
+          }
+        }
+      ]
+    },
+    {
+      "id": "9ebe2942-ba63-47d0-a0a0-81061150b58e",
+      "namespace": "SOURCE1",
+      "original_start": "",
+      "start": "Thu Jan 15 01:23:20 UTC 2026",
+      "original_end": "",
+      "end": "",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Events20",
+        "status": "FINISHED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "1",
+        "tolerance": "100",
+        "description": "description_20 Events20"
+      },
+      "render": {
+        "color": "#354455",
+        "image": "icon/ob_stop.png"
+      },
+      "activities": [
+        {
+          "id": "9c185ca1-13c2-4dc3-b5cc-390102c4e772",
+          "namespace": "SOURCE1",
+          "original_start": "",
+          "start": "Thu Jan 15 01:23:20 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Events_20_0",
+            "status": "FINISHED",
+            "priority": "1",
+            "tolerance": "100",
+            "description": "description_Events_20_0_activity_0"
+          },
+          "render": {
+            "color": "#354455",
+            "image": "icon/ob_stop.png"
+          }
+        }
+      ]
+    },
+    {
+      "id": "30760d88-42da-4e46-bc3a-3a7cb3cfa3f6",
+      "namespace": "SOURCE1",
+      "original_start": "",
+      "start": "Thu Jan 15 01:06:40 UTC 2026",
+      "original_end": "",
+      "end": "",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Events21",
+        "status": "FINISHED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "4",
+        "tolerance": "100",
+        "description": "description_21 Events21"
+      },
+      "render": {
+        "color": "#720301",
+        "image": "icon/ob_data.png"
+      },
+      "activities": [
+        {
+          "id": "65905b87-16fc-4eed-b6bf-c13ba15475fd",
+          "namespace": "SOURCE1",
+          "original_start": "",
+          "start": "Thu Jan 15 01:06:40 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Events_21_0_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text",
+            "status": "FINISHED",
+            "priority": "4",
+            "tolerance": "100",
+            "description": "description_Events_21_0_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_activity_0"
+          },
+          "render": {
+            "color": "#720301",
+            "image": "icon/ob_data.png"
+          }
+        }
+      ]
+    },
+    {
+      "id": "6c95ffdc-4a39-4621-988b-2410a075a5d4",
+      "namespace": "SOURCE1",
+      "original_start": "",
+      "start": "Thu Jan 15 01:06:40 UTC 2026",
+      "original_end": "",
+      "end": "",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Events22",
+        "status": "FINISHED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "2",
+        "tolerance": "100",
+        "description": "description_22 Events22"
+      },
+      "render": {
+        "color": "#273874",
+        "image": "icon/ob_green_flag.png"
+      },
+      "activities": [
+        {
+          "id": "f7b0077d-30a3-4437-8777-6d51766ea561",
+          "namespace": "SOURCE1",
+          "original_start": "",
+          "start": "Thu Jan 15 01:06:40 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Events_22_0_read_descriptor",
+            "status": "FINISHED",
+            "priority": "2",
+            "tolerance": "100",
+            "description": ""
+          },
+          "render": {
+            "color": "#273874",
+            "image": "icon/ob_green_flag.png"
+          }
+        }
+      ]
+    },
+    {
+      "id": "26d5ec8c-1a66-4906-af62-2d5a7ebb8266",
+      "namespace": "SOURCE1",
+      "original_start": "",
+      "start": "Thu Jan 15 01:06:40 UTC 2026",
+      "original_end": "",
+      "end": "",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Events23_read_descriptor",
+        "status": "FINISHED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "0",
+        "tolerance": "100",
+        "description": ""
+      },
+      "render": {
+        "color": "#774574"
+      },
+      "activities": [
+        {
+          "id": "b944cab0-9ef7-4d05-83b5-a738c626bbfb",
+          "namespace": "SOURCE1",
+          "original_start": "",
+          "start": "Thu Jan 15 01:06:40 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Events_23_0_read_descriptor",
+            "status": "FINISHED",
+            "priority": "0",
+            "tolerance": "100",
+            "description": ""
+          },
+          "render": {
+            "color": "#774574"
+          }
+        }
+      ]
+    },
+    {
+      "id": "032fa449-466c-4377-a188-51e31ce6fbde",
+      "namespace": "SOURCE1",
+      "original_start": "",
+      "start": "Thu Jan 15 01:06:40 UTC 2026",
+      "original_end": "",
+      "end": "",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Activity_24",
+        "status": "FINISHED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "0",
+        "tolerance": "100",
+        "description": "description_24 Activity_24"
+      },
+      "render": {
+        "color": "#252703",
+        "image": "icon/ob_warning.png"
+      },
+      "activities": [
+        {
+          "id": "9fa463fc-6848-4aec-996c-4a420786c2d2",
+          "namespace": "SOURCE1",
+          "original_start": "",
+          "start": "Thu Jan 15 01:06:40 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_24_0_read_descriptor",
+            "status": "FINISHED",
+            "priority": "0",
+            "tolerance": "100",
+            "description": ""
+          },
+          "render": {
+            "color": "#252703",
+            "image": "icon/ob_warning.png"
+          }
+        },
+        {
+          "id": "8075aeaa-e5be-44dd-8335-6c5bfd170568",
+          "namespace": "SOURCE1",
+          "original_start": "",
+          "start": "Thu Jan 15 01:06:40 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_24_1_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text",
+            "status": "FINISHED",
+            "priority": "0",
+            "tolerance": "100",
+            "description": "description_Activity_24_1_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_activity_1"
+          },
+          "render": {
+            "color": "#252703",
+            "image": "icon/ob_warning.png"
+          }
+        }
+      ]
+    },
+    {
+      "id": "28d38a99-27e4-4d54-a70e-984a4c011047",
+      "namespace": "SOURCE1",
+      "original_start": "",
+      "start": "Thu Jan 15 01:06:40 UTC 2026",
+      "original_end": "",
+      "end": "",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Events25",
+        "status": "FINISHED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "2",
+        "tolerance": "100",
+        "description": "description_25 Events25"
+      },
+      "render": {
+        "color": "#703643",
+        "image": "icon/ob_orange_square.png"
+      },
+      "activities": [
+        {
+          "id": "3ffc6970-1b3a-4e6c-b688-a63e9a09109e",
+          "namespace": "SOURCE1",
+          "original_start": "",
+          "start": "Thu Jan 15 01:06:40 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Events_25_0_read_descriptor",
+            "status": "FINISHED",
+            "priority": "2",
+            "tolerance": "100",
+            "description": ""
+          },
+          "render": {
+            "color": "#703643",
+            "image": "icon/ob_orange_square.png"
+          }
+        }
+      ]
+    },
+    {
+      "id": "076000ec-4195-4f04-875a-080fae142e15",
+      "namespace": "SOURCE1",
+      "original_start": "",
+      "start": "Thu Jan 15 01:06:40 UTC 2026",
+      "original_end": "",
+      "end": "",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Events26_read_descriptor",
+        "status": "STARTED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "1",
+        "tolerance": "100",
+        "description": ""
+      },
+      "render": {
+        "color": "#003560"
+      },
+      "activities": [
+        {
+          "id": "e7cb976b-5676-4cc0-8a60-aae68e7f397c",
+          "namespace": "SOURCE1",
+          "original_start": "",
+          "start": "Thu Jan 15 01:06:40 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Events_26_0_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text",
+            "status": "STARTED",
+            "priority": "1",
+            "tolerance": "100",
+            "description": "description_Events_26_0_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_activity_0"
+          },
+          "render": {
+            "color": "#003560"
+          }
+        }
+      ]
+    },
+    {
+      "id": "42c2bf89-9cf9-4d97-ae9c-a8414d41a0fe",
+      "namespace": "SOURCE1",
+      "original_start": "",
+      "start": "Thu Jan 15 01:06:40 UTC 2026",
+      "original_end": "",
+      "end": "",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Events27_read_descriptor",
+        "status": "RUNNING",
+        "type": "type1",
+        "system": "system1",
+        "priority": "4",
+        "tolerance": "100",
+        "description": ""
+      },
+      "render": {
+        "color": "#150620",
+        "image": "icon/ob_green_square.png"
+      },
+      "activities": [
+        {
+          "id": "4d93ccd9-c04a-4522-8820-883886dc7455",
+          "namespace": "SOURCE1",
+          "original_start": "",
+          "start": "Thu Jan 15 01:06:40 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Events_27_0_read_descriptor",
+            "status": "RUNNING",
+            "priority": "4",
+            "tolerance": "100",
+            "description": ""
+          },
+          "render": {
+            "color": "#150620",
+            "image": "icon/ob_green_square.png"
+          }
+        }
+      ]
+    },
+    {
+      "id": "658895e9-d5e3-4d51-9010-990c1df31b3a",
+      "namespace": "SOURCE1",
+      "original_start": "",
+      "start": "Thu Jan 15 01:06:40 UTC 2026",
+      "original_end": "",
+      "end": "",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Events28_read_descriptor",
+        "status": "FINISHED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "1",
+        "tolerance": "100",
+        "description": ""
+      },
+      "render": {
+        "color": "#450132"
+      },
+      "activities": [
+        {
+          "id": "e2d4d32f-eadf-4287-a46b-83af38ce2f5f",
+          "namespace": "SOURCE1",
+          "original_start": "",
+          "start": "Thu Jan 15 01:06:40 UTC 2026",
+          "original_end": "",
+          "end": "",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Events_28_0_read_descriptor",
+            "status": "FINISHED",
+            "priority": "1",
+            "tolerance": "100",
+            "description": ""
+          },
+          "render": {
+            "color": "#450132"
+          }
+        }
+      ]
+    },
+    {
+      "id": "dd98d621-5631-4d2b-b47b-8f07affeab5d",
+      "namespace": "SOURCE1",
+      "original_start": "Thu Jan 15 01:54:34 UTC 2026",
+      "start": "Thu Jan 15 01:55:00 UTC 2026",
+      "original_end": "",
+      "end": "Thu Jan 15 02:38:20 UTC 2026",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Session_29",
+        "status": "STARTED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "3",
+        "tolerance": "700",
+        "description": "description_29 Session_29"
+      },
+      "render": {
+        "color": "#824570"
+      },
+      "activities": [
+        {
+          "id": "5ddced48-349f-4a79-b2c1-0bbdf5c51ca3",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 01:54:34 UTC 2026",
+          "start": "Thu Jan 15 01:55:00 UTC 2026",
+          "original_end": "",
+          "end": "Thu Jan 15 02:38:20 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Session_29_0_read_descriptor",
+            "status": "STARTED",
+            "priority": "3",
+            "tolerance": "700",
+            "description": ""
+          },
+          "render": {
+            "color": "#824570"
+          }
+        }
+      ]
+    },
+    {
+      "id": "57ed3b4a-9a5d-4fbd-8057-f85090ff9c7a",
+      "namespace": "SOURCE1",
+      "original_start": "Thu Jan 15 01:23:20 UTC 2026",
+      "start": "Thu Jan 15 01:23:20 UTC 2026",
+      "original_end": "Thu Jan 15 00:13:20 UTC 2026",
+      "end": "Thu Jan 15 02:13:20 UTC 2026",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Activity_30_read_descriptor",
+        "status": "FINISHED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "0",
+        "tolerance": "100",
+        "description": ""
+      },
+      "render": {
+        "color": "#482781"
+      },
+      "activities": [
+        {
+          "id": "2334461e-1c56-49d1-8971-a915843ef30d",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 01:23:20 UTC 2026",
+          "start": "Thu Jan 15 01:23:20 UTC 2026",
+          "original_end": "Thu Jan 15 00:13:20 UTC 2026",
+          "end": "Thu Jan 15 02:13:20 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_30_0_read_descriptor",
+            "status": "FINISHED",
+            "priority": "0",
+            "tolerance": "100",
+            "description": ""
+          },
+          "render": {
+            "color": "#482781"
+          }
+        },
+        {
+          "id": "43774ddd-68b8-4563-80e1-de60de026b0c",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 01:23:20 UTC 2026",
+          "start": "Thu Jan 15 01:23:20 UTC 2026",
+          "original_end": "Thu Jan 15 00:13:20 UTC 2026",
+          "end": "Thu Jan 15 02:13:20 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_30_1",
+            "status": "FINISHED",
+            "priority": "0",
+            "tolerance": "100",
+            "description": "description_Activity_30_1_activity_1"
+          },
+          "render": {
+            "color": "#482781"
+          }
+        },
+        {
+          "id": "0e0d6753-af2b-4913-80c9-0f0fd906d035",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 01:23:20 UTC 2026",
+          "start": "Thu Jan 15 01:23:20 UTC 2026",
+          "original_end": "Thu Jan 15 00:13:20 UTC 2026",
+          "end": "Thu Jan 15 02:13:20 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_30_2_read_descriptor",
+            "status": "FINISHED",
+            "priority": "0",
+            "tolerance": "100",
+            "description": ""
+          },
+          "render": {
+            "color": "#482781"
+          }
+        },
+        {
+          "id": "8435a899-3c12-4e4d-ba47-c79ad11fa158",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 01:23:20 UTC 2026",
+          "start": "Thu Jan 15 01:23:20 UTC 2026",
+          "original_end": "Thu Jan 15 00:13:20 UTC 2026",
+          "end": "Thu Jan 15 02:13:20 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_30_3_read_descriptor",
+            "status": "FINISHED",
+            "priority": "0",
+            "tolerance": "100",
+            "description": ""
+          },
+          "render": {
+            "color": "#482781"
+          }
+        },
+        {
+          "id": "c886fd9e-9411-4ad8-b38e-7fed8544c605",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 01:23:20 UTC 2026",
+          "start": "Thu Jan 15 01:23:20 UTC 2026",
+          "original_end": "Thu Jan 15 00:13:20 UTC 2026",
+          "end": "Thu Jan 15 02:13:20 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_30_4_long_text_long_text_long_text",
+            "status": "FINISHED",
+            "priority": "0",
+            "tolerance": "100",
+            "description": "description_Activity_30_4_long_text_long_text_long_text_activity_4"
+          },
+          "render": {
+            "color": "#482781"
+          }
+        },
+        {
+          "id": "1f5a186f-8448-4d87-9790-afad1303dcd5",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 01:23:20 UTC 2026",
+          "start": "Thu Jan 15 01:23:20 UTC 2026",
+          "original_end": "Thu Jan 15 00:13:20 UTC 2026",
+          "end": "Thu Jan 15 02:13:20 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_30_5_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text",
+            "status": "FINISHED",
+            "priority": "0",
+            "tolerance": "100",
+            "description": "description_Activity_30_5_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_long_text_activity_5"
+          },
+          "render": {
+            "color": "#482781"
+          }
+        },
+        {
+          "id": "3e787647-05a2-4f8e-a8ce-51d9e433f36d",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 01:23:20 UTC 2026",
+          "start": "Thu Jan 15 01:23:20 UTC 2026",
+          "original_end": "Thu Jan 15 00:13:20 UTC 2026",
+          "end": "Thu Jan 15 02:13:20 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_30_6_long_text_long_text",
+            "status": "FINISHED",
+            "priority": "0",
+            "tolerance": "100",
+            "description": "description_Activity_30_6_long_text_long_text_activity_6"
+          },
+          "render": {
+            "color": "#482781"
+          }
+        },
+        {
+          "id": "b9d13501-a139-44e1-9d8a-98144a195744",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 01:23:20 UTC 2026",
+          "start": "Thu Jan 15 01:23:20 UTC 2026",
+          "original_end": "Thu Jan 15 00:13:20 UTC 2026",
+          "end": "Thu Jan 15 02:13:20 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_30_7",
+            "status": "FINISHED",
+            "priority": "0",
+            "tolerance": "100",
+            "description": "description_Activity_30_7_activity_7"
+          },
+          "render": {
+            "color": "#482781"
+          }
+        },
+        {
+          "id": "f60b3588-8aa5-47c9-93ab-62c1b7bb7341",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 01:23:20 UTC 2026",
+          "start": "Thu Jan 15 01:23:20 UTC 2026",
+          "original_end": "Thu Jan 15 00:13:20 UTC 2026",
+          "end": "Thu Jan 15 02:13:20 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_30_8_read_descriptor",
+            "status": "FINISHED",
+            "priority": "0",
+            "tolerance": "100",
+            "description": ""
+          },
+          "render": {
+            "color": "#482781"
+          }
+        },
+        {
+          "id": "cbecb20a-2361-4ef1-b3b9-fa19206a139f",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 01:23:20 UTC 2026",
+          "start": "Thu Jan 15 01:23:20 UTC 2026",
+          "original_end": "Thu Jan 15 00:13:20 UTC 2026",
+          "end": "Thu Jan 15 02:13:20 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_30_9_read_descriptor",
+            "status": "FINISHED",
+            "priority": "0",
+            "tolerance": "100",
+            "description": ""
+          },
+          "render": {
+            "color": "#482781"
+          }
+        },
+        {
+          "id": "37334160-463a-4194-9ab9-4c84464aa03f",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 01:23:20 UTC 2026",
+          "start": "Thu Jan 15 01:23:20 UTC 2026",
+          "original_end": "Thu Jan 15 00:13:20 UTC 2026",
+          "end": "Thu Jan 15 02:13:20 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_30_10",
+            "status": "FINISHED",
+            "priority": "0",
+            "tolerance": "100",
+            "description": "description_Activity_30_10_activity_10"
+          },
+          "render": {
+            "color": "#482781"
+          }
+        },
+        {
+          "id": "adc04dcd-6c32-4cfd-a232-d4669361a837",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 01:23:20 UTC 2026",
+          "start": "Thu Jan 15 01:23:20 UTC 2026",
+          "original_end": "Thu Jan 15 00:13:20 UTC 2026",
+          "end": "Thu Jan 15 02:13:20 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_30_11",
+            "status": "FINISHED",
+            "priority": "0",
+            "tolerance": "100",
+            "description": "description_Activity_30_11_activity_11"
+          },
+          "render": {
+            "color": "#482781"
+          }
+        }
+      ]
+    },
+    {
+      "id": "239b4bcc-abc1-4c7f-8ecf-a09a1f0447e4",
+      "namespace": "SOURCE1",
+      "original_start": "Thu Jan 15 12:52:42 UTC 2026",
+      "start": "Thu Jan 15 12:53:20 UTC 2026",
+      "original_end": "",
+      "end": "Thu Jan 15 13:56:40 UTC 2026",
+      "data": {
+        "namespace": "SOURCE1",
+        "title": "Activity_31",
+        "status": "FINISHED",
+        "type": "type1",
+        "system": "system1",
+        "priority": "3",
+        "description": "description_31 Activity_31"
+      },
+      "render": {
+        "color": "#878563"
+      },
+      "activities": [
+        {
+          "id": "2a391308-6f82-47ba-945d-fe17490942a5",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 12:52:42 UTC 2026",
+          "start": "Thu Jan 15 12:53:20 UTC 2026",
+          "original_end": "",
+          "end": "Thu Jan 15 13:56:40 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_31_0",
+            "status": "FINISHED",
+            "priority": "3",
+            "description": "description_Activity_31_0_activity_0"
+          },
+          "render": {
+            "color": "#878563",
+            "image": "icon/ob_conflict.png"
+          }
+        },
+        {
+          "id": "37880c05-01e4-4331-b8a9-99432a37bc08",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 12:52:42 UTC 2026",
+          "start": "Thu Jan 15 12:53:20 UTC 2026",
+          "original_end": "",
+          "end": "Thu Jan 15 13:56:40 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_31_1_read_descriptor",
+            "status": "FINISHED",
+            "priority": "3",
+            "description": ""
+          },
+          "render": {
+            "color": "#878563"
+          }
+        },
+        {
+          "id": "cdb920a3-c8fe-4b01-b81c-ae97ffee9e48",
+          "namespace": "SOURCE1",
+          "original_start": "Thu Jan 15 12:52:42 UTC 2026",
+          "start": "Thu Jan 15 12:53:20 UTC 2026",
+          "original_end": "",
+          "end": "Thu Jan 15 13:56:40 UTC 2026",
+          "data": {
+            "namespace": "SOURCE1",
+            "title": "Activity_31_2_read_descriptor",
+            "status": "FINISHED",
+            "priority": "3",
+            "description": ""
+          },
+          "render": {
+            "color": "#878563",
+            "image": "icon/ob_conflict.png"
+          }
+        }
+      ]
+    }
+  ]
+}

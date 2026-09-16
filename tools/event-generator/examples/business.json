@@ -1,0 +1,23 @@
+{
+  "namespace": "office",
+  "seed": "business-example",
+  "referenceDate": "2026-01-15T00:00:00Z",
+  "rangeStart": "2026-01-01T00:00:00Z",
+  "rangeEnd": "2026-02-01T00:00:00Z",
+  "pastCount": 12,
+  "futureCount": 12,
+  "density": "sparse",
+  "duration": { "mode": "weighted", "weights": [{ "minutes": 15, "weight": 3 }, { "minutes": 60, "weight": 1 }] },
+  "businessHours": { "enabled": true, "start": "09:00", "end": "17:00" },
+  "includeWeekends": false,
+  "includeHolidays": false,
+  "holidays": ["2026-01-01", "2026-01-19"],
+  "clustering": "realistic",
+  "complexity": "complex",
+  "recurrence": { "probability": 0.35, "intervalDays": 2 },
+  "dependencies": { "probability": 0.5, "maxParents": 2 },
+  "categories": [{ "value": "meeting", "weight": 2 }, { "value": "maintenance", "weight": 1 }],
+  "priorities": [{ "value": "low", "weight": 2 }, { "value": "high", "weight": 1 }],
+  "resources": { "mode": "round-robin", "values": ["system1", "system2", "system3"] },
+  "descriptorProbability": 0.5
+}

@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>OpenBEXI Timeline Generator</title>
+  <link rel="stylesheet" href="./ui/styles.css">
+  <script type="module" src="./ui/app.js"></script>
+</head>
+<body>
+  <header class="page-header">
+    <div><p class="eyebrow">OPENBEXI / TOOLS</p><h1>Timeline generator</h1><p>Configure events, explore the result, and export timeline data.</p></div>
+    <a href="./README.md">Documentation</a>
+  </header>
+  <main class="workspace">
+    <section class="settings panel" aria-labelledby="settings-title">
+      <div class="section-heading"><div><h2 id="settings-title">Generation settings</h2><p>Expand each branch to tune your timeline. All calendar controls use UTC.</p></div></div>
+      <div class="toolbar">
+        <button type="button" id="load-config">Import configuration</button>
+        <button type="button" id="save-config">Save configuration</button>
+        <button type="button" id="reset-config">Reset</button>
+        <input id="config-file" type="file" accept="application/json,.json" hidden>
+      </div>
+      <form id="generator-form" novalidate>
+        <div id="config-tree" aria-label="Generation settings tree"></div>
+        <div class="generate-bar"><button id="generate" class="primary" type="submit">Generate timeline</button><button id="cancel" type="button" hidden>Cancel</button><span id="generation-status" role="status" aria-live="polite">Ready to generate</span></div>
+      </form>
+    </section>
+    <section class="results panel" aria-labelledby="results-title">
+      <div class="section-heading"><div><h2 id="results-title">Timeline preview</h2><p id="result-summary">Your generated events will appear here.</p></div></div>
+      <div id="errors" class="notice error" role="alert" tabindex="-1" hidden></div>
+      <div id="warnings" class="notice warning" hidden></div>
+      <div id="empty-preview" class="empty-preview"><span aria-hidden="true">↔</span><p>Start with the defaults, or create your own scenario.</p><small>Seeded runs with the same configuration produce the same output.</small></div>
+      <div id="preview-content" hidden>
+        <div id="stats" class="stats" aria-label="Generated timeline statistics"></div>
+        <div class="mini-timeline"><svg id="timeline-chart" viewBox="0 0 760 210" role="img" aria-label="Timeline overview of the first 120 events"></svg><p id="chart-caption"></p></div>
+        <div class="toolbar exports"><button type="button" id="download-timeline" class="primary">Download events JSON</button><button type="button" id="download-all">Download all files (ZIP)</button><button type="button" id="download-used-config">Download used configuration</button></div>
+        <p class="preview-note">Preview shows the first 150 events. Downloads contain the complete output, including nested activities. The ZIP also contains daily partitions and descriptors.</p>
+        <div class="table-scroll"><table><caption class="visually-hidden">Generated events</caption><thead><tr><th scope="col">Title</th><th scope="col">Start (UTC)</th><th scope="col">End (UTC)</th><th scope="col">Type</th><th scope="col">Resource</th><th scope="col">Priority</th></tr></thead><tbody id="event-rows"></tbody></table></div>
+        <details class="json-preview"><summary>Inspect generated JSON (first three events)</summary><pre id="json-output"></pre></details>
+      </div>
+    </section>
+  </main>
+  <footer>OpenBEXI timeline data · Configurable and legacy generation modes · Local browser processing</footer>
+</body>
+</html>
