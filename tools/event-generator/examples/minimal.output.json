@@ -1,0 +1,125 @@
+{
+  "dateTimeFormat": "iso8601",
+  "events": [
+    {
+      "id": "dfeae4a9-c55a-48fe-b072-e2348f47c38a",
+      "namespace": "generated",
+      "original_start": "",
+      "start": "Tue Jan 13 08:05:28 UTC 2026",
+      "original_end": "",
+      "end": "Tue Jan 13 08:35:28 UTC 2026",
+      "data": {
+        "namespace": "generated",
+        "title": "Session_0",
+        "status": "FINISHED",
+        "type": "type1",
+        "priority": "4",
+        "description": "description_0 Session_0",
+        "system": "system1"
+      },
+      "render": {
+        "color": "#423324"
+      },
+      "activities": [
+        {
+          "id": "4da49cef-1431-4b6e-83e5-19526d4d2477",
+          "namespace": "generated",
+          "original_start": "",
+          "start": "Tue Jan 13 08:05:28 UTC 2026",
+          "original_end": "",
+          "end": "Tue Jan 13 08:35:28 UTC 2026",
+          "data": {
+            "namespace": "generated",
+            "title": "Session_0_0",
+            "status": "FINISHED",
+            "priority": "4",
+            "description": "description_Session_0_0_activity_0"
+          },
+          "render": {
+            "color": "#423324"
+          }
+        }
+      ]
+    },
+    {
+      "id": "1b0ef4bf-05b6-4efd-b3d8-ca605e0e3c78",
+      "namespace": "generated",
+      "original_start": "",
+      "start": "Thu Jan 15 15:39:52 UTC 2026",
+      "original_end": "",
+      "end": "Thu Jan 15 16:09:52 UTC 2026",
+      "data": {
+        "namespace": "generated",
+        "title": "Session_1",
+        "status": "RUNNING",
+        "type": "type1",
+        "priority": "0",
+        "description": "description_1 Session_1",
+        "system": "system1"
+      },
+      "render": {
+        "color": "#184126"
+      },
+      "activities": [
+        {
+          "id": "41de96c6-6ec6-4208-94b4-538075d6484a",
+          "namespace": "generated",
+          "original_start": "",
+          "start": "Thu Jan 15 15:39:52 UTC 2026",
+          "original_end": "",
+          "end": "Thu Jan 15 16:09:52 UTC 2026",
+          "data": {
+            "namespace": "generated",
+            "title": "Session_1_0",
+            "status": "RUNNING",
+            "priority": "0",
+            "description": "description_Session_1_0_activity_0"
+          },
+          "render": {
+            "color": "#184126"
+          }
+        }
+      ]
+    },
+    {
+      "id": "ad05fcf6-860f-4e64-b3a1-98523f32cb88",
+      "namespace": "generated",
+      "original_start": "",
+      "start": "Sat Jan 24 22:36:09 UTC 2026",
+      "original_end": "",
+      "end": "Sat Jan 24 23:06:09 UTC 2026",
+      "data": {
+        "namespace": "generated",
+        "title": "Session_2",
+        "status": "RUNNING",
+        "type": "type1",
+        "priority": "1",
+        "description": "description_2 Session_2",
+        "system": "system1"
+      },
+      "render": {
+        "color": "#074580"
+      },
+      "activities": [
+        {
+          "id": "a8a6f3ca-78d6-4dea-8ecf-61d55920159a",
+          "namespace": "generated",
+          "original_start": "",
+          "start": "Sat Jan 24 22:36:09 UTC 2026",
+          "original_end": "",
+          "end": "Sat Jan 24 23:06:09 UTC 2026",
+          "data": {
+            "namespace": "generated",
+            "title": "Session_2_0",
+            "status": "RUNNING",
+            "priority": "1",
+            "description": "description_Session_2_0_activity_0"
+          },
+          "render": {
+            "color": "#074580"
+          }
+        }
+      ]
+    }
+  ]
+}

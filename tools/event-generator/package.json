@@ -1,0 +1,13 @@
+{
+  "name": "openbexi-event-generator",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "Seeded OpenBEXI timeline generator with legacy JSON compatibility",
+  "scripts": {
+    "test": "node --test tests/*.test.js",
+    "start": "node serve.js",
+    "examples": "node examples/build.js"
+  },
+  "engines": { "node": ">=20" }
+}

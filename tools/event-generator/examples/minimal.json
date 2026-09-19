@@ -1,0 +1,10 @@
+{
+  "seed": "minimal-example",
+  "pastCount": 1,
+  "futureCount": 2,
+  "complexity": "simple",
+  "duration": { "mode": "fixed", "fixedMinutes": 30 },
+  "pointEventProbability": 0,
+  "descriptorProbability": 0,
+  "overlapProbability": 0
+}

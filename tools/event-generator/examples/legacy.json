@@ -1,0 +1,8 @@
+{
+  "mode": "legacy-simple",
+  "namespace": "SOURCE1",
+  "seed": "legacy-example",
+  "referenceDate": "2026-01-15T00:00:00Z",
+  "dataModel": "data/SOURCE1/yyyy/mm/dd",
+  "legacy": { "eventCount": 32, "days": 1 }
+}
