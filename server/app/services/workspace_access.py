@@ -10,8 +10,9 @@ from .query_access import query_access
 class WorkspaceAccess:
     """Resolve trusted scope at the root, then acquire workspace locks in that order."""
 
-    def __init__(self, identities, repository, queries):
+    def __init__(self, identities, repository, queries, *, preferences=None):
         self.identities, self.repository, self.queries = identities, repository, queries
+        self.preferences = preferences
         self.workspace_id = repository.meta["manifest"]["workspaceId"]
         self._unsubscribe_authorization = identities.subscribe_authorization(self._authorization_changed)
 
@@ -102,6 +103,38 @@ class WorkspaceAccess:
                 pass  # Expiry or concurrent invalidation may already have released it.
             raise
         return result
+
+    def date_availability(self, identity, request):
+        from .date_availability import DateAvailability, record_intervals, request_range
+        from .query_configuration import resolve_query_configuration
+        request_range(request)
+        with self.identities.mutex, self.repository.mutex:
+            current = self._current(identity, "records.read")
+            scope = self._scope(current)
+            self.repository._ensure_available()
+            metadata = self.repository.meta
+            if self.preferences:
+                metadata = self.preferences.apply(metadata, self.preferences.capture())
+            resolved = resolve_query_configuration(metadata, request, scope)
+            selected = [source for source in scope["sourceIds"] if resolved["sourceSelected"](source)]
+            if getattr(self.repository, "lazy", False):
+                result = self.repository.date_availability(request, selected)
+            else:
+                revision = self.repository.meta["manifest"]["revision"]
+                cache_key = (self.repository.meta["manifest"]["generation"], revision)
+                if getattr(self, "_date_cache_key", None) != cache_key:
+                    predicate = resolve_query_configuration(self.repository.meta, {})["predicate"]
+                    sources = {}
+                    for record in self.repository.records.values():
+                        if predicate(record):
+                            sources.setdefault(record["sourceId"], []).append(record)
+                    self._date_cache = DateAvailability({source: record_intervals(records) for source, records in sources.items()})
+                    self._date_cache_key = cache_key
+                result = self._date_cache.read(selected, request)
+            return {**result, "generation": self.repository.meta["manifest"]["generation"],
+                    "revision": self.repository.meta["manifest"]["revision"],
+                    **({"preferencesRevision": metadata["manifest"]["preferencesRevision"]}
+                       if "preferencesRevision" in metadata["manifest"] else {})}
 
     def read(self, identity, operation, *args):
         with self.identities.mutex, self.repository.mutex:

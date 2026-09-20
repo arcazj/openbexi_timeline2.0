@@ -6,8 +6,9 @@ Use the launcher below to prepare and run a checkout.
 
 ## Run the current application
 
-Prerequisites: Python 3.9+ from the project's supported/tested interpreter set,
-Node 22+ with npm, and package-registry access for first setup. From the checkout:
+Prerequisites: Python 3.13 or 3.14 for a new installation (see the
+[compatibility policy](#python-compatibility) for older versions), Node 22+ with
+npm, and package-registry access for first setup. From the checkout:
 
 ```powershell
 python scripts/start.py
@@ -41,6 +42,32 @@ client build already exist. Use the bootstrap launcher for a fresh clone or afte
 dependency changes. Rebuild/restart after application changes and refresh the
 browser to replace an old bundled client.
 
+## Python compatibility
+
+The project retains `requires-python = ">=3.9"`. Its verification matrix targets
+CPython 3.9, 3.10, 3.11, 3.12, 3.13 and 3.14 on Windows and Linux. This is the
+set checked by CI, not a claim that every current check has passed; consult the
+[Candidate Verification results](https://github.com/arcazj/openbexi_timeline2.0/actions/workflows/verify.yml)
+for the commit you use. macOS is not currently in that matrix.
+
+Use Python 3.13 or 3.14 for a new environment. Python 3.9 remains a legacy
+compatibility target but reached upstream end of life on October 31, 2025.
+See the [Python version lifecycle](https://devguide.python.org/versions/) for
+maintenance status. The minimum version in package metadata does not promise
+compatibility with every future Python release. Add a new version to the CI
+matrix and verify dependency installation and the application before claiming
+support for it.
+
+The launcher preserves an existing `.venv` interpreter. To select a different
+version, run it from a base interpreter outside that environment:
+
+```powershell
+py -3.14 scripts/start.py --setup-only --python 3.14
+```
+
+On macOS/Linux use `python3.14` instead of `py -3.14`. After changing versions,
+refresh the project's interpreter in the IDE.
+
 ## Access the REST and Swagger documentation
 
 In the running timeline, open **Help → Developer docs → Swagger (offline)**.
@@ -63,15 +90,27 @@ for the REST routes, authentication and compatibility limits.
 
 ## IntelliJ and fresh clones
 
-The shared **OpenBEXI Timeline test sources** run configuration opens the bundled
-dataset. **OpenBEXI Timeline legacy comparison** opens the SOURCE1/SOURCE2 profile
-and requires the adjacent legacy archive. Both use the bootstrap launcher.
+The shared run configurations use the project's Python SDK and relative paths:
 
-Cloning alone does not execute installation commands. Configure the launch action
-to use `scripts/start.py`, the checkout as working directory, and parameters
-`-- --yaml yaml/default_test.yml` (or the desired bundled profile). The first launch performs
-setup. Select this checkout's `.venv/Scripts/python.exe` afterward; on POSIX use
-`.venv/bin/python`.
+| Run configuration | Profile and data |
+| --- | --- |
+| **OpenBEXI Timeline test sources** | `yaml/test-data/default-dataset.yml`, bundled default dataset |
+| **OpenBEXI Timeline multiple_sources_test** | `yaml/multiple_sources_test.yml`, complete copied `data/SOURCES1` and `data/SOURCES2` archives |
+| **OpenBEXI Timeline legacy comparison** | `yaml/default_test.yml`, external adjacent legacy archive required |
+
+For a fresh clone, enable Python support in IntelliJ and assign an installed
+Python 3.13 or 3.14 interpreter as the project/module SDK. Run one of the shared
+configurations; each calls `scripts/start.py` from the checkout and installs the
+locked dependencies before starting the server. Cloning alone does not execute
+installation commands. After the first setup, change the project/module SDK to
+this checkout's `.venv/Scripts/python.exe` (Windows) or `.venv/bin/python` (POSIX),
+then use **Run** or **Debug** as usual. The shared configurations inherit this
+choice, so they do not depend on a named interpreter from another project.
+
+To prepare the environment before selecting an IDE configuration, run
+`python scripts/start.py --setup-only` in the project terminal. A custom launch
+configuration should use `scripts/start.py`, working directory `$PROJECT_DIR$`,
+and parameters `-- --yaml <profile.yml>`.
 
 The launcher preserves the debugger process when it is already running inside
 the project's `.venv`. Old configurations that call `serve-legacy.py` directly or

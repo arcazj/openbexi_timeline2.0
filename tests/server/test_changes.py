@@ -10,7 +10,7 @@ import pytest
 import uvicorn
 from fastapi.testclient import TestClient
 
-from conftest import BASE, TOKEN
+from conftest import BASE, ROOT, TOKEN
 from server.app.api.changes import BoundedStreamResponse, frame
 from server.app.main import create_app
 from server.app.models.domain import DomainError
@@ -158,7 +158,9 @@ def test_stream_asgi_cleanup_is_bounded_even_before_generator_start(mode):
 
 @pytest.fixture
 def live_changes(tmp_path):
-    app = create_app(tmp_path / "live", TOKEN)
+    # Exercise stream lifecycle with the stable contract fixture. The expanded
+    # demonstration dataset has separate installation/readiness coverage.
+    app = create_app(tmp_path / "live", TOKEN, ROOT / "shared/fixtures/initial-snapshot.json")
     sock = socket.socket()
     sock.bind(("127.0.0.1", 0))
     address = "http://127.0.0.1:" + str(sock.getsockname()[1])

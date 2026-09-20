@@ -8,6 +8,7 @@ const METHODS = { getStatus: 0, createQuery: 1, getQuery: 1, getDensity: 1, getM
 const aborted = () => new DOMException('Operation aborted', 'AbortError');
 METHODS.getQueryRecord = 2;
 METHODS.findMatch = 2;
+METHODS.getDateAvailability = 1;
 METHODS.migrateLegacyFilter = 2;
 const unknownWrite = () => new ProviderError('write_outcome_unknown', 'Local write outcome is unknown; keep this source open and check the original command identity', 503);
 const lostWorker = () => new ProviderError('local_worker_lost', 'The Local worker stopped. Unsaved changes cannot be recovered by reopening the original snapshot', 503);

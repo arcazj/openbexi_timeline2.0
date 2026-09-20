@@ -1,6 +1,7 @@
 import { ProviderError, abortIfNeeded, clone, freeze, uuid, sha256, canonicalJson } from './data-provider.js';
 import { validateSnapshot, validateRecord, validateRelationships, normalizedTimes, LOCAL_LIMITS } from './snapshot.js';
 import { createQueryDataAsync } from './query-core.js';
+import { createDateAvailability } from './date-availability.js';
 import { scopedQueryCounts } from './query-relationships.js';
 import { compileExpression, compileSearch, createRegexBudget } from './filter-expression.js';
 import queryCapabilities from '../../../shared/query-capabilities.json' with { type: 'json' };
@@ -106,6 +107,15 @@ export class LocalProvider {
       throw new ProviderError('snapshot_expired', 'Query expired or belongs to another source', 409);
     }
     return query;
+  }
+
+  async getDateAvailability(input, options = {}) {
+    this._assert(); abortIfNeeded(options.signal);
+    if (this.dateAvailabilityRevision !== this.revision) {
+      this.dateAvailability = createDateAvailability(this.snapshot);
+      this.dateAvailabilityRevision = this.revision;
+    }
+    return { ...this.dateAvailability(input), generation: this.generation, revision: this.revision };
   }
 
   async createQuery(input, options = {}) {

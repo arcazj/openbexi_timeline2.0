@@ -29,9 +29,16 @@ OpenAPI 3.1.1 with the JSON Schema 2020-12 dialect. The checked-in
 | `GET /api/v1/health` | Public health information |
 | `GET /api/v1/workspaces/default/status` | Authenticated workspace/source state |
 | `POST /api/v1/workspaces/default/query-sessions` | Prepare a time-domain query with filters/search and immutable result identity |
+| `POST /api/v1/workspaces/default/date-availability` | Read authorized source date bounds and nearby recorded instants for an empty view |
 | Query-session subresources | Read overview/density and query records; prepare measured layouts and traverse their rows |
 | Workspace record/model/configuration resources | Inspect or modify authorized managed resources, subject to capabilities and concurrency rules |
 | `GET /api/v1/workspaces/default/openapi.json` | Authenticated live specification for registered routes |
+
+Date availability respects the authorized and selected source intersection,
+including saved-filter source restrictions. Content/search predicates do not
+change these source hints. A cached interval lookup serves repeated requests;
+partitioned archives reuse their disposable index and report incomplete coverage
+explicitly. Local snapshots provide the same navigation semantics offline.
 
 The [detailed API guide](reference/implementation/api.md) and generated contract
 define exact payloads, methods, statuses, authentication, revision checks and

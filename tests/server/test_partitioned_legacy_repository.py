@@ -386,3 +386,48 @@ def test_real_api_pins_deferred_identity_density_and_pages_and_exports_all_recor
         assert len(exported.json()["records"]) == 121
         assert client.get(base + "/records").status_code == 422
         assert client.post(base + "/legacy/prefetch", json=window()).json()["status"] == "cached"
+
+
+def test_date_hints_use_cached_verified_intervals_and_survive_restart(archive, monkeypatch):
+    repository = opened(archive)
+    source = repository.reader.sources[0].id
+    request = {"range": {"from": "2025-01-01T00:00:00Z", "to": "2025-01-02T00:00:00Z"}}
+    try:
+        assert repository.date_availability(request, [source])["complete"] is False
+        repository._reconcile()
+        value = repository.date_availability(request, [source])
+        assert value["complete"] is True
+        assert value["previous"] == "2024-05-31T23:59:59.999Z"
+        assert value["next"] is None
+        assert value["sources"][0]["first"] == "2024-01-01T00:00:00.000Z"
+        cache = repository._date_lookup
+        monkeypatch.setattr(repository.reader, "scan", lambda **_: pytest.fail("Availability must not scan raw source data"))
+        assert repository.date_availability(request, [source]) == value
+        assert repository._date_lookup is cache
+        assert repository.date_availability(request, [])["sources"] == []
+    finally:
+        repository.close()
+    repository = opened(archive)
+    try:
+        # Persisted intervals are useful immediately, but freshness is provisional.
+        assert repository.coverage()["indexedFiles"] == 120
+        restored = repository.date_availability(request, [source])
+        assert restored["complete"] is False
+        assert restored["sources"] == value["sources"]
+    finally:
+        repository.close()
+
+
+def test_date_hints_are_invalidated_when_an_indexed_file_disappears(archive):
+    repository = opened(archive)
+    source = repository.reader.sources[0].id
+    request = {"range": {"from": "2025-01-01T00:00:00Z", "to": "2025-01-02T00:00:00Z"}}
+    try:
+        repository._reconcile()
+        assert repository.date_availability(request, [source])["previous"] == "2024-05-31T23:59:59.999Z"
+        path = next(path for path in archive[2] if path.as_posix().endswith("2024/01/01/events.json"))
+        path.unlink()
+        repository._reconcile()
+        assert repository.date_availability(request, [source])["previous"] == "2024-04-29T12:00:00.000Z"
+    finally:
+        repository.close()

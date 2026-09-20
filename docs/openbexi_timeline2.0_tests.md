@@ -6,6 +6,35 @@ Feature tests do not by themselves establish every supported-scale release targe
 
 ## Release 2.0 validation
 
+### Subsequent setup, navigation and CI hardening
+
+The post-release checks add portable IntelliJ configurations, sparse-date
+navigation and measured full-archive workloads. Date-availability tests cover
+authorized source selection, saved filters, deleted/ongoing records, negative
+years, half-open intervals, cache invalidation and stale or unauthorized UI
+responses. Browser checks retain filters and viewport span when jumping between
+recorded dates. The copied archives remain read-only.
+
+CI failures on `dce557013` exposed a real Now-button defect near UTC midnight,
+an oversized SSE contract-test seed, an unsettled Firefox reconnect precondition,
+and an outage assertion tied to only one valid error message. The fixes keep
+real lifecycle and recovery assertions, use a compact explicit SSE fixture, and
+test Now with a fixed clock on both sides of midnight. No retry count or overall
+test timeout was increased to hide these failures.
+
+Local Windows validation on September 20, 2026 passed 525 client tests,
+50 generator tests, 72 provider integration/parity tests and 1,253 Python 3.14
+server tests. One server test was skipped because the local account cannot
+create symbolic links. Focused Python 3.9 checks also passed. These results
+describe the local implementation checks; the full CI matrix below separately
+qualifies each operating system and interpreter combination.
+
+The Windows/Linux CPython 3.9–3.14 matrix remains the qualification source for
+each commit: [Candidate Verification](https://github.com/arcazj/openbexi_timeline2.0/actions/workflows/verify.yml).
+Successful dependency installation alone does not qualify the application.
+
+### Original release evidence
+
 The release adds dataset deep links and expands the default sample to 1,008
 records. Validation on September 20, 2026 includes:
 
@@ -42,7 +71,7 @@ the separate legacy checkout is explicit: `npm run test:reference` requires
 `../openbexi_timeline/tests/data/SOURCES1` and `SOURCES2`. It fails clearly when
 those external fixtures are missing and checks that their source hashes remain
 unchanged. A fresh clone can run its normal suite without the sibling checkout.
-`npm run test:demo` checks the packaged static site and all six dataset deep links.
+`npm run test:demo` checks the packaged static site and all seven dataset deep links.
 
 ## Implementation checkpoint
 
@@ -259,6 +288,15 @@ certification of the new grouping UI or an earthquake archive validation.
   cursors/revisions and descriptors. Qualify SSE lifecycle separately when implemented.
 
 ## Efficiency qualification
+
+Reproduce the copied-archive server workload with
+`.venv/Scripts/python.exe scripts/benchmark-archive.py --rounds 3` (use
+`.venv/bin/python` on POSIX). After `npm run build`, run the complementary
+browser workload with `npm run measure:archive -- --runs 3`.
+See the [API measurements](reference/implementation/archive-performance.md) and
+[browser measurements](reference/implementation/archive-browser-performance.md)
+for the workloads, observations, source receipts and limitations. These samples
+do not replace the larger acceptance targets below.
 
 Retain the [original performance targets](../OpenBEXI_Timeline_Rebuild_Prompt.md#17-performance-targets-and-supported-scale)
 and freeze the measurement environment before tuning. They are acceptance targets,

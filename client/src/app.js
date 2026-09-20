@@ -14,6 +14,7 @@ import './styles/calendar.css';
 import './styles/test-data.css';
 import './styles/descriptor.css';
 import './styles/toolbar.css';
+import './styles/empty-dates.css';
 import { createIcons, icons } from 'lucide';
 import Decimal from 'decimal.js';
 import { createLocalProvider } from './data/worker-provider.js';
@@ -37,6 +38,7 @@ import { mergeNavigationPreviewRows } from './timeline/navigation-preview-rows.j
 import { previewProjector, extendPreviewSessions, reprojectPreviewRows } from './timeline/navigation-preview-projection.js';
 import { navigatePan, navigateZoom, followingOverview, rangeInside, createPanProjector, navigationMap, navigationQueryDomain } from './timeline/navigation-domain.js';
 import { openTimelineCalendar } from './ui/timeline-calendar.js';
+import { mountEmptyDateNavigation } from './ui/empty-date-navigation.js';
 import { calendarRange, centerCalendarRange } from './ui/calendar-time.js';
 import { loadPathPreferences, savePathPreferences } from './ui/source-paths.js';
 import { openModelManager } from './ui/model-manager.js';
@@ -105,6 +107,7 @@ let changeMonitor, timeCommitPending = 0, navigationActive = false;
 let navigation;
 let calendar = null, calendarOpener = null;
 let displayedTimeUnit = null;
+let disposeEmptyDates;
 let bootPending = true;
 let pathCatalog = null, pathPreferences = null;
 let startupDiscovery;
@@ -275,7 +278,10 @@ async function reloadCommittedSource({ provider }) {
   state.info = info; state.generationRequired = false;
   if (generationChanged) { state.selected = null; resetTimeMode(); renderDescriptor(); activateRecordRecovery(); }
   await refreshQuery();
-  if (!current() || state.query === previousQuery) { if (current() && restart) state.generationRequired = true; return null; }
+  if (!current() || state.query === previousQuery) {
+    if (current() && restart) { state.generationRequired = true; showWorkspaceReloadNotice(); updateStatus(); }
+    return null;
+  }
   if (state.selected && state.query?.definitionVersion !== 2) {
     const previousSelection = state.selected, selection = selectionIntent;
     const selectionCurrent = () => current() && selection === selectionIntent && state.selected === previousSelection && !state.localUnavailable;
@@ -510,6 +516,7 @@ async function initialize(provider, snapshot = null, { preserveView = true } = {
     else state.provider.dispose?.();
   }
   state.provider = provider; state.info = info;
+  disposeEmptyDates?.(); disposeEmptyDates = null; $('.empty-state')?.remove();
   windowLoader?.dispose(); clearTimeout(loadingTimer); clearTimeout(overviewTimer); overviewRequest?.abort();
   state.overviewZones = null;
   windowLoader = info.legacy?.lazy ? createWindowLoader(provider, { ratio: info.legacy.loading?.bufferRatio ?? .25 }) : null;
@@ -567,16 +574,24 @@ function showError(error) {
   console.error(error); toast(message);
   if (state.provider instanceof ServerProvider && ([401, 403].includes(error?.status) || error?.code === 'permission_scope_changed')) { clearUnauthorized(); return; }
   if (state.provider instanceof ServerProvider && state.authRequired) return;
+  if (state.provider instanceof ServerProvider && state.generationRequired) { showWorkspaceReloadNotice(); updateStatus(); return; }
   if (state.provider instanceof ServerProvider && error?.code === 'server_unavailable') { activateFallback().catch(failure => toast(failure.message)); return; }
   if (state.provider instanceof ServerProvider) { state.stale = true; $('.notice span').textContent = `Server data may be stale. ${message}`; $('.notice').hidden = false; noticeAction(state.provider.requiresReconnect ? 'reconnect-server' : 'refresh'); }
   updateStatus();
 }
+function showWorkspaceReloadNotice() {
+  $('.notice span').textContent = 'Reload the active workspace to continue.';
+  $('.notice').hidden = false; noticeAction('refresh');
+}
 function requireGenerationRefresh(event) {
+  disposeEmptyDates?.(); disposeEmptyDates = null; $('.empty-state')?.remove();
   changeMonitor?.markBoundary(state.provider, event?.code === 'replay_gap' ? 'replay-gap' : 'generation-changed');
   ++state.epoch; ++layoutIntent; state.queryLoading = false; state.generationRequired = true; state.stale = true;
+  showWorkspaceReloadNotice();
   setBusy(false); resetTimeMode(); tableView.suspend(); $('.overview-plot').dispatchEvent(new Event('pointercancel')); updateStatus();
 }
 function clearUnauthorized() {
+  disposeEmptyDates?.(); disposeEmptyDates = null; $('.empty-state')?.remove();
   changeMonitor?.markBoundary(state.provider, 'authorization-lost');
   changeMonitor?.cancelQueuedReload();
   bandStack?.configure(null);
@@ -1007,7 +1022,24 @@ function render() {
   if (!$('.overview-section').hidden) { renderOverview(state.domain, presentation); updateOverviewWindow(); }
   updateStatus(); renderTable();
   $('.empty-state')?.remove();
-  if (!(state.rows.items || []).some(item => item.record)) { const empty = document.createElement('div'); empty.className = 'empty-state'; empty.innerHTML = state.query.coverage?.complete === false ? '<strong>No loaded records in this range</strong><span>Archive coverage is still being checked</span>' : '<strong>No records in this range</strong><span>Change the range or filters</span>'; plot.append(empty); }
+  disposeEmptyDates?.(); disposeEmptyDates = null;
+  if (state.layout.detailTotal === 0) {
+    const empty = document.createElement('div'); empty.className = 'empty-state';
+    empty.innerHTML = state.query.coverage?.complete === false ? '<strong>No loaded records in this range</strong><span>Archive coverage is still being checked</span>' : '<strong>No records in this range</strong><span>Change the range or filters</span>';
+    plot.append(empty);
+    const provider = state.provider, epoch = state.epoch, from = state.fromMs, to = state.toMs;
+    disposeEmptyDates = mountEmptyDateNavigation(empty, { provider, generation: state.info.generation, input: { range: rangeIso(), filters: structuredClone(state.filter), definitionVersion: state.definitionVersion },
+      sourceLabel: id => [...$('#source-filter').options].find(option => option.value === id)?.textContent || id,
+      dateLabel: value => rangeDate(value),
+      current: () => provider === state.provider && epoch === state.epoch && from === state.fromMs && to === state.toMs && !state.authRequired && !state.generationRequired && !state.localUnavailable,
+      onError: showError, onGenerationChanged: requireGenerationRefresh,
+      navigate: value => {
+        if (state.queryLoading) return;
+        navigation?.cancel(); const target = toMs(value), range = calendarRange(target, timeDecimal(state.toMs).minus(state.fromMs));
+        Object.assign(state, range); followRange(range); rememberSetting('range', rangeIso());
+        refreshQuery({ focusTime: target, navigationOnly: true }).catch(showError);
+      } });
+  }
   $('.scale-cue').textContent = state.query.coverage?.complete === false ? 'Automatic scale pending / provisional coverage' : state.scaleMode === 'adaptive' ? `${state.scaleStrategy === 'automatic' ? 'Row optimized' : 'Manual'} / ${state.map.ratio}x local scale` : state.map.mode === 'fixed' ? 'Reference / Magnified time intervals' : 'Uniform time scale';
   renderScaleCues();
   $('.scale-window').textContent = `${state.scaleMode === 'adaptive' ? 'Adaptive divisions' : state.unit[0] + state.unit.slice(1).toLowerCase()} / ${state.timeZone || 'UTC'}`;
@@ -1306,12 +1338,14 @@ async function handleAction(action) {
   if (action === 'workspace-tools') { navigation?.cancel(); workspaceToolsOpen = !workspaceToolsOpen; updateToolbarStatus(); return refreshLayout(); }
   if (action === 'camera') return setCamera(cameraMode === 'Perspective' ? 'Orthographic' : 'Perspective');
   if (action === 'now') {
-    const now = new Date(), day = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
-    state.domain = { from: day.toISOString(), to: new Date(day.getTime() + 86400000).toISOString() };
-    state.fromMs = String(Math.max(day.getTime(), now.getTime() - 4 * 3600000)); state.toMs = String(Math.min(day.getTime() + 86400000, now.getTime() + 4 * 3600000)); rememberSetting('overview', state.domain); rememberSetting('range', rangeIso()); return refreshQuery({ navigationOnly: true });
+    navigation?.cancel();
+    const now = Date.now(), range = calendarRange(now, 8 * 3600000);
+    Object.assign(state, range); followRange(range); rememberSetting('range', rangeIso());
+    return refreshQuery({ focusTime: now, navigationOnly: true });
   }
   if (action === 'refresh') {
     if (!isLocal() && !state.authRequired && state.info.capabilities?.changeFeed !== false) return changeMonitor.reload();
+    if (!isLocal() && !state.authRequired && state.generationRequired) return reloadCommittedSource({ provider: state.provider });
     const provider = state.provider, intent = sourceIntent, epoch = state.epoch;
     const current = () => provider === state.provider && intent === sourceIntent && epoch === state.epoch;
     try { const info = await provider.getStatus(); if (current()) { const changedGeneration = state.info.generation !== info.generation; state.info = info; if (changedGeneration) { state.selected = null; renderDescriptor(); activateRecordRecovery(); } return refreshQuery(); } }

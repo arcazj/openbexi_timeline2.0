@@ -80,6 +80,7 @@ test('geometry settings apply bounded dimensions and restore the window', async 
 });
 
 test('reference resynchronization is separate from Now and calendar opens creation on its date', async ({ page }) => {
+  await page.clock.setFixedTime(new Date('2026-09-20T23:30:00Z'));
   const reference = await page.evaluate(() => JSON.parse(document.getElementById('timeline-data').textContent).settings.referenceTime);
   await page.getByRole('button', { name: 'Now', exact: true }).click(); await ready(page);
   await expect.poll(() => page.evaluate(() => Math.abs(Number(window.__timelineDebug.centerMs) - Date.now()))).toBeLessThan(10000);
@@ -93,6 +94,19 @@ test('reference resynchronization is separate from Now and calendar opens creati
   await expect(page.locator('#record-form [name=start]')).toHaveValue(new RegExp(`^${date}`));
   await expect(page.getByLabel('Record icon', { exact: true })).toBeVisible();
 });
+
+for (const instant of ['2026-09-20T00:30:00Z', '2026-09-20T23:30:00Z']) {
+  test(`Now centers the current instant across UTC midnight (${instant})`, async ({ page }) => {
+    await page.clock.setFixedTime(new Date(instant));
+    await page.getByRole('button', { name: 'Now', exact: true }).click(); await ready(page);
+    const current = await page.evaluate(() => window.__timelineDebug);
+    expect(Math.abs(Number(current.centerMs) - Date.parse(instant))).toBeLessThan(1);
+    expect(Number(current.fromMs)).toBeLessThan(Date.parse(instant));
+    expect(Number(current.toMs)).toBeGreaterThan(Date.parse(instant));
+    expect(Date.parse(current.domain.from)).toBeLessThanOrEqual(Number(current.fromMs));
+    expect(Date.parse(current.domain.to)).toBeGreaterThanOrEqual(Number(current.toMs));
+  });
+}
 
 test('observed custom JSON fields can group the timeline without authorizing predicate fields', async ({ page }) => {
   const local = new LocalProvider(await page.evaluate(() => JSON.parse(document.getElementById('timeline-data').textContent)));

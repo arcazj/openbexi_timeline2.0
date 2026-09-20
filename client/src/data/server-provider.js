@@ -62,6 +62,7 @@ export class ServerProvider {
   reloadLegacy(options = {}) { return this._request(`${this.base}/legacy/reload`, { ...options, method: 'POST', timeout: options.timeout ?? 330000 }); }
   getLoadingStatus(options = {}) { return this._request(`${this.base}/legacy/loading`, { timeout: 2500, ...options }); }
   prefetchWindow(input, options = {}) { return this._request(`${this.base}/legacy/prefetch`, { timeout: 5000, ...options, method: 'POST', body: input }); }
+  getDateAvailability(input, options = {}) { return this._request(`${this.base}/date-availability`, { ...options, method: 'POST', body: input }); }
   releaseNavigationQuery(id) {
     if (!this.localBrowser || !id) return;
     void fetch(`${this.baseUrl}${this.base}/query-sessions/${encodeURIComponent(id)}`, {

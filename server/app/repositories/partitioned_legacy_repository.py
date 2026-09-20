@@ -10,13 +10,15 @@ import threading
 import time
 from pathlib import Path
 
-from ..models.domain import DomainError, content_checksum, instant_ms, iso_from_ms, json_bytes, now_iso, parse_json
+from ..models.domain import DomainError, content_checksum, instant_ms, iso_from_ms, json_bytes, now_iso, parse_json, MIN_INSTANT_MS
 from ..models.model_catalog import normalize_metadata
 from ..services.legacy_reader import _path_guard, safe_read
 from ..services.legacy_presentation import apply_legacy_presentation
 from ..services.legacy_sources import is_partition_directory, partition_date, partition_interval, partition_paths
 from ..services.preparation_control import checkpoint, cancellable_lock
 from ..services.file_intervals import FileIntervals
+from ..services.date_availability import DateAvailability, record_intervals, MAX_TIME
+from ..services.query_configuration import resolve_query_configuration
 from ..services.query_access import current_query_access
 from .json_repository import atomic_json
 from .legacy_repository import LegacyRepository
@@ -48,9 +50,10 @@ class PartitionedLegacyRepository(LegacyRepository):
         self._metrics = {"windowReads": 0, "bytesRead": 0, "indexFilesRead": 0,
                          "indexFilesReused": 0, "prefetches": 0, "lastWindowMs": 0}
         self._index_path = self.root / "legacy-file-index.json"
-        self._signature = hashlib.sha256(json_bytes([
-            [s.id, str(s.root), s.data_model, s.timezone, s.dialect] for s in self.reader.sources
-        ])).hexdigest()
+        self._signature = hashlib.sha256(json_bytes({
+            "sources": [[s.id, str(s.root), s.data_model, s.timezone, s.dialect] for s in self.reader.sources],
+            "predicates": self.configuration.metadata().get("sourcePredicates", {}),
+        })).hexdigest()
 
     def _latest_range(self):
         if self.loading.get("initialRange"):
@@ -104,7 +107,7 @@ class PartitionedLegacyRepository(LegacyRepository):
         try:
             value = parse_json(safe_read(self._index_path, self.root, 64 * 1024 * 1024))
             checksum = value.pop("sha256", None)
-            if (value.get("version") != 2 or value.get("configuration") != self._signature
+            if (value.get("version") != 4 or value.get("configuration") != self._signature
                     or checksum != hashlib.sha256(json_bytes(value)).hexdigest()):
                 return
             entries = value["entries"]
@@ -122,6 +125,12 @@ class PartitionedLegacyRepository(LegacyRepository):
                         or not isinstance(entry["ids"], list) or len(entry["ids"]) != entry["count"]
                         or any(not isinstance(identity, str) or len(identity) > 128 for identity in entry["ids"])
                         or not isinstance(entry.get("signatures"), dict)
+                        or not isinstance(entry.get("dateIntervals"), list)
+                        or len(entry["dateIntervals"]) > entry["count"]
+                        or any(not isinstance(pair, list) or len(pair) != 2
+                               or any(type(value) is not int for value in pair)
+                               or not MIN_INSTANT_MS <= pair[0] < pair[1] <= MAX_TIME + 2
+                               for pair in entry["dateIntervals"])
                         or any(not isinstance(key, str) or not isinstance(digest, str) or len(digest) != 64
                                for key, digest in entry["signatures"].items())
                         or (entry["from"] is not None and instant_ms(entry["from"]) >= instant_ms(entry["to"]))):
@@ -136,7 +145,7 @@ class PartitionedLegacyRepository(LegacyRepository):
 
     def _persist_index(self):
         with self._index_lock:
-            value = {"version": 2, "configuration": self._signature, "checkedAt": self._checked_at,
+            value = {"version": 4, "configuration": self._signature, "checkedAt": self._checked_at,
                      "entries": list(self._entries.values())}
         raw = json_bytes(value)
         if len(raw) > 64 * 1024 * 1024:
@@ -184,6 +193,17 @@ class PartitionedLegacyRepository(LegacyRepository):
             return {**self.coverage(source_ids), "metrics": {**self._metrics,
                     "cacheBytes": self.reader._cache_size, "cacheLimitBytes": self.reader.limits.cache_bytes}}
 
+    def date_availability(self, request, source_ids):
+        with self._index_lock:
+            if getattr(self, "_date_lookup", None) is None:
+                sources = {}
+                for entry in self._entries.values():
+                    sources.setdefault(entry["sourceId"], []).extend(entry["dateIntervals"])
+                self._date_lookup = DateAvailability(sources)
+            coverage = self.coverage(source_ids)
+            return self._date_lookup.read(source_ids, request, complete=coverage["complete"],
+                                          index_version=coverage["indexVersion"])
+
     def _index_file(self, source, path):
         key = (source.id, path.relative_to(source.root).as_posix())
         stamp = self._stamp(path, source)
@@ -205,6 +225,8 @@ class PartitionedLegacyRepository(LegacyRepository):
         entry = {"sourceId": source.id, "file": key[1], "stamp": stamp, "count": len(records),
                  "ids": [record["id"] for record in records],
                  "from": bounds["from"] if bounds else None, "to": bounds["to"] if bounds else None}
+        predicate = resolve_query_configuration(self.meta, {})["predicate"]
+        entry["dateIntervals"] = record_intervals(record for record in records if predicate(record))
         entry["signatures"] = {record["id"]: hashlib.sha256(json_bytes({
             key: value for key, value in record.items() if key not in ("createdAt", "updatedAt", "extensions", "order")
         })).hexdigest() for record in records}
@@ -212,6 +234,7 @@ class PartitionedLegacyRepository(LegacyRepository):
         with self._index_lock:
             self._entries[key] = entry
             self._interval_lookup = None
+            self._date_lookup = None
             self._errors.pop(key, None)
             self._metrics["indexFilesRead"] += 1
             self._metrics["bytesRead"] += result.report["bytes"]
@@ -264,6 +287,7 @@ class PartitionedLegacyRepository(LegacyRepository):
                         self._errors[key] = str(error)[:256]
         with self._index_lock:
             self._entries = {key: entry for key, entry in self._entries.items() if key in seen}
+            self._date_lookup = None
             self._errors = {key: error for key, error in self._errors.items() if key in seen and key not in self._entries}
             signatures, records_by_source = {}, {}
             for key, entry in self._entries.items():

@@ -10,7 +10,7 @@ and the compact toolbar are implemented. See the
 
 ## Quick start
 
-Install Python 3.9+ from the supported set and Node 22+, then run from this checkout:
+For a new installation, use Python 3.13 or 3.14 and Node 22+, then run from this checkout:
 
 ```powershell
 python scripts/start.py
@@ -21,14 +21,21 @@ bundled default dataset. It does not require a global `uv` command. Use `py -3`
 on Windows or `python3` on macOS/Linux if necessary. First setup needs network
 access to package registries.
 
-For legacy validation with SOURCE1 and SOURCE2:
+The compatibility target is CPython 3.9–3.14 on Windows and Linux. Python 3.9
+remains a legacy compatibility target, although upstream support ended on
+[October 31, 2025](https://devguide.python.org/versions/). The `>=3.9` package
+requirement specifies a minimum; newer Python releases need validation before
+joining the tested set. See the [compatibility policy](docs/openbexi_timeline2.0_deployment.md#python-compatibility)
+and [verification results](https://github.com/arcazj/openbexi_timeline2.0/actions/workflows/verify.yml).
+
+For the copied SOURCE1 and SOURCE2 archives:
 
 ```powershell
-python scripts/start.py -- --yaml yaml/default_test.yml
+python scripts/start.py -- --yaml yaml/multiple_sources_test.yml
 ```
 
-Open the printed URL. This profile requires the adjacent legacy checkout and its
-`tests/data/SOURCES1` and `tests/data/SOURCES2` folders. For IntelliJ,
+Open the printed URL. This profile uses this checkout's `data/SOURCES1` and
+`data/SOURCES2` folders. For IntelliJ, comparison with the adjacent legacy checkout,
 dependency setup, other operating modes and troubleshooting, see
 [deployment](docs/openbexi_timeline2.0_deployment.md).
 

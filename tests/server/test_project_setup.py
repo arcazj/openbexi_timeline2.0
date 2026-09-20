@@ -137,11 +137,19 @@ def test_python_only_setup_needs_no_node_or_npm(setup, monkeypatch):
     assert setup.main(["--setup-only", "--python-only"]) == 0
 
 
-def test_shared_ide_configuration_does_not_require_a_preexisting_venv():
+@pytest.mark.parametrize(("name", "profile"), [
+    ("test sources", "yaml/test-data/default-dataset.yml"),
+    ("legacy comparison", "yaml/default_test.yml"),
+    ("multiple_sources_test", "yaml/multiple_sources_test.yml"),
+])
+def test_shared_ide_configuration_does_not_require_a_preexisting_venv(name, profile):
     root = Path(__file__).resolve().parents[2]
-    config = ET.parse(root / ".run/OpenBEXI Timeline test sources.run.xml").find("configuration")
+    config = ET.parse(root / f".run/OpenBEXI Timeline {name}.run.xml").find("configuration")
     options = {item.attrib["name"]: item.attrib["value"] for item in config.findall("option")}
     assert options["SDK_HOME"] == ""
     assert "SDK_NAME" not in options
     assert options["IS_MODULE_SDK"] == "true"
     assert options["SCRIPT_NAME"] == "$PROJECT_DIR$/scripts/start.py"
+    assert options["WORKING_DIRECTORY"] == "$PROJECT_DIR$"
+    assert options["PARAMETERS"] == f"-- --yaml {profile}"
+    assert (root / profile).is_file()

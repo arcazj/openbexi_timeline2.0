@@ -2,6 +2,7 @@ import { LocalProvider } from './local-provider.js';
 
 const METHODS = new Set(['getStatus', 'createQuery', 'getQuery', 'getDensity', 'getMap', 'getZones', 'getOverview', 'createLayout', 'getLayout', 'getRows', 'getPlacement', 'getRecord', 'queryRecords', 'executeCommand', 'executeBatch', 'getCommandOutcome', 'listModels', 'getModel', 'validateModel', 'executeModelCommand', 'exportSnapshot', 'releaseQuery', 'releaseLayout', 'listConfiguration', 'getConfiguration', 'validateConfiguration', 'configurationUsage', 'mutateConfiguration', 'getEffectiveSettings', 'mutateSettings', 'previewSchemaImpact']);
 const active = new Map();
+METHODS.add('getDateAvailability');
 METHODS.add('getQueryRecord');
 METHODS.add('findMatch');
 METHODS.add('migrateLegacyFilter');

@@ -105,6 +105,17 @@ and reject stale responses after a newer navigation. An empty interval remains
 navigable. Showing the overview provides a broader time context; hiding it gives
 the primary timeline more space.
 
+When the visible range is empty, the timeline shows the first and last recorded
+dates for each selected source. **Previous date with data** and **Next date with
+data** jump to a nearby recorded instant while preserving your zoom span, model,
+sources, filters and search. Dates describe source availability, so content filters
+can still leave the destination empty. First/last dates do not imply continuous
+coverage between them. While archive indexing is incomplete, the hints are
+provisional; **Refresh available dates** checks for newly indexed dates.
+
+**Now** centers the current instant even near midnight. **Resynchronize reference
+time** returns to the profile's configured opening reference instead.
+
 Click an event or activity to inspect its descriptor, original timestamps,
 status and parent relationship. Long titles and status icons must remain meaningful.
 A missing descriptor must be reported as unavailable rather than replaced with

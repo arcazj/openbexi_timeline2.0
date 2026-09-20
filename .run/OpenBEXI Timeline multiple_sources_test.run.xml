@@ -1,5 +1,5 @@
 <component name="ProjectRunConfigurationManager">
-  <configuration default="false" name="OpenBEXI Timeline legacy comparison" type="PythonConfigurationType" factoryName="Python">
+  <configuration default="false" name="OpenBEXI Timeline multiple_sources_test" type="PythonConfigurationType" factoryName="Python">
     <option name="ENV_FILES" value="" />
     <option name="INTERPRETER_OPTIONS" value="" />
     <option name="PARENT_ENVS" value="true" />
@@ -16,7 +16,7 @@
     <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
     <option name="RUN_TOOL" value="" />
     <option name="SCRIPT_NAME" value="$PROJECT_DIR$/scripts/start.py" />
-    <option name="PARAMETERS" value="-- --yaml yaml/default_test.yml" />
+    <option name="PARAMETERS" value="-- --yaml yaml/multiple_sources_test.yml" />
     <option name="SHOW_COMMAND_LINE" value="true" />
     <option name="EMULATE_TERMINAL" value="false" />
     <option name="MODULE_MODE" value="false" />

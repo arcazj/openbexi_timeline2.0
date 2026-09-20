@@ -78,12 +78,18 @@ test('server failure during navigation retains real data and never substitutes a
     const before = await debug(page);
     await page.route('**/api/v1/workspaces/default/query-sessions', route => route.abort());
     await page.locator('.plot-wrap').focus(); await page.keyboard.press('ArrowRight');
-    await expect(page.locator('.notice')).toContainText('no sample data was substituted');
+    // A lost allocation can report either transport failure or unconfirmed
+    // cleanup. Both retain this exact server view and require reconnection.
+    await expect(page.locator('.notice')).toContainText(/retained|stale/);
+    await expect(page.locator('.notice [data-action=reconnect-server]')).toBeVisible();
     const after = await debug(page);
     expect(after.providerKind).toBe('server'); expect(after.providerId).toBe(before.providerId);
     expect(after.queryId).toBe(before.queryId);
     await page.unroute('**/api/v1/workspaces/default/query-sessions');
-    await page.getByRole('button', { name: 'Retry', exact: true }).click(); await ready(page);
+    await expect.poll(async () => (await debug(page)).navigationPhase).toBe('idle');
+    await page.getByRole('button', { name: 'Retry', exact: true }).click();
+    await expect.poll(async () => (await debug(page)).providerId).not.toBe(before.providerId);
+    await ready(page);
     await expect(page.locator('.notice')).toBeHidden();
   } finally { await server.stop(); }
 });

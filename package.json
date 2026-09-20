@@ -13,6 +13,7 @@
     "build:standalone": "node scripts/build-standalone.mjs",
     "build:demo": "node scripts/prepare-demo.mjs",
     "measure:demo": "node scripts/measure-demo.mjs",
+    "measure:archive": "node scripts/measure-archive.mjs",
     "check:repo": "node scripts/check-repository.mjs",
     "dev": "node scripts/dev.mjs",
     "test": "node --test tests/client/*.test.mjs",

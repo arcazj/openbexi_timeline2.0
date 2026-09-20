@@ -2748,6 +2748,172 @@
         "pattern": "^-?(?:0|[1-9][0-9]*)(?:\\.[0-9]+)?$",
         "type": "string"
       },
+      "DateAvailability": {
+        "additionalProperties": false,
+        "description": "Available dates and nearest recorded instants before/after the viewport for authorized selected sources, including saved-filter source selection. Other record predicates and search do not restrict these hints. Incomplete legacy indexing is explicit; no complete archive scan is performed for this read.",
+        "properties": {
+          "complete": {
+            "type": "boolean"
+          },
+          "generation": {
+            "maxLength": 128,
+            "minLength": 1,
+            "type": "string"
+          },
+          "indexVersion": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "next": {
+            "anyOf": [
+              {
+                "description": "Explicit-offset proleptic Gregorian instant, astronomical years -9999 through 9999, at most millisecond precision. Year 0000 is 1 BC; negative years use six digits (for example -000199 for 200 BC).",
+                "format": "timeline-instant",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "preferencesRevision": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "previous": {
+            "anyOf": [
+              {
+                "description": "Explicit-offset proleptic Gregorian instant, astronomical years -9999 through 9999, at most millisecond precision. Year 0000 is 1 BC; negative years use six digits (for example -000199 for 200 BC).",
+                "format": "timeline-instant",
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "range": {
+            "$ref": "#/components/schemas/Range"
+          },
+          "revision": {
+            "maximum": 9007199254740991,
+            "minimum": 1,
+            "type": "integer"
+          },
+          "scope": {
+            "enum": [
+              "selected-sources"
+            ]
+          },
+          "sources": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "first": {
+                  "anyOf": [
+                    {
+                      "description": "Explicit-offset proleptic Gregorian instant, astronomical years -9999 through 9999, at most millisecond precision. Year 0000 is 1 BC; negative years use six digits (for example -000199 for 200 BC).",
+                      "format": "timeline-instant",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "last": {
+                  "anyOf": [
+                    {
+                      "description": "Explicit-offset proleptic Gregorian instant, astronomical years -9999 through 9999, at most millisecond precision. Year 0000 is 1 BC; negative years use six digits (for example -000199 for 200 BC).",
+                      "format": "timeline-instant",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "next": {
+                  "anyOf": [
+                    {
+                      "description": "Explicit-offset proleptic Gregorian instant, astronomical years -9999 through 9999, at most millisecond precision. Year 0000 is 1 BC; negative years use six digits (for example -000199 for 200 BC).",
+                      "format": "timeline-instant",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "ongoing": {
+                  "type": "boolean"
+                },
+                "previous": {
+                  "anyOf": [
+                    {
+                      "description": "Explicit-offset proleptic Gregorian instant, astronomical years -9999 through 9999, at most millisecond precision. Year 0000 is 1 BC; negative years use six digits (for example -000199 for 200 BC).",
+                      "format": "timeline-instant",
+                      "type": "string"
+                    },
+                    {
+                      "type": "null"
+                    }
+                  ]
+                },
+                "sourceId": {
+                  "maxLength": 128,
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "sourceId",
+                "first",
+                "last",
+                "ongoing",
+                "previous",
+                "next"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "generation",
+          "revision",
+          "range",
+          "scope",
+          "complete",
+          "sources",
+          "previous",
+          "next"
+        ],
+        "type": "object"
+      },
+      "DateAvailabilityRequest": {
+        "additionalProperties": false,
+        "properties": {
+          "definitionVersion": {
+            "enum": [
+              1,
+              2
+            ]
+          },
+          "filters": {
+            "$ref": "#/components/schemas/QueryFilters"
+          },
+          "range": {
+            "$ref": "#/components/schemas/Range"
+          }
+        },
+        "required": [
+          "range"
+        ],
+        "type": "object"
+      },
       "Density": {
         "additionalProperties": false,
         "properties": {
@@ -11254,6 +11420,105 @@
         ],
         "x-handler": "usage_opaque",
         "x-permission-policy": "configuration.read plus present visibility/source scope; personal own writes need configuration.personal, workspace writes manage, workspace publication publish; Apply uses acting principal preferences."
+      }
+    },
+    "/api/v1/workspaces/default/date-availability": {
+      "post": {
+        "description": "Read source-scoped available dates and nearest recorded instants outside the requested viewport. Content filters and search remain independent. Legacy hints use the bounded disposable file index and report provisional coverage.",
+        "operationId": "post__api_v1_workspaces_default_date_availability",
+        "parameters": [],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/DateAvailabilityRequest"
+              }
+            }
+          },
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DateAvailability"
+                }
+              }
+            },
+            "description": "Successful read-only result",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              },
+              "X-Request-Id": {
+                "description": "Correlation ID; never a token.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem404"
+          },
+          "408": {
+            "$ref": "#/components/responses/Problem408"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Problem410"
+          },
+          "412": {
+            "$ref": "#/components/responses/Problem412"
+          },
+          "413": {
+            "$ref": "#/components/responses/Problem413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Problem415"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem422"
+          },
+          "428": {
+            "$ref": "#/components/responses/Problem428"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problem500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem503"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Date availability",
+        "tags": [
+          "workspace"
+        ],
+        "x-handler": "date_availability",
+        "x-permission-policy": "records.read; snapshot additionally export and configuration.read; outcomes require current original-result authorization.",
+        "x-request-byte-limit": 1048576
       }
     },
     "/api/v1/workspaces/default/events": {
@@ -20085,6 +20350,11 @@
       "handler": "usage_opaque",
       "method": "GET",
       "path": "/api/v1/workspaces/default/configuration/usage"
+    },
+    {
+      "handler": "date_availability",
+      "method": "POST",
+      "path": "/api/v1/workspaces/default/date-availability"
     },
     {
       "handler": "get_events",

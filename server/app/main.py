@@ -83,7 +83,7 @@ def create_app(data_root=None, token=None, seed_path=None, metrics_path=None, le
                 app.state.repository = repository
                 app.state.identities = identities
                 app.state.queries = QueryEngine(repository, metrics)
-                app.state.access = WorkspaceAccess(identities, repository, app.state.queries)
+                app.state.access = WorkspaceAccess(identities, repository, app.state.queries, preferences=preferences)
                 app.state.preparations = QueryPreparationCoordinator(app.state.queries, app.state.access, preferences=preferences)
                 service = LegacyPreferencesConfigurationService if preferences else LegacyConfigurationService if legacy_config else ConfigurationService
                 app.state.configuration = service(identities, preferences or repository)
@@ -325,6 +325,11 @@ def create_app(data_root=None, token=None, seed_path=None, metrics_path=None, le
         with app.state.identities.mutex:
             scope = app.state.access._scope(app.state.access._current(request.state.identity, "records.read"))
         return await run_in_threadpool(app.state.repository.loading_status, scope["sourceIds"])
+
+    @app.post(BASE + "/date-availability", dependencies=[Depends(authenticated)])
+    async def date_availability(request: Request):
+        payload = await body(request, maximum=64 * 1024)
+        return await run_in_threadpool(app.state.access.date_availability, request.state.identity, payload)
 
     @app.post(BASE + "/legacy/prefetch", dependencies=[Depends(authenticated)], include_in_schema=False)
     async def prefetch_legacy(request: Request):

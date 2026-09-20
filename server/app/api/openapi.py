@@ -105,6 +105,16 @@ def components():
         ["type", "title", "status", "detail", "instance", "code", "message", "requestId"])
     schemas["ValidationReport"] = obj({"valid": boolean, "errors": array(obj({"path": string(), "code": string(), "message": string()}, additional=True))}, ["valid", "errors"])
     schemas["Range"] = obj({"from": timeline_instant, "to": timeline_instant}, ["from", "to"], description="Positive finite half-open interval [from,to).")
+    schemas["DateAvailabilityRequest"] = obj({"range": ref("Range"), "filters": ref("QueryFilters"),
+                                              "definitionVersion": enum(1, 2)}, ["range"])
+    source_dates = obj({"sourceId": identity, "first": nullable(timeline_instant), "last": nullable(timeline_instant),
+                       "ongoing": boolean, "previous": nullable(timeline_instant), "next": nullable(timeline_instant)},
+                      ["sourceId", "first", "last", "ongoing", "previous", "next"])
+    schemas["DateAvailability"] = obj({**provenance, "range": ref("Range"), "scope": enum("selected-sources"),
+                                       "complete": boolean, "sources": array(source_dates), "indexVersion": integer(), "preferencesRevision": integer(),
+                                       "previous": nullable(timeline_instant), "next": nullable(timeline_instant)},
+                                      ["generation", "revision", "range", "scope", "complete", "sources", "previous", "next"],
+        description="Available dates and nearest recorded instants before/after the viewport for authorized selected sources, including saved-filter source selection. Other record predicates and search do not restrict these hints. Incomplete legacy indexing is explicit; no complete archive scan is performed for this read.")
     schemas["LegacyDescriptor"] = obj({"status": enum("current", "missing", "unavailable"),
         "readOnly": {"const": True}, "sha256": string(pattern="^[0-9a-f]{64}$"), "file": string(),
         "descriptor": obj({}, additional=True), "diagnostics": array(obj({}, additional=True)), "reason": string()},
@@ -404,6 +414,8 @@ def _operation(path, method, name):
         return "IdentityOutcome", None, 200, "identity", "Read-only recovery lookup of the original actor-scoped identity command.", True
     if suffix in ("", "/status"):
         return "WorkspaceStatus", None, 200, "workspace", "Read the current authorized default-workspace counts, effective settings and capabilities.", True
+    if suffix == "/date-availability":
+        return "DateAvailability", "DateAvailabilityRequest", 200, "workspace", "Read source-scoped available dates and nearest recorded instants outside the requested viewport. Content filters and search remain independent. Legacy hints use the bounded disposable file index and report provisional coverage.", True
     if suffix == "/legacy/reload":
         return "WorkspaceStatus", None, 200, "workspace", "In explicitly configured legacy mode, recheck date-partitioned JSON without source writes. Requires workspace.manage. Lazy mode schedules background index verification and exposes coverage; eager mode publishes a complete/last-good file image. Existing queries remain pinned. Returns404 in managed mode.", True
     if suffix.endswith("/legacy-descriptor"):
