@@ -87,6 +87,8 @@ const state = {
   scaleStrategy: 'automatic',
 };
 let timeline, overviewRenderer, resizeTimer, searchTimer, toastTimer, dialogOpener, lastWidth = 0, lastHeight = 0;
+let reconcileViewport = () => {};
+let pendingViewportLayout = null;
 let bandStack;
 let layoutIntent = 0, layoutQueue = Promise.resolve(), queryQueue = Promise.resolve(), sourceIntent = 0, importIntent = 0, selectionIntent = 0;
 let localBranch = null, fallbackActive = false;
@@ -107,7 +109,7 @@ let changeMonitor, timeCommitPending = 0, navigationActive = false;
 let navigation;
 let calendar = null, calendarOpener = null;
 let displayedTimeUnit = null;
-let disposeEmptyDates;
+let emptyDatesController;
 let emptyDatesKey = null;
 let bootPending = true;
 let pathCatalog = null, pathPreferences = null;
@@ -463,8 +465,10 @@ function shell() {
   $('.provider-status').setAttribute('role', 'status');
   $('.provider-status').textContent = location.protocol === 'file:' ? 'Opening Local snapshot...' : 'Connecting configured source...';
   bindShell(); updateIcons();
-  const resizeObserver = new ResizeObserver(() => {
+  const viewportLayoutPending = () => pendingViewportLayout?.intent === layoutIntent && pendingViewportLayout.provider === state.provider && pendingViewportLayout.query === state.query && pendingViewportLayout.queryEpoch === state.epoch;
+  reconcileViewport = () => {
     if (state.view === 'table') return;
+    if (viewportLayoutPending()) return;
     const plot = $('.plot-wrap');
     if (!plot) return;
     const box = plot.getBoundingClientRect();
@@ -472,6 +476,7 @@ function shell() {
     clearTimeout(resizeTimer); const resize = () => {
       if (reconnectRequest) { pendingReconnectResize = resize; return; }
       if (!state.query || state.view === 'table') return;
+      if (viewportLayoutPending()) return;
       const current = $('.plot-wrap')?.getBoundingClientRect();
       if (!current) return;
       if (Math.abs(current.width - lastWidth) < 1 && Math.abs(current.height - lastHeight) < 1) return;
@@ -482,7 +487,8 @@ function shell() {
       if (state.scaleMode === 'adaptive' && state.scaleStrategy === 'automatic' && Math.abs(current.width - lastWidth) >= 1) refreshQuery();
       else refreshLayout();
     }; resizeTimer = setTimeout(resize, 100);
-  });
+  };
+  const resizeObserver = new ResizeObserver(reconcileViewport);
   resizeObserver.observe($('.plot-wrap'));
 }
 
@@ -517,7 +523,7 @@ async function initialize(provider, snapshot = null, { preserveView = true } = {
     else state.provider.dispose?.();
   }
   state.provider = provider; state.info = info;
-  disposeEmptyDates?.(); disposeEmptyDates = null; $('.empty-state')?.remove();
+  emptyDatesController?.dispose(); emptyDatesController = null; $('.empty-state')?.remove();
   windowLoader?.dispose(); clearTimeout(loadingTimer); clearTimeout(overviewTimer); overviewRequest?.abort();
   state.overviewZones = null;
   windowLoader = info.legacy?.lazy ? createWindowLoader(provider, { ratio: info.legacy.loading?.bufferRatio ?? .25 }) : null;
@@ -585,14 +591,14 @@ function showWorkspaceReloadNotice() {
   $('.notice').hidden = false; noticeAction('refresh');
 }
 function requireGenerationRefresh(event) {
-  disposeEmptyDates?.(); disposeEmptyDates = null; $('.empty-state')?.remove();
+  emptyDatesController?.dispose(); emptyDatesController = null; $('.empty-state')?.remove();
   changeMonitor?.markBoundary(state.provider, event?.code === 'replay_gap' ? 'replay-gap' : 'generation-changed');
   ++state.epoch; ++layoutIntent; state.queryLoading = false; state.generationRequired = true; state.stale = true;
   showWorkspaceReloadNotice();
   setBusy(false); resetTimeMode(); tableView.suspend(); $('.overview-plot').dispatchEvent(new Event('pointercancel')); updateStatus();
 }
 function clearUnauthorized() {
-  disposeEmptyDates?.(); disposeEmptyDates = null; $('.empty-state')?.remove();
+  emptyDatesController?.dispose(); emptyDatesController = null; $('.empty-state')?.remove();
   changeMonitor?.markBoundary(state.provider, 'authorization-lost');
   changeMonitor?.cancelQueuedReload();
   bandStack?.configure(null);
@@ -797,6 +803,7 @@ function toast(message) {
 }
 function setBusy(value) {
   state.loading = value; $('.busy-indicator')?.remove();
+  emptyDatesController?.update();
   updateToolbarStatus();
   if (!value) { queueMicrotask(() => document.dispatchEvent(new Event('timeline-ready'))); navigation?.warm(); }
   if (value) { const node = document.createElement('div'); node.className = 'busy-indicator'; node.setAttribute('role', 'status'); node.textContent = 'Updating timeline...'; $('.workspace').append(node); }
@@ -815,6 +822,7 @@ function refreshQuery(options = {}) {
   const epoch = ++state.epoch; ++layoutIntent; const provider = state.provider;
   selectionRequest?.abort();
   state.queryLoading = true;
+  emptyDatesController?.update();
   recordGestures?.cancel();
   queryQueue = queryQueue.catch(() => {}).then(() => { if (epoch !== state.epoch || provider !== state.provider) return; return performQuery(epoch, provider, options); });
   return queryQueue;
@@ -935,13 +943,20 @@ function refreshLayout(cursor, queryEpoch = state.epoch, options = {}) {
   if (state.queryLoading) return queryQueue;
   navigation?.pauseBuffer();
   const intent = ++layoutIntent, provider = state.provider, query = state.query;
+  const request = { intent, provider, query, queryEpoch, adopted: false };
+  pendingViewportLayout = request;
   layoutQueue = layoutQueue.catch(() => {}).then(() => {
     if (intent !== layoutIntent || queryEpoch !== state.epoch || provider !== state.provider) return;
-    return performLayout(cursor, queryEpoch, intent, provider, query, options);
+    return performLayout(cursor, queryEpoch, intent, provider, query, options, request);
+  }).finally(() => {
+    if (pendingViewportLayout === request) pendingViewportLayout = null;
+    // A native press can cancel a resize without changing the DOM size again.
+    // A newer valid layout owns reconciliation until its own work settles.
+    if ((request.adopted || intent !== layoutIntent) && provider === state.provider && query === state.query && queryEpoch === state.epoch && !state.queryLoading) reconcileViewport();
   });
   return layoutQueue;
 }
-async function performLayout(cursor, queryEpoch, intent, provider, query, { navigationOnly = false } = {}) {
+async function performLayout(cursor, queryEpoch, intent, provider, query, { navigationOnly = false } = {}, request) {
   if (!state.query || !state.map) return;
   setBusy(true);
   let releasePreparation;
@@ -955,20 +970,26 @@ async function performLayout(cursor, queryEpoch, intent, provider, query, { navi
     const plot = $('.plot-wrap').getBoundingClientRect();
     const width = Math.max(100, Math.round(plot.width || $('.primary').clientWidth - 40));
     const height = Math.max(1, Math.round(plot.height || 400));
-    lastWidth = plot.width; lastHeight = plot.height;
     let layout = state.layout;
     if (!cursor) layout = await visibleLayout(provider, query.queryId, state.map.mapId, width, height);
     const requestedPage = navigationOnly && !cursor ? state.rows?.pageIndex || 0 : 0;
     const pageIndex = Math.min(requestedPage, Math.max(0, Math.ceil(layout.totalRows / layout.pageCapacity) - 1));
     const rows = await provider.getRows(query.queryId, layout.layoutId, cursor ? { cursor } : { pageIndex });
-    if (queryEpoch !== state.epoch || intent !== layoutIntent || provider !== state.provider) { if (!cursor) await provider.releaseLayout(query.queryId, layout.layoutId).catch(() => {}); return; }
+    if (queryEpoch !== state.epoch || intent !== layoutIntent || provider !== state.provider || query !== state.query) { if (!cursor) await provider.releaseLayout(query.queryId, layout.layoutId).catch(() => {}); return; }
     const oldLayout = state.layout;
     state.layout = layout; state.rows = rows;
-    try { render(); }
+    try {
+      render(); request.adopted = true;
+      // Requested geometry is not committed until its layout is actually painted.
+      // Paging an existing layout cannot validate a newly resized viewport.
+      if (!cursor) { lastWidth = layout.width; lastHeight = height; }
+    }
     finally { if (!cursor && oldLayout?.layoutId && oldLayout.layoutId !== layout.layoutId) await provider.releaseLayout(query.queryId, oldLayout.layoutId).catch(() => {}); }
     if (!cursor) await refreshBands(queryEpoch);
     if (pageIndex !== requestedPage) toast('The previous vertical page is not present in this interval. Showing the last available page.');
-  } catch (error) { if (intent === layoutIntent && provider === state.provider) showError(error); } finally { releasePreparation?.(); if (intent === layoutIntent) setBusy(false); }
+  } catch (error) { if (intent === layoutIntent && provider === state.provider) showError(error); } finally {
+    releasePreparation?.(); if (intent === layoutIntent) setBusy(false);
+  }
 }
 function clampTime(value) { return Decimal.min(Decimal.max(decimal(value instanceof Date ? value.getTime() : typeof value === 'string' && value.includes('T') ? toMs(value) : value), toMs(state.map.domain.from)), toMs(state.map.domain.to)).toString(); }
 function project(value) { return projectTime(state.map, clampTime(value), state.fromMs, state.toMs, state.layout.width); }
@@ -1027,17 +1048,18 @@ function render() {
   // A new source, query, generation or range still replaces its scoped controller.
   if (state.layout.detailTotal !== 0 || dateKey !== emptyDatesKey || !$('.empty-state')) {
     $('.empty-state')?.remove();
-    disposeEmptyDates?.(); disposeEmptyDates = null; emptyDatesKey = null;
+    emptyDatesController?.dispose(); emptyDatesController = null; emptyDatesKey = null;
     if (state.layout.detailTotal === 0) {
       emptyDatesKey = dateKey;
       const empty = document.createElement('div'); empty.className = 'empty-state';
       empty.innerHTML = state.query.coverage?.complete === false ? '<strong>No loaded records in this range</strong><span>Archive coverage is still being checked</span>' : '<strong>No records in this range</strong><span>Change the range or filters</span>';
       plot.append(empty);
       const provider = state.provider, epoch = state.epoch, from = state.fromMs, to = state.toMs;
-      disposeEmptyDates = mountEmptyDateNavigation(empty, { provider, generation: state.info.generation, input: { range: rangeIso(), filters: structuredClone(state.filter), definitionVersion: state.definitionVersion },
+      emptyDatesController = mountEmptyDateNavigation(empty, { provider, generation: state.info.generation, input: { range: rangeIso(), filters: structuredClone(state.filter), definitionVersion: state.definitionVersion },
         sourceLabel: id => [...$('#source-filter').options].find(option => option.value === id)?.textContent || id,
         dateLabel: value => rangeDate(value),
         current: () => provider === state.provider && epoch === state.epoch && from === state.fromMs && to === state.toMs && !state.authRequired && !state.generationRequired && !state.localUnavailable,
+        ready: () => !state.queryLoading,
         onError: showError, onGenerationChanged: requireGenerationRefresh,
         navigate: value => {
           if (state.queryLoading) return;

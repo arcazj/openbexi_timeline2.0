@@ -1,18 +1,21 @@
 // Empty-window hints have their own lifetime: a late source/range response cannot
 // move the viewport or replace a newer query's message.
-export function mountEmptyDateNavigation(container, { provider, input, generation, sourceLabel, dateLabel, current, navigate, onError, onGenerationChanged }) {
-  let active = true, pending = null;
+export function mountEmptyDateNavigation(container, { provider, input, generation, sourceLabel, dateLabel, current, ready, navigate, onError, onGenerationChanged }) {
+  let active = true, pending = null, controls = [];
   const area = document.createElement('div'); area.className = 'empty-date-navigation'; container.append(area);
   const valid = () => active && container.isConnected && current();
+  const enabled = () => valid() && ready();
+  const update = () => { for (const [button, available] of controls) button.disabled = !available || !enabled(); };
   const text = (tag, value) => { const node = document.createElement(tag); node.textContent = value; return node; };
   const retry = () => {
     const button = text('button', 'Refresh available dates'); button.type = 'button';
-    button.onclick = event => { event.stopPropagation(); if (valid()) load(); };
-    area.append(button);
+    button.onclick = event => { event.stopPropagation(); if (enabled()) load(); };
+    controls.push([button, true]); area.append(button); update();
   };
   area.addEventListener('pointerdown', event => event.stopPropagation());
   async function load() {
     pending?.abort(); pending = new AbortController();
+    controls = [];
     area.replaceChildren(text('span', 'Checking available dates…'));
     try {
       const result = await provider.getDateAvailability(input, { signal: pending.signal });
@@ -28,12 +31,13 @@ export function mountEmptyDateNavigation(container, { provider, input, generatio
       else area.append(text('span', 'No sources selected.'));
       const actions = document.createElement('div'); actions.className = 'empty-date-actions';
       for (const [key, label] of [['previous', 'Previous date with data'], ['next', 'Next date with data']]) {
-        const button = text('button', label); button.type = 'button'; button.disabled = !result[key];
+        const button = text('button', label); button.type = 'button'; controls.push([button, !!result[key]]);
         if (result[key]) button.title = dateLabel(result[key]);
-        button.onclick = event => { event.stopPropagation(); if (valid() && result[key]) navigate(result[key]); };
+        button.onclick = event => { event.stopPropagation(); if (enabled() && result[key]) navigate(result[key]); };
         actions.append(button);
       }
       area.append(actions, text('small', 'Dates reflect selected sources. Your other filters and search still apply.'));
+      update();
       if (!result.complete) {
         area.append(text('small', 'Archive dates are still being indexed; additional dates may become available.')); retry();
       }
@@ -44,5 +48,5 @@ export function mountEmptyDateNavigation(container, { provider, input, generatio
     }
   }
   load();
-  return () => { active = false; pending?.abort(); area.remove(); };
+  return { update, dispose: () => { active = false; pending?.abort(); controls = []; area.remove(); } };
 }

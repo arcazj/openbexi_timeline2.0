@@ -81,8 +81,13 @@ test('indexed server dates are provisional until verified and never substitute a
     await page.goto(server.baseUrl); await ready(page);
     const source = await selectSource(page, 'SOURCE2');
     await calendarDate(page, 2024, 2, 1);
+    // Closing the calendar changes plot width and can start an adaptive query.
+    // Keep indexing held until that query has painted its provisional view.
+    await expect.poll(() => page.locator('.plot-wrap').evaluate(node => Math.abs(window.__timelineDebug.layoutWidth - node.clientWidth))).toBeLessThan(1);
+    await ready(page);
     await expect(page.locator('.empty-date-navigation')).toContainText('still being indexed');
     await expect(page.getByRole('button', { name: 'Next date with data', exact: true })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Refresh available dates', exact: true })).toBeEnabled();
     await server.releaseIndex();
     await expect.poll(() => page.evaluate(async () => {
       const response = await fetch('/api/v1/workspaces/default/legacy/loading', { headers: { 'X-OpenBEXI-Local': '1' }, credentials: 'omit' });
@@ -92,6 +97,22 @@ test('indexed server dates are provisional until verified and never substitute a
     await page.getByRole('button', { name: 'Refresh available dates', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Next date with data', exact: true })).toBeEnabled();
     await expect(page.getByRole('list', { name: 'Available dates by source' }).locator('li')).toHaveCount(1);
+    let requested = false, release;
+    const held = new Promise(resolve => { release = resolve; });
+    const pattern = '**/query-sessions';
+    await page.route(pattern, async route => {
+      if (route.request().method() !== 'POST' || route.request().postDataJSON()?.scaleMode !== 'adaptive') { await route.continue(); return; }
+      requested = true; await held;
+      try { await route.continue(); } catch { /* A later query can supersede this resize. */ }
+    });
+    try {
+      const viewport = page.viewportSize();
+      await page.setViewportSize({ width: viewport.width + 40, height: viewport.height });
+      await expect.poll(() => requested).toBe(true);
+      expect(await page.evaluate(() => window.__timelineDebug.queryLoading)).toBe(true);
+      await expect(page.getByRole('button', { name: 'Next date with data', exact: true })).toBeDisabled();
+    } finally { release(); await page.unroute(pattern); }
+    await ready(page);
     await page.getByRole('button', { name: 'Next date with data', exact: true }).click(); await ready(page);
     await expect(page.locator('.plot-wrap .record-label').first()).toBeVisible();
     expect(await page.locator('#source-filter').inputValue()).toBe(source);

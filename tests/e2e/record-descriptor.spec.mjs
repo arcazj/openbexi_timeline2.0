@@ -150,6 +150,42 @@ test('label activation during a pending descriptor resize retains the selection'
   await ready(page);
 });
 
+for (const delayed of [false, true]) test(`native record activation during a pending descriptor layout reconciles the painted viewport${delayed ? ' with another resize and slow layouts' : ''}`, async ({ page }) => {
+  await sidecar(); await openServer(page);
+  const paintedWidth = await page.evaluate(() => window.__timelineDebug.layoutWidth);
+  let requested = false, release;
+  const held = new Promise(resolve => { release = resolve; });
+  await page.route('**/query-sessions/*/layouts', async route => {
+    if (route.request().method() !== 'POST' || route.request().postDataJSON().width !== paintedWidth - 312) { await route.continue(); return; }
+    if (!requested) { requested = true; await held; }
+    // Exceed the resize debounce so cancellation of an old layout must not
+    // repeatedly supersede the next valid, still-running layout.
+    if (delayed) await new Promise(resolve => setTimeout(resolve, 400));
+    try { await route.continue(); } catch { /* Native activation can cancel the older layout. */ }
+  });
+  try {
+    await label(page).click();
+    await expect(page.locator('.linked-descriptor-fields')).toContainText('Linked source description');
+    await expect.poll(() => requested).toBe(true);
+    await expect.poll(() => page.locator('.plot-wrap').evaluate(node => node.clientWidth)).toBe(paintedWidth - 312);
+    await page.locator('[data-action=close-descriptor]').click();
+    await expect(page.locator('.descriptor')).toBeHidden();
+    // The widened plot again matches its old canvas, so a real press invalidates
+    // pending narrow layout work before reopening the same descriptor.
+    await label(page).click();
+    if (delayed) {
+      const viewport = page.viewportSize();
+      await page.setViewportSize({ width: viewport.width, height: viewport.height + 20 });
+    }
+    release();
+    await expect.poll(() => page.locator('.plot-wrap').evaluate(node =>
+      Math.abs(node.querySelector('canvas').width / Math.min(devicePixelRatio, 2) - node.clientWidth))).toBeLessThan(1);
+    await ready(page);
+    await expect(page.locator('.descriptor')).toBeVisible();
+    await expect(page.locator('.linked-descriptor-fields')).toContainText('Linked source description');
+  } finally { release(); await page.unrouteAll({ behavior: 'wait' }); }
+});
+
 test('time-only navigation retains an offscreen v2 descriptor without reloading its sidecar, while filter changes recheck it', async ({ page }) => {
   await sidecar(`Navigation description ${'Long metadata value. '.repeat(600)}`); await openServer(page);
   await page.locator('[data-action=filters]').first().click();

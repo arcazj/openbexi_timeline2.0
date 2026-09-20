@@ -36,6 +36,17 @@ input. A separate source-race test now waits for a replacement server identity
 and ready query before releasing an obsolete editor response, rather than
 mistaking the original connection for the newly requested one.
 
+Further browser runs exposed two related races: an adaptive query left obsolete
+date actions enabled, and a canceled descriptor resize recorded dimensions that
+had never been rendered. Held-request regressions check that date actions remain
+disabled until their current query is ready and that record selection during a
+pending resize eventually restores the canvas to the actual plot dimensions.
+Layout-only changes continue to preserve a date-button press.
+A second delayed-layout regression checks that reconciliation lets a newer
+pending layout finish instead of repeatedly canceling it. The archive-index test
+settles the calendar's resize before releasing its index gate, so its manual
+refresh assertion does not race an already completed automatic refresh.
+
 Local Windows validation on September 20, 2026 passed 525 client tests,
 50 generator tests, 72 provider integration/parity tests and 1,253 Python 3.14
 server tests. One server test was skipped because the local account cannot

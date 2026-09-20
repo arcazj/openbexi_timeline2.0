@@ -90,6 +90,18 @@ as a performance follow-up; the smooth animation callbacks alone do not
 establish that every newly exposed region was ready. This run did not identify
 the cause of the earlier preparation failures.
 
+A later diagnostic of HTML SHA-256
+`ab287d74f57f4b942d5976058a07d41a84171f6a67c742d4bf1110098a2cc00d`
+reproduced two eight-second speculative preparation timeouts during initial
+indexing. The navigation buffer aborted those jobs; no HTTP error responses or
+uncaught page errors were observed. The first foreground view was ready in
+2.64 seconds after browser navigation, and indexing finished 70.45 seconds after
+server launch. The drag added no preparation failures. This single additional
+sample used uncontrolled filesystem caches and does not establish a speedup.
+It identifies the timeout mechanism, but not the operation consuming its budget;
+cold-index preview preparation and incomplete edge coverage still need profiling
+before changing concurrency, cache sizes or timeout limits.
+
 Main-target JavaScript heap usage was 21.17 MiB at first ready, 22.12 MiB after
 the third operation round and 44.31 MiB immediately after the drag. These are
 unforced-GC samples, excluding Python, browser native/GPU memory and separate
