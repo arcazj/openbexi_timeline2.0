@@ -1,0 +1,4 @@
+{
+  "dateTimeFormat": "iso8601",
+  "event_descriptor": [{
+"id":"7684d2bb-3b01-40e4-820b-7d1b7aec34ab","start":"Mon Jun 24 09:20:00 UTC 2024","end":"","data":{"namespace":"SOURCE1","title":"Events360","type":"type1","priority":"1","status":"RUNNING","tolerance":"15","description":"description_360 Events360_read_descriptor_in_file"}}]}

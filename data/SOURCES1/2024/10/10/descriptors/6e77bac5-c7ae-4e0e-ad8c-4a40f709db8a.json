@@ -1,0 +1,4 @@
+{
+  "dateTimeFormat": "iso8601",
+  "event_descriptor": [{
+"id":"6e77bac5-c7ae-4e0e-ad8c-4a40f709db8a","start":"Thu Oct 10 01:00:00 UTC 2024","end":"","data":{"namespace":"SOURCE1","title":"Activity_543_1","type":"type1","priority":"1","status":"RUNNING","tolerance":"128","description":"description_Activity_543_1_activity_1_read_descriptor_in_file"}}]}

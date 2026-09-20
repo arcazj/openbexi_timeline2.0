@@ -1,0 +1,4 @@
+{
+  "dateTimeFormat": "iso8601",
+  "events": [
+  {"id":"d72391f0-5c07-414f-b8df-4fad90fddd48",  "zone":"zone",  "start":"Sun Jun 09 21:47:40 UTC 2024",  "end":"Sun Jun 09 22:29:40 UTC 2024","data":{"text":"zone_1","description":"zone_1",},"render":{"color":"#621306",}},  {"id":"03a1eef2-56c5-4788-b486-f3c8be2eac57",  "zone":"zone",  "start":"Sun Jun 09 23:17:40 UTC 2024",  "end":"Sun Jun 09 23:35:40 UTC 2024","data":{"text":"zone_2","description":"zone_2",},"render":{"color":"#861304",}},  {"id":"02675945-f1f8-42ac-9799-3ab534750111",  "zone":"zone",  "start":"Sun Jun 09 23:59:40 UTC 2024",  "end":"Mon Jun 10 00:29:40 UTC 2024","data":{"text":"zone_3","description":"zone_3",},"render":{"color":"#417304",}}]}

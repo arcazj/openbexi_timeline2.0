@@ -15,4 +15,4 @@ const manifest = await buildStandalone();
 for (const file of files) await copyFile(path.join(root, 'dist', file), path.join(output, file));
 await writeFile(path.join(output, '.nojekyll'), '');
 console.log(`Prepared artifacts/demo: ${manifest.htmlBytes} HTML bytes, SHA-256 ${manifest.htmlSha256}.`);
-console.log('Includes all six bundled datasets. Review redistribution rights before public deployment.');
+console.log(`Includes all ${manifest.testDatasets.length} bundled datasets. Review redistribution rights before public deployment.`);

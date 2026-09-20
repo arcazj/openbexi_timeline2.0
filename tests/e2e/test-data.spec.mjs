@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import { startSnapshotServer } from '../integration/snapshot-server-fixture.mjs';
 import { canvasMetrics } from '../helpers/canvas-metrics.mjs';
 
-const datasets = [['default-dataset',1008,2],['ephemeris',127,2],['jfk',130,2],['monet',27,1],['religions',730,4],['space_exploration',1287,2]];
+const datasets = [['default-dataset',1008,2],['ephemeris',127,2],['jfk',130,2],['monet',27,1],['religions',730,4],['space_exploration',1287,2],['multiple_sources_test',1145,2]];
 const file = pathToFileURL(path.resolve('dist/index.html')).href;
 const captures = process.env.OPENBEXI_UPDATE_SCREENSHOTS === '1' ? 'docs/ui/test-data' : 'artifacts/browser/test-data';
 async function choose(page, id) {

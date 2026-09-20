@@ -1,0 +1,4 @@
+{
+  "dateTimeFormat": "iso8601",
+  "event_descriptor": [{
+"id":"c6cfaee0-e221-452e-86f2-748c30c26d33","start":"Mon May 27 03:36:40 UTC 2024","end":"","data":{"namespace":"SOURCE1","title":"Events365","type":"type1","priority":"2","status":"RUNNING","tolerance":"3","description":"description_365 Events365_read_descriptor_in_file"}}]}

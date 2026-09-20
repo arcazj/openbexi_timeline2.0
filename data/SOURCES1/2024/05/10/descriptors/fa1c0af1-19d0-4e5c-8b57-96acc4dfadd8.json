@@ -1,0 +1,4 @@
+{
+  "dateTimeFormat": "iso8601",
+  "event_descriptor": [{
+"id":"fa1c0af1-19d0-4e5c-8b57-96acc4dfadd8","start":"Fri May 10 11:40:00 UTC 2024","end":"Fri May 10 12:40:00 UTC 2024","original_start":"Fri May 10 11:39:24 UTC 2024","data":{"namespace":"SOURCE1","title":"Activity_352_2","type":"type1","priority":"2","status":"RUNNING","tolerance":"81","description":"description_Activity_352_2_activity_2_read_descriptor_in_file"}}]}

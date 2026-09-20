@@ -60,7 +60,7 @@ test('HTTPS project-site demo supports all datasets, row paging, and offline nav
   for (const field of ['fromMs', 'toMs', 'mapId']) expect(next[field]).toBe(initial[field]);
   await page.context().setOffline(true);
   try {
-    for (const [id, count] of [['ephemeris',127], ['jfk',130], ['monet',27], ['religions',730], ['space_exploration',1287], ['default-dataset',1008]]) {
+    for (const [id, count] of [['ephemeris',127], ['jfk',130], ['monet',27], ['religions',730], ['space_exploration',1287], ['multiple_sources_test',1145], ['default-dataset',1008]]) {
       await page.locator('[data-action=help]').click();
       await page.getByLabel('Test local dataset', { exact: true }).selectOption(id);
       await page.locator('[data-help=open-test-data]').click();
@@ -80,7 +80,7 @@ test('HTTPS project-site demo supports all datasets, row paging, and offline nav
   } finally { await page.context().setOffline(false); }
 });
 
-for (const id of ['default-dataset', 'ephemeris', 'jfk', 'monet', 'religions', 'space_exploration']) {
+for (const id of ['default-dataset', 'ephemeris', 'jfk', 'monet', 'religions', 'space_exploration', 'multiple_sources_test']) {
   test(`live demo deep link opens ${id}`, async ({ page }) => {
     const observed = await openHosted(page, `?dataset=${id}`);
     expect(await page.evaluate(() => window.__timelineDebug.testDatasetId)).toBe(id);
@@ -113,6 +113,32 @@ test('demo sharing retains the dataset and waits for review before applying the 
   expect(await page.evaluate(() => window.__timelineDebug.fromMs)).not.toBe(fromMs);
   await page.locator('[data-help=apply-link]').click(); await ready(page);
   expect(await page.evaluate(() => window.__timelineDebug.fromMs)).toBe(fromMs);
+});
+
+test('multiple-source demo filters both namespaces, discovers grouping and navigates original dates', async ({ page }, info) => {
+  const observed = await openHosted(page, '?dataset=multiple_sources_test');
+  expect(await page.evaluate(() => window.__timelineDebug.recordCount)).toBe(1145);
+  expect(await page.evaluate(() => window.__timelineDebug.detailTotal)).toBe(1145);
+  await page.getByRole('button', { name: 'Workspace tools', exact: true }).click();
+  for (const [namespace, count] of [['SOURCE1', 1018], ['SOURCE2', 127]]) {
+    const source = await page.locator('#source-filter option').evaluateAll((items, name) => items.find(item => item.textContent.includes(name))?.value, namespace);
+    expect(source).toBeTruthy();
+    await page.locator('#source-filter').selectOption(source); await ready(page);
+    await expect.poll(() => page.evaluate(() => window.__timelineDebug.detailTotal)).toBe(count);
+  }
+  await page.locator('#source-filter').selectOption('all'); await ready(page);
+  for (const name of ['status', 'namespace']) {
+    const field = await page.locator('#grouping-mode option').evaluateAll((items, text) => items.find(item => item.textContent.toLowerCase() === text)?.value, name);
+    expect(field).toBeTruthy();
+    await page.locator('#grouping-mode').selectOption(field); await ready(page);
+    expect(await page.evaluate(() => window.__timelineDebug.detailTotal)).toBe(1145);
+  }
+  await page.screenshot({ path: info.outputPath('multiple-sources-grouped.png') });
+  await page.getByRole('button', { name: 'Calendar', exact: true }).click();
+  await page.getByRole('button', { name: '2024-03-24', exact: true }).click(); await ready(page);
+  await expect(page.locator('.record-label').first()).toBeVisible();
+  expect(Number(await page.evaluate(() => window.__timelineDebug.fromMs))).not.toBe(Date.parse('2024-03-17T00:00:00Z'));
+  expect(observed.errors).toEqual([]); expect(observed.unexpected).toEqual([]);
 });
 
 test('expanded default demo renders sessions and events in both surrounding months', async ({ page }) => {

@@ -1,0 +1,4 @@
+{
+  "dateTimeFormat": "iso8601",
+  "event_descriptor": [{
+"id":"feda52dc-04ad-4971-b370-de5405713ba4","start":"Sun Apr 07 08:03:20 UTC 2024","end":"Sun Apr 07 09:06:40 UTC 2024","original_start":"Sun Apr 07 08:02:42 UTC 2024","data":{"namespace":"SOURCE1","title":"Session_263_0","type":"type1","priority":"0","status":"RUNNING","tolerance":"208","description":"description_Session_263_0_activity_0_read_descriptor_in_file"}}]}

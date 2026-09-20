@@ -1,0 +1,4 @@
+{
+  "dateTimeFormat": "iso8601",
+  "event_descriptor": [{
+"id":"0ae64a78-7096-4dda-8c3c-2108b7ba5c80","start":"Fri Aug 02 08:53:20 UTC 2024","end":"Fri Aug 02 09:26:40 UTC 2024","original_start":"Fri Aug 02 08:53:00 UTC 2024","data":{"namespace":"SOURCE1","title":"Session_365","type":"type1","priority":"3","status":"FINISHED","tolerance":"24","description":"description_365 Session_365_read_descriptor_in_file"}}]}

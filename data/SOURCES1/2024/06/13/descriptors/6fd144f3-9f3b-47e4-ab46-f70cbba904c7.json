@@ -1,0 +1,4 @@
+{
+  "dateTimeFormat": "iso8601",
+  "event_descriptor": [{
+"id":"6fd144f3-9f3b-47e4-ab46-f70cbba904c7","start":"Thu Jun 13 07:56:40 UTC 2024","end":"Thu Jun 13 08:36:40 UTC 2024","original_start":"Thu Jun 13 07:56:16 UTC 2024","data":{"namespace":"SOURCE1","title":"Session_443","type":"type1","priority":"2","status":"STARTED","tolerance":"80","description":"description_443 Session_443_read_descriptor_in_file"}}]}

@@ -1,0 +1,7 @@
+{
+  "params": [{"name": "multiple_sources_test", "title": "SOURCE1 / SOURCE2", "date": "current_time", "timeZone": "UTC", "fontSize": 12, "camera": "Orthographic", "compact": true, "overviewVisible": true}],
+  "bands": [
+    {"name": "primary", "height": "75%", "color": "#eeeeee", "textColor": "#121212", "dateColor": "#617d89", "SessionColor": "#0099ff", "eventColor": "#0099ff", "intervalPixels": 200, "intervalUnit": "DAY", "intervalUnitPos": "TOP", "defaultEventSize": 5, "model": [{"sortBy": "NONE"}]},
+    {"name": "overview", "height": "25%", "color": "#dddddd", "textColor": "#121212", "dateColor": "#617d89", "intervalPixels": 200, "intervalUnit": "DAY"}
+  ]
+}

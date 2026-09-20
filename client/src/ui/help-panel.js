@@ -73,7 +73,7 @@ export function openHelpPanel(host, initialLink = '', initialTab = 'help') {
       const select = body.querySelector('[aria-label="Test local dataset"]');
       const preview = () => {
         const entry = host.testDatasets.find(item => item.id === select.value);
-        body.querySelector('.test-data-summary').textContent = `${entry.report.outputRecords} records / Complete bundled snapshot / ${entry.yaml}${entry.referenceImage ? '' : ' / No supplied reference: unapproved baseline'}`;
+        body.querySelector('.test-data-summary').textContent = `${entry.report.outputRecords} records / ${entry.report.serverYaml ? 'Selected archive preview; full archive via ' + entry.report.serverYaml : 'Complete bundled snapshot'} / ${entry.yaml}${entry.referenceImage ? '' : ' / No supplied reference: unapproved baseline'}`;
         body.querySelector('.test-data-reference').hidden = !entry.referenceImage;
         const img = body.querySelector('.test-data-reference img');
         if (entry.referenceImage) img.src = entry.referenceImage; else img.removeAttribute('src');

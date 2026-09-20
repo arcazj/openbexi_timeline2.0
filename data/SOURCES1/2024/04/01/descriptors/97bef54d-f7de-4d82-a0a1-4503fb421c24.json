@@ -1,0 +1,4 @@
+{
+  "dateTimeFormat": "iso8601",
+  "event_descriptor": [{
+"id":"97bef54d-f7de-4d82-a0a1-4503fb421c24","start":"Mon Apr 01 17:15:00 UTC 2024","end":"Mon Apr 01 17:58:20 UTC 2024","original_start":"Mon Apr 01 17:14:34 UTC 2024","data":{"namespace":"SOURCE1","title":"Session_403_0","type":"type1","priority":"3","status":"FINISHED","tolerance":"48","description":"description_Session_403_0_activity_0_read_descriptor_in_file"}}]}

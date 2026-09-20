@@ -32,7 +32,13 @@ def test_complete_source_normalization_and_read_only_api(entry, tmp_path):
     report = json.loads((ROOT / entry['report']).read_text())
     added = report.get('syntheticExpansion', {}).get('addedRecords', 0)
     assert len(snapshot['records']) == report['outputRecords'] == report['inputRecords'] + added
-    assert report['inputSha256'] == hashlib.sha256((ROOT / entry['original']).read_bytes()).hexdigest()
+    if 'original' in entry:
+        assert report['inputSha256'] == hashlib.sha256((ROOT / entry['original']).read_bytes()).hexdigest()
+    else:
+        assert set(entry['originals']).issubset(report['inputs'])
+        for name, digest in report['inputs'].items():
+            assert hashlib.sha256((ROOT / name).read_bytes()).hexdigest() == digest
+        assert report['inputSha256'] == hashlib.sha256(json.dumps(report['inputs'], sort_keys=True, separators=(',', ':')).encode()).hexdigest()
     profile = load_launch_configuration(ROOT / entry['yaml'])
     assert profile['snapshot_file'] == path
     app = create_app(tmp_path / 'state', TOKEN, legacy_config={'snapshotFile': str(path)})

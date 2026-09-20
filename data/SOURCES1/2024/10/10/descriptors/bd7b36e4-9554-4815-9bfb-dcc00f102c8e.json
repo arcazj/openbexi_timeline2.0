@@ -1,0 +1,4 @@
+{
+  "dateTimeFormat": "iso8601",
+  "event_descriptor": [{
+"id":"bd7b36e4-9554-4815-9bfb-dcc00f102c8e","start":"Thu Oct 10 11:30:00 UTC 2024","end":"Thu Oct 10 12:13:20 UTC 2024","original_start":"Thu Oct 10 11:29:34 UTC 2024","data":{"namespace":"SOURCE1","title":"Activity_365","type":"type1","priority":"1","status":"FINISHED","tolerance":"160","description":"description_365 Activity_365_read_descriptor_in_file"}}]}

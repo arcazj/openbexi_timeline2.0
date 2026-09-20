@@ -1,0 +1,9 @@
+{
+  "version": 1,
+  "name": "SOURCE1 / SOURCE2 March preview",
+  "source_ids": ["source1", "source2"],
+  "group_by": "none",
+  "expression": null,
+  "search": {"text": "", "mode": "any"},
+  "initial_range": {"from": "2024-03-17T00:00:00Z", "to": "2024-03-25T00:00:00Z"}
+}

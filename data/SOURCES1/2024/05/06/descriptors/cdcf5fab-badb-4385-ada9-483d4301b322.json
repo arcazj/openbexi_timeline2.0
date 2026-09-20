@@ -1,0 +1,4 @@
+{
+  "dateTimeFormat": "iso8601",
+  "event_descriptor": [{
+"id":"cdcf5fab-badb-4385-ada9-483d4301b322","start":"Mon May 06 14:30:00 UTC 2024","end":"","data":{"namespace":"SOURCE1","title":"Events32","type":"type1","priority":"4","status":"STARTED","tolerance":"250","description":"description_32 Events32_read_descriptor_in_file"}}]}

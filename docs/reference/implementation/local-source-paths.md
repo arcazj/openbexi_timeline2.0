@@ -11,7 +11,7 @@ and messaging connectors are not started.
 
 ## Start SOURCE1 and SOURCE2
 
-From `C:\projects\open_timeline2.0`, with the existing Python environment and
+From the project checkout, with the existing Python environment and
 JavaScript dependencies installed:
 
 ```powershell
@@ -30,8 +30,9 @@ background launch was blocked by the execution environment. Existing unrelated
 servers were left untouched. Automated browser tests used temporary isolated
 server instances, not the production source directories.
 
-The new project's `yaml/multiple_sources_test.yml` explicitly enables both production
-directories. It does not change the original legacy YAML. `SOURCE1` maps to the
+The version-2 `yaml/multiple_sources_test.yml` now enables the copied archives in
+`data/SOURCES1` and `data/SOURCES2`, with explicit model/filter files and a March
+17–25, 2024 opening range. It does not change the original legacy YAML. `SOURCE1` maps to the
 actual folder spelling `SOURCES1`; `SOURCE2` maps to `SOURCES2`.
 
 If `OPENBEXI_CORS_ORIGINS` is set, remove it from this process before local mode;
@@ -41,11 +42,11 @@ required when `server.local_browser` is false (or when using the old CLI without
 ## Global YAML Profiles
 
 One operator-owned file contains the server settings and the legacy `data_sources`
-list. No generated source YAML or copied archive is needed. Available profiles:
+list. Available profiles:
 
 | Profile | Read-only data | Client URL |
 | --- | --- | --- |
-| `yaml/multiple_sources_test.yml` | `C:/data/SOURCES1` and `C:/data/SOURCES2` | `http://127.0.0.1:8769/` |
+| `yaml/multiple_sources_test.yml` | Checkout's `data/SOURCES1` and `data/SOURCES2` | `http://127.0.0.1:8769/` |
 | `yaml/earthquake_volcano_data.yml` | `C:/data/earthquake` and `C:/data/volcano` | `http://127.0.0.1:8770/` |
 | `yaml/default_test.yml` | Legacy project's `tests/data/SOURCES1` and `SOURCES2` | `http://127.0.0.1:8771/` |
 

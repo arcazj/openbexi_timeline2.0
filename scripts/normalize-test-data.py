@@ -19,7 +19,6 @@ from server.app.services.legacy_json import legacy_instant, parse_legacy_json  #
 from server.app.models.model_catalog import normalize_metadata, DEFINITION_FIELDS  # noqa: E402
 
 STAMP = "2026-09-13T00:00:00.000Z"
-IDS = ("default-dataset", "ephemeris", "jfk", "monet", "religions", "space_exploration")
 
 
 class EventParser(HTMLParser):
@@ -174,6 +173,9 @@ def normalize_record(item, dataset, index, markup, source):
 
 
 def convert(dataset, profile, *, check=False):
+    if dataset == "multiple_sources_test":
+        from scripts.multiple_sources_demo import convert_multiple_sources
+        return convert_multiple_sources(ROOT, profile, check=check)
     folder = ROOT / "data"
     archived = folder / "original" / f"{dataset}.json"
     if not archived.is_file():

@@ -12,3 +12,5 @@
 *.ttf binary
 # Exact source bytes are part of the normalization provenance hashes.
 data/original/** -text -whitespace
+data/SOURCES1/** -text -whitespace
+data/SOURCES2/** -text -whitespace

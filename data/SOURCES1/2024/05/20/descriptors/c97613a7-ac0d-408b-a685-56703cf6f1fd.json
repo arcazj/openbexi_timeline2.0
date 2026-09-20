@@ -1,0 +1,4 @@
+{
+  "dateTimeFormat": "iso8601",
+  "event_descriptor": [{
+"id":"c97613a7-ac0d-408b-a685-56703cf6f1fd","start":"Mon May 20 00:55:00 UTC 2024","end":"","data":{"namespace":"SOURCE1","title":"Events360","type":"type1","priority":"1","status":"RUNNING","tolerance":"27","description":"description_360 Events360_read_descriptor_in_file"}}]}

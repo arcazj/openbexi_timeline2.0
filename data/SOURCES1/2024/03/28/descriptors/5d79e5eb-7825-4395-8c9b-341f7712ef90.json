@@ -1,0 +1,4 @@
+{
+  "dateTimeFormat": "iso8601",
+  "event_descriptor": [{
+"id":"5d79e5eb-7825-4395-8c9b-341f7712ef90","start":"Thu Mar 28 15:58:20 UTC 2024","end":"Thu Mar 28 16:48:20 UTC 2024","original_start":"Thu Mar 28 15:57:50 UTC 2024","data":{"namespace":"SOURCE1","title":"Session_360","type":"type1","priority":"1","status":"FINISHED","tolerance":"308","description":"description_360 Session_360_read_descriptor_in_file"}}]}

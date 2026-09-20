@@ -1,5 +1,14 @@
 # Data and Asset Publication Review
 
+## Multiple-source demo addition
+
+On September 20, 2026, the owner requested copying and publishing the supplied
+2024 SOURCE1 and SOURCE2 archives, together with the `multiple_sources_test`
+live demo. The repository preserves both archives; the standalone preview
+embeds the two explicitly selected March event files and their available
+descriptor notes. This records the owner's publication instruction and does
+not change any existing source license or attribution.
+
 ## Version 2.0.0
 
 On September 20, 2026, the owner requested publication of release 2.0 and live
@@ -54,7 +63,8 @@ unchanged; externally linked material is not automatically covered by this appro
 
 `data/reports/` records source hashes, record counts, uncertainties, and missing
 assets. Conversion preserves unknown fields and source text; it does not confer
-new permissions. The full standalone HTML embeds the six datasets and three
+new permissions. The full standalone HTML embeds the six original datasets,
+the bounded multiple-source preview and three
 supplied PNGs, even when only the default sample is currently visible.
 
 Public Pages deployment requires `PUBLIC_DEMO_APPROVED=true`; public preview

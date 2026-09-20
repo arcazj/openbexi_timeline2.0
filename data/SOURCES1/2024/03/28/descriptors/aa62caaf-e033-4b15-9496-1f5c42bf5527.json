@@ -1,0 +1,4 @@
+{
+  "dateTimeFormat": "iso8601",
+  "event_descriptor": [{
+"id":"aa62caaf-e033-4b15-9496-1f5c42bf5527","start":"Thu Mar 28 03:20:00 UTC 2024","end":"Thu Mar 28 04:06:40 UTC 2024","original_start":"Thu Mar 28 03:19:32 UTC 2024","data":{"namespace":"SOURCE1","title":"Session_312_0","type":"type1","priority":"2","status":"RUNNING","tolerance":"459","description":"description_Session_312_0_activity_0_read_descriptor_in_file"}}]}

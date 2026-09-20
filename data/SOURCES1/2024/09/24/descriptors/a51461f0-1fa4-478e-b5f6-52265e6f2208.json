@@ -1,0 +1,4 @@
+{
+  "dateTimeFormat": "iso8601",
+  "event_descriptor": [{
+"id":"a51461f0-1fa4-478e-b5f6-52265e6f2208","start":"Tue Sep 24 13:25:00 UTC 2024","end":"Tue Sep 24 14:01:40 UTC 2024","original_start":"Tue Sep 24 13:24:38 UTC 2024","data":{"namespace":"SOURCE1","title":"Session_162","type":"type1","priority":"3","status":"RUNNING","tolerance":"260","description":"description_162 Session_162_read_descriptor_in_file"}}]}

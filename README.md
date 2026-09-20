@@ -47,10 +47,22 @@ including daily shifts, nested activities and events before and after the origin
 | Claude Monet | [Open timeline](https://arcazj.github.io/openbexi_timeline2.0/?dataset=monet) |
 | Religions | [Open timeline](https://arcazj.github.io/openbexi_timeline2.0/?dataset=religions) |
 | Space exploration | [Open timeline](https://arcazj.github.io/openbexi_timeline2.0/?dataset=space_exploration) |
+| multiple_sources_test | [Open SOURCE1 / SOURCE2 preview](https://arcazj.github.io/openbexi_timeline2.0/?dataset=multiple_sources_test) |
 
 The same datasets are available under **Help → Test local dataset**. Changes stay
 in your browser session until you export them. Original historical fixtures and
 conversion reports are preserved in [data](data/README.md).
+
+`multiple_sources_test` opens 1,145 records from the March 17 SOURCE2 and March 24
+SOURCE1 event files, with their original dates and available descriptor notes.
+Its opening range spans March 17–25, 2024 so both sources are included. This is a
+bounded browser preview; the complete copied 2024 archives are under
+`data/SOURCES1/2024` and `data/SOURCES2/2024`.
+To browse the full archives with the same model and filter, run:
+
+```powershell
+python scripts/start.py -- --yaml yaml/multiple_sources_test.yml
+```
 
 ## Documentation
 

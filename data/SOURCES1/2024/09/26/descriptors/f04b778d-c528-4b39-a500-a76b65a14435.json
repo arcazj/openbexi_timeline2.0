@@ -1,0 +1,4 @@
+{
+  "dateTimeFormat": "iso8601",
+  "event_descriptor": [{
+"id":"f04b778d-c528-4b39-a500-a76b65a14435","start":"Thu Sep 26 09:30:00 UTC 2024","end":"","data":{"namespace":"SOURCE1","title":"Events401","type":"type1","priority":"2","status":"STARTED","tolerance":"100","description":"description_401 Events401_read_descriptor_in_file"}}]}

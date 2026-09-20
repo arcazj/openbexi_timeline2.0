@@ -1,0 +1,4 @@
+{
+  "dateTimeFormat": "iso8601",
+  "event_descriptor": [{
+"id":"7a55c45d-316d-4d83-9159-a9ef17ed4c89","start":"Fri Jul 19 06:30:00 UTC 2024","end":"","data":{"namespace":"SOURCE1","title":"Events42","type":"type1","priority":"0","status":"RUNNING","tolerance":"207","description":"description_42 Events42_read_descriptor_in_file"}}]}

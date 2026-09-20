@@ -1,0 +1,4 @@
+{
+  "dateTimeFormat": "iso8601",
+  "event_descriptor": [{
+"id":"b86f8c52-c59f-440c-9c55-b24b5b129dca","start":"Fri May 10 05:20:00 UTC 2024","end":"","data":{"namespace":"SOURCE1","title":"Events365","type":"type1","priority":"4","status":"STARTED","tolerance":"32","description":"description_365 Events365_read_descriptor_in_file"}}]}

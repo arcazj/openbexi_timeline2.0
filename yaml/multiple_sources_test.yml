@@ -1,26 +1,29 @@
-version: 1
+version: 2
 server:
   host: 127.0.0.1
   port: 8769
   local_browser: true
-  state_root: ../var/local-source-picker
-legacy:
-  root: ../../openbexi_timeline
-  allow_roots: [C:/data/SOURCES1, C:/data/SOURCES2]
-  path_maps: {/data: C:/data}
-  model: tests/models/regular_timeline.json
-  timezone: UTC
-  dialect: legacy-json
+  state_root: ../var/multiple-sources-test
+model: ../models/multiple_sources_test.json
+filter: ../filters/multiple_sources_test.json
+loading:
+  buffer_ratio: 0
 data_sources:
-  - namespace: SOURCE1
+  - id: source1
+    namespace: SOURCE1
     type: json_file
     enable: true
-    data_path: /data/
-    data_model: /data/SOURCES1/yyyy/mm/dd
-    render: {color: '#000000', textColor: '#ffffff', dateColor: '#ffffff'}
-  - namespace: SOURCE2
+    data_path: ../data/SOURCES1
+    data_model: yyyy/mm/dd
+    identity_path: data/SOURCES1/yyyy/mm/dd
+    timezone: UTC
+    dialect: legacy-json
+  - id: source2
+    namespace: SOURCE2
     type: json_file
     enable: true
-    data_path: /data/
-    data_model: /data/SOURCES2/yyyy/mm/dd
-    render: {color: '#D3D3D3', textColor: '#000000', dateColor: '#000000'}
+    data_path: ../data/SOURCES2
+    data_model: yyyy/mm/dd
+    identity_path: data/SOURCES2/yyyy/mm/dd
+    timezone: UTC
+    dialect: legacy-json

@@ -386,6 +386,18 @@
       "yaml": "yaml/test-data/space_exploration.yml",
       "original": "data/original/space_exploration.json",
       "report": "data/reports/space_exploration.json"
+    },
+    {
+      "id": "multiple_sources_test",
+      "title": "Multiple sources test",
+      "settings": {"displayUnit": "DAY"},
+      "file": "data/multiple_sources_test.json",
+      "yaml": "yaml/test-data/multiple_sources_test.yml",
+      "serverYaml": "yaml/multiple_sources_test.yml",
+      "model": "models/multiple_sources_test.json",
+      "filter": "filters/multiple_sources_test.json",
+      "originals": ["data/SOURCES1/2024/03/24/events.json", "data/SOURCES2/2024/03/17/events.json"],
+      "report": "data/reports/multiple_sources_test.json"
     }
   ]
 }

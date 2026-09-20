@@ -5,12 +5,12 @@ import { startSnapshotServer } from './snapshot-server-fixture.mjs';
 import { LocalProvider } from '../../client/src/data/local-provider.js';
 import { ServerProvider } from '../../client/src/data/server-provider.js';
 
-for(const id of ['jfk','monet','religions']) test(`${id} Python/file providers match reference maps, uncertainty and row packing`,async()=>{
+for(const id of ['jfk','monet','religions','multiple_sources_test']) test(`${id} Python/file providers match reference maps, uncertainty and row packing`,async()=>{
   const server=await startSnapshotServer(id), local=new LocalProvider(JSON.parse(await readFile(`data/${id}.json`,'utf8'))), remote=new ServerProvider({baseUrl:server.baseUrl,token:server.token});
   try{
     const info=await local.initialize(); await remote.initialize();
-    const primary=info.settings.presentation.bandLayout.find(b=>b.role==='primary');
-    const request={domain:info.settings.overview,scaleMode:'uniform',...(primary.fixedScale ? {fixedScale:primary.fixedScale}: {})};
+    const primary=info.settings.presentation.bandLayout?.find(b=>b.role==='primary');
+    const request={domain:info.settings.overview,scaleMode:'uniform',...(primary?.fixedScale ? {fixedScale:primary.fixedScale}: {})};
     const a=await local.createQuery(request),b=await remote.createQuery(request);
     const am=await local.getMap(a.queryId,a.mapId),bm=await remote.getMap(b.queryId,b.mapId);
     assert.deepEqual(am.knots,bm.knots);

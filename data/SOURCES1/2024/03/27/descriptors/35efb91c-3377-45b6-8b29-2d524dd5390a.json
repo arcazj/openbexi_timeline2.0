@@ -1,0 +1,4 @@
+{
+  "dateTimeFormat": "iso8601",
+  "event_descriptor": [{
+"id":"35efb91c-3377-45b6-8b29-2d524dd5390a","start":"Wed Mar 27 11:06:40 UTC 2024","end":"Wed Mar 27 11:40:00 UTC 2024","original_start":"Wed Mar 27 11:06:20 UTC 2024","data":{"namespace":"SOURCE1","title":"Activity_360_2","type":"type1","priority":"4","status":"RUNNING","tolerance":"105","description":"description_Activity_360_2_activity_2_read_descriptor_in_file"}}]}
