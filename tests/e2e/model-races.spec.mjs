@@ -12,13 +12,19 @@ function deferred() {
 }
 
 async function connect(page) {
+  const previousProviderId = await page.evaluate(() => window.__timelineDebug.providerId);
   await page.locator('[data-action=sources]').first().click();
   await page.locator('#server-form [name=baseUrl]').fill(server.baseUrl);
   await page.locator('#server-form [name=token]').fill(server.token);
   await page.locator('#server-form [type=submit]').click();
   await expect(page.locator('#switch-source')).toBeVisible();
   await page.locator('#switch-source').click();
-  await expect.poll(() => page.evaluate(() => window.__timelineDebug.providerKind)).toBe('server');
+  // A server-to-server switch keeps the old Connected view until initialize
+  // adopts its replacement. Wait for that replacement's prepared query.
+  await expect.poll(() => page.evaluate(previous => {
+    const current = window.__timelineDebug;
+    return current.providerKind === 'server' && current.providerId !== previous && current.ready && !!current.queryId;
+  }, previousProviderId), { timeout: 15000 }).toBe(true);
   await expect(page.locator('.provider-status')).toContainText('Connected');
   await expect(page.locator('.busy-indicator')).toHaveCount(0);
 }

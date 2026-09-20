@@ -108,6 +108,7 @@ let navigation;
 let calendar = null, calendarOpener = null;
 let displayedTimeUnit = null;
 let disposeEmptyDates;
+let emptyDatesKey = null;
 let bootPending = true;
 let pathCatalog = null, pathPreferences = null;
 let startupDiscovery;
@@ -1021,24 +1022,30 @@ function render() {
   bandStack.relativeAxis(state.presentation, plot, project, rangeIso());
   if (!$('.overview-section').hidden) { renderOverview(state.domain, presentation); updateOverviewWindow(); }
   updateStatus(); renderTable();
-  $('.empty-state')?.remove();
-  disposeEmptyDates?.(); disposeEmptyDates = null;
-  if (state.layout.detailTotal === 0) {
-    const empty = document.createElement('div'); empty.className = 'empty-state';
-    empty.innerHTML = state.query.coverage?.complete === false ? '<strong>No loaded records in this range</strong><span>Archive coverage is still being checked</span>' : '<strong>No records in this range</strong><span>Change the range or filters</span>';
-    plot.append(empty);
-    const provider = state.provider, epoch = state.epoch, from = state.fromMs, to = state.toMs;
-    disposeEmptyDates = mountEmptyDateNavigation(empty, { provider, generation: state.info.generation, input: { range: rangeIso(), filters: structuredClone(state.filter), definitionVersion: state.definitionVersion },
-      sourceLabel: id => [...$('#source-filter').options].find(option => option.value === id)?.textContent || id,
-      dateLabel: value => rangeDate(value),
-      current: () => provider === state.provider && epoch === state.epoch && from === state.fromMs && to === state.toMs && !state.authRequired && !state.generationRequired && !state.localUnavailable,
-      onError: showError, onGenerationChanged: requireGenerationRefresh,
-      navigate: value => {
-        if (state.queryLoading) return;
-        navigation?.cancel(); const target = toMs(value), range = calendarRange(target, timeDecimal(state.toMs).minus(state.fromMs));
-        Object.assign(state, range); followRange(range); rememberSetting('range', rangeIso());
-        refreshQuery({ focusTime: target, navigationOnly: true }).catch(showError);
-      } });
+  const dateKey = canonicalJson([state.provider.identity, state.info.generation, state.query.queryId, state.epoch, state.fromMs, state.toMs]);
+  // Keep a pressed button attached during layout-only renders, including resize.
+  // A new source, query, generation or range still replaces its scoped controller.
+  if (state.layout.detailTotal !== 0 || dateKey !== emptyDatesKey || !$('.empty-state')) {
+    $('.empty-state')?.remove();
+    disposeEmptyDates?.(); disposeEmptyDates = null; emptyDatesKey = null;
+    if (state.layout.detailTotal === 0) {
+      emptyDatesKey = dateKey;
+      const empty = document.createElement('div'); empty.className = 'empty-state';
+      empty.innerHTML = state.query.coverage?.complete === false ? '<strong>No loaded records in this range</strong><span>Archive coverage is still being checked</span>' : '<strong>No records in this range</strong><span>Change the range or filters</span>';
+      plot.append(empty);
+      const provider = state.provider, epoch = state.epoch, from = state.fromMs, to = state.toMs;
+      disposeEmptyDates = mountEmptyDateNavigation(empty, { provider, generation: state.info.generation, input: { range: rangeIso(), filters: structuredClone(state.filter), definitionVersion: state.definitionVersion },
+        sourceLabel: id => [...$('#source-filter').options].find(option => option.value === id)?.textContent || id,
+        dateLabel: value => rangeDate(value),
+        current: () => provider === state.provider && epoch === state.epoch && from === state.fromMs && to === state.toMs && !state.authRequired && !state.generationRequired && !state.localUnavailable,
+        onError: showError, onGenerationChanged: requireGenerationRefresh,
+        navigate: value => {
+          if (state.queryLoading) return;
+          navigation?.cancel(); const target = toMs(value), range = calendarRange(target, timeDecimal(state.toMs).minus(state.fromMs));
+          Object.assign(state, range); followRange(range); rememberSetting('range', rangeIso());
+          refreshQuery({ focusTime: target, navigationOnly: true }).catch(showError);
+        } });
+    }
   }
   $('.scale-cue').textContent = state.query.coverage?.complete === false ? 'Automatic scale pending / provisional coverage' : state.scaleMode === 'adaptive' ? `${state.scaleStrategy === 'automatic' ? 'Row optimized' : 'Manual'} / ${state.map.ratio}x local scale` : state.map.mode === 'fixed' ? 'Reference / Magnified time intervals' : 'Uniform time scale';
   renderScaleCues();

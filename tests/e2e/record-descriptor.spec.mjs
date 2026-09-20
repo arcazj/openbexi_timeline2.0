@@ -93,6 +93,37 @@ test('a delayed sidecar cannot revive a closed descriptor or replace another sel
   await expect(page.locator('.descriptor')).not.toContainText('Linked source description');
 });
 
+test('a descriptor close press completes when a resize status appears above it', async ({ page }) => {
+  await sidecar(); await openServer(page); await label(page).click();
+  await expect(page.locator('.linked-descriptor-fields')).toContainText('Linked source description');
+  await expect.poll(() => page.locator('.plot-wrap').evaluate(node => Math.abs(node.querySelector('canvas').width / Math.min(devicePixelRatio, 2) - node.clientWidth))).toBeLessThan(1);
+  await ready(page);
+  let requested = false, release;
+  const held = new Promise(resolve => { release = resolve; });
+  const routePattern = '**/query-sessions/*/layouts';
+  await page.route(routePattern, async route => {
+    if (route.request().method() !== 'POST') { await route.continue(); return; }
+    requested = true; await held;
+    try { await route.continue(); } catch { /* Closing the descriptor can supersede this resize. */ }
+  });
+  const close = page.locator('[data-action=close-descriptor]');
+  const bounds = await close.boundingBox(), point = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 };
+  try {
+    await page.mouse.move(point.x, point.y); await page.mouse.down();
+    const viewport = page.viewportSize();
+    await page.setViewportSize({ width: viewport.width, height: viewport.height + 20 });
+    await expect.poll(() => requested).toBe(true);
+    const busy = await page.locator('.busy-indicator').boundingBox();
+    expect(point.x).toBeGreaterThanOrEqual(busy.x); expect(point.x).toBeLessThanOrEqual(busy.x + busy.width);
+    expect(point.y).toBeGreaterThanOrEqual(busy.y); expect(point.y).toBeLessThanOrEqual(busy.y + busy.height);
+    await page.mouse.up();
+    await expect(page.locator('.descriptor')).toBeHidden();
+  } finally {
+    await page.mouse.up(); release(); await page.unroute(routePattern);
+  }
+  await ready(page);
+});
+
 test('label activation during a pending descriptor resize retains the selection', async ({ page }) => {
   await sidecar(); await openServer(page); await label(page).click();
   await expect(page.locator('.linked-descriptor-fields')).toContainText('Linked source description');

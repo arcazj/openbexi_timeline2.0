@@ -22,12 +22,28 @@ real lifecycle and recovery assertions, use a compact explicit SSE fixture, and
 test Now with a fixed clock on both sides of midnight. No retry count or overall
 test timeout was increased to hide these failures.
 
+The subsequent Linux Firefox run exposed an empty-date button being replaced
+during a layout resize, interrupting a click. A regression holds the pointer
+down while the viewport height changes, verifies that the same button survives,
+then releases it and checks navigation. It fails against the original build;
+the fix retains the controls for layout-only changes and still clears them when
+their source, query or range becomes obsolete.
+
+Windows Firefox also exposed an informational loading badge intercepting the
+descriptor Close button during relayout. Its regression holds a real pointer
+press while a delayed layout displays the badge; status text must not intercept
+input. A separate source-race test now waits for a replacement server identity
+and ready query before releasing an obsolete editor response, rather than
+mistaking the original connection for the newly requested one.
+
 Local Windows validation on September 20, 2026 passed 525 client tests,
 50 generator tests, 72 provider integration/parity tests and 1,253 Python 3.14
 server tests. One server test was skipped because the local account cannot
 create symbolic links. Focused Python 3.9 checks also passed. These results
 describe the local implementation checks; the full CI matrix below separately
 qualifies each operating system and interpreter combination.
+The initial committed build passed all 247 local Edge browser cases, while
+Linux Firefox CI exposed the resize regression described above.
 
 The Windows/Linux CPython 3.9–3.14 matrix remains the qualification source for
 each commit: [Candidate Verification](https://github.com/arcazj/openbexi_timeline2.0/actions/workflows/verify.yml).

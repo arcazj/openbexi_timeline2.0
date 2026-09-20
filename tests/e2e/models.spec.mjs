@@ -208,7 +208,13 @@ test('a lost model-create reply is recovered without duplicate writes and publis
     await page.locator('#server-form [name=baseUrl]').fill(server.baseUrl);
     await page.locator('#server-form [name=token]').fill(server.token);
     await page.locator('#server-form [type=submit]').click();
+    const previousProviderId = await page.evaluate(() => window.__timelineDebug.providerId);
     await page.locator('#switch-source').click();
+    // A restart can leave the old Server view active until its replacement is ready.
+    await expect.poll(() => page.evaluate(previous => {
+      const current = window.__timelineDebug;
+      return current.providerKind === 'server' && current.providerId !== previous && current.ready && !!current.queryId;
+    }, previousProviderId), { timeout: 15000 }).toBe(true);
     await expect(page.locator('.provider-status')).toContainText('Connected');
     await openManager(page);
     await expect(page.locator('.model-catalog-item.selected')).toContainText('Persistent model');

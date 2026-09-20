@@ -52,6 +52,28 @@ test('offline empty dates navigate to selected source in either direction and pr
   expect(errors).toEqual([]);
 });
 
+test('a pressed date-navigation button survives a layout-only resize and completes its click', async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.route(/^https?:/, route => route.abort());
+  await page.goto(file + '?dataset=multiple_sources_test'); await ready(page);
+  await selectSource(page, 'SOURCE2'); await calendarDate(page, 2023, 12, 15);
+  const button = page.getByRole('button', { name: 'Next date with data', exact: true });
+  await expect(button).toBeEnabled();
+  const original = await button.elementHandle(), bounds = await button.boundingBox();
+  const point = { x: bounds.x + bounds.width / 2, y: bounds.y + bounds.height / 2 };
+  const priorLayout = await page.evaluate(() => window.__timelineDebug.layoutId);
+  await page.mouse.move(point.x, point.y); await page.mouse.down();
+  try {
+    await page.setViewportSize({ width: 390, height: 864 });
+    await expect.poll(() => page.evaluate(() => window.__timelineDebug.layoutId)).not.toBe(priorLayout); await ready(page);
+    expect(await original.evaluate(node => node.isConnected), 'The pressed control must survive a layout-only render').toBe(true);
+    expect(await button.evaluate((node, pressed) => node === pressed, original)).toBe(true);
+    const current = await button.boundingBox();
+    expect(point.y).toBeGreaterThan(current.y); expect(point.y).toBeLessThan(current.y + current.height);
+  } finally { await page.mouse.up(); }
+  await ready(page); await expect(page.locator('.plot-wrap .record-label').first()).toBeVisible();
+});
+
 test('indexed server dates are provisional until verified and never substitute another source', async ({ page }) => {
   test.setTimeout(90000);
   const server = await startLocalPathsServer({ deferIndex: true });
