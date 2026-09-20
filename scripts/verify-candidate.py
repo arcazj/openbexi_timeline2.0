@@ -160,10 +160,11 @@ def main():
     parser.add_argument("--output", type=Path, required=True, help="New directory below artifacts/verification")
     parser.add_argument("--matrix", action="store_true", help="Also run focused Chromium/Firefox/Edge coverage")
     options = parser.parse_args()
-    output = options.output.resolve()
+    output = (ROOT / options.output).resolve()
     allowed = (ROOT / "artifacts/verification").resolve()
     if not output.is_relative_to(allowed) or output == allowed or output.exists():
-        parser.error("Output must be a new child directory below artifacts/verification")
+        parser.error(f"Output must be a new child directory below artifacts/verification: "
+                     f"output={output}, allowed={allowed}, exists={output.exists()}")
     output.parent.mkdir(parents=True, exist_ok=True)
     output.mkdir()
     node = shutil.which("node")

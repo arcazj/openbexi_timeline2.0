@@ -127,7 +127,12 @@ def test_four_queries_per_trusted_principal_not_four_globally(client, bundle, ap
     for headers in (alice, bob):
         for _ in range(4):
             result = client.post(BASE + "/query-sessions", headers=headers, json={"domain": bundle["settings"]["overview"]})
-            assert result.status_code == 200, result.text
+            assert result.status_code in (200, 202), result.text
+            deadline = time.monotonic() + 5
+            while result.json()["state"] == "preparing" and time.monotonic() < deadline:
+                time.sleep(0.01)
+                result = client.get(BASE + "/query-sessions/" + result.json()["queryId"], headers=headers)
+            assert result.status_code == 200 and result.json()["state"] == "ready", result.text
             handles.append((headers, result.json()))
         rejected = client.post(BASE + "/query-sessions", headers=headers, json={"domain": bundle["settings"]["overview"]})
         assert rejected.status_code == 429 and rejected.json()["code"] == "query_capacity"

@@ -7,6 +7,11 @@ import { WorkerLocalProvider, createLocalProvider } from '../../client/src/data/
 const raw = await readFile(new URL('../../data/default-dataset.json', import.meta.url), 'utf8');
 const snapshot = JSON.parse(raw);
 const tick = () => new Promise(resolve => setTimeout(resolve, 0));
+async function allocationHeld(worker) {
+  // Preparation may yield over several timer turns with the expanded dataset.
+  for (let i = 0; i < 500 && !worker().held.length; i++) await tick();
+  assert.equal(worker().held.length, 1, 'the worker must finish allocation before its reply is released');
+}
 
 class LoopbackWorker {
   constructor() {
@@ -149,8 +154,7 @@ test('late successful aborted query allocation is released instead of leaking qu
     const operation = provider.createQuery({ domain: snapshot.settings.overview }, { signal: controller.signal });
     const rejection = assert.rejects(operation, { name: 'AbortError' });
     // Wait for allocation, not one timer turn: larger snapshots yield during preparation.
-    for (let i = 0; i < 500 && !worker().held.length; i++) await tick();
-    assert.equal(worker().held.length, 1);
+    await allocationHeld(worker);
     controller.abort();
     assert.equal(worker().core.queries.size, 1);
     worker().flush(); await tick();
@@ -175,7 +179,7 @@ test('canceled warm allocations wait for acknowledged cleanup before foreground 
       worker().hold.add(method); worker().hold.add(release);
       const controller = new AbortController(); let settled = false;
       const canceled = provider[method](...args, { signal: controller.signal }).catch(error => { settled = true; return error; });
-      await tick(); controller.abort(); await tick();
+      await allocationHeld(worker); controller.abort(); await tick();
       assert.equal(settled, false, 'allocation cancellation must wait for its response');
       worker().hold.delete(method); worker().flush(); await tick();
       assert.equal(settled, false, 'allocation cancellation must wait for the release acknowledgement');
@@ -198,7 +202,7 @@ test('allocation cleanup waits are bounded by the RPC deadline without reopening
     const controller = new AbortController();
     const operation = provider.createQuery({ domain: snapshot.settings.overview }, { signal: controller.signal, timeout: 30 });
     const result = operation.catch(error => error);
-    await tick(); controller.abort();
+    await allocationHeld(worker); controller.abort();
     assert.equal((await result).code, 'local_allocation_pending');
     await assert.rejects(provider.createQuery({ domain: snapshot.settings.overview }), { code: 'local_allocation_pending' });
     assert.equal((await provider.getStatus()).recordCount, snapshot.records.length, 'ordinary reads remain available');
@@ -219,7 +223,7 @@ test('cleanup acknowledgement deadlines never cancel a release waiting to execut
     worker().hold.add('createQuery'); worker().defer.add('releaseQuery');
     const controller = new AbortController();
     const operation = provider.createQuery({ domain: snapshot.settings.overview }, { signal: controller.signal, timeout: 60 }).catch(error => error);
-    await tick(); controller.abort(); worker().hold.delete('createQuery'); worker().flush(); await tick();
+    await allocationHeld(worker); controller.abort(); worker().hold.delete('createQuery'); worker().flush(); await tick();
     const release = worker().deferred.find(message => message.method === 'releaseQuery');
     assert.ok(release);
     assert.equal((await operation).code, 'local_allocation_pending');
@@ -240,7 +244,7 @@ test('negative cleanup acknowledgement reports a terminal failure instead of pro
     await provider.initialize(); worker().hold.add('createQuery'); worker().defer.add('releaseQuery');
     const controller = new AbortController();
     const operation = provider.createQuery({ domain: snapshot.settings.overview }, { signal: controller.signal }).catch(error => error);
-    await tick(); controller.abort(); worker().hold.delete('createQuery'); worker().flush(); await tick();
+    await allocationHeld(worker); controller.abort(); worker().hold.delete('createQuery'); worker().flush(); await tick();
     const release = worker().deferred.shift();
     worker().emit('message', { data: { type: 'response', id: release.id, error: { code: 'release_failed', message: 'Controlled cleanup failure', status: 503 } } });
     const error = await operation;
