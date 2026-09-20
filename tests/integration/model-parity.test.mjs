@@ -11,7 +11,7 @@ let server, local, remote;
 const definition = { theme: 'light', rowHeight: 40, fontSize: 13, groupBy: 'sourceId', displayUnit: 'MINUTE', timeZone: 'America/New_York', scaleMode: 'adaptive', ratio: 3, bins: 64 };
 before(async () => {
   server = await startServer();
-  local = new LocalProvider(JSON.parse(await readFile('data/default-dataset.json', 'utf8')));
+  local = new LocalProvider(JSON.parse(await readFile('shared/fixtures/initial-snapshot.json', 'utf8')));
   remote = new ServerProvider({ baseUrl: server.baseUrl, token: server.token });
   await local.initialize(); await remote.initialize();
 });
@@ -107,6 +107,6 @@ test('canonical snapshot integrity agrees for numeric keys, Unicode ordering and
   assert.equal(exported.manifest.contentSha256, expected);
   const imported = new LocalProvider(exported);
   await imported.initialize();
-  assert.equal((await imported.getStatus()).recordCount, 49);
+  assert.equal((await imported.getStatus()).recordCount, exported.records.length);
   imported.dispose();
 });

@@ -16,6 +16,7 @@ from .row_packer import pack_footprints
 from .preparation_control import checked, checkpoint
 from .string_order import compare_ordered_text, normalize_string_order
 from .group_pagination import collapsed_group_keys, paginate_group_rows
+from .grouping_fields import encounter_key, family_roots
 
 HAZARD_ICONS = frozenset(json.loads((Path(__file__).resolve().parents[3] / "shared/legacy-hazard-icons.json").read_text(encoding="utf-8")).values())
 
@@ -177,7 +178,7 @@ def compare_group_keys(left, right, direction='asc', ordering=None):
     return -result if direction == 'desc' else result
 
 
-def build_styled_layout(selected, request, width, requested_height, font_size, group_by, project, domain_end, metrics_for):
+def build_styled_layout(selected, request, width, requested_height, font_size, group_by, project, domain_end, metrics_for, grouping_context=None):
     group_order = normalize_string_order(request.get('groupOrder', {}), request.get('definitionVersion', 1))
     collapsed = collapsed_group_keys(request.get('collapsedGroups', []), request.get('definitionVersion', 1))
     presentation = resolved_presentation(request.get("presentation", {"version": 1}), font_size, request.get("theme", "light"),
@@ -186,18 +187,24 @@ def build_styled_layout(selected, request, width, requested_height, font_size, g
     field = grouping["field"]
     groups = {}
     band_sources = next((band.get("sourceIds") for band in presentation.get("bandLayout", []) if band["role"] == "primary"), None)
+    context = [record for record in checked(grouping_context if grouping_context is not None else selected)
+               if not band_sources or record["sourceId"] in band_sources]
+    roots = family_roots(context) if grouping.get("recordPolicy") == "parent-family" else {}
+    if grouping.get("order") == "encounter":
+        order_key = encounter_key([source["sourceId"] for source in presentation["sourceStyles"]])
+        selected = sorted(selected, key=lambda record: (order_key(roots.get(record["id"], record)), temporal_order(record)))
     for record in checked(selected):
         if band_sources and record["sourceId"] not in band_sources:
             continue
-        key, name = group_value(record, field) if field else ((0, ""), "")
+        key, name = group_value(roots.get(record["id"], record), field) if field else ((0, ""), "")
         groups.setdefault(key, {"name": name, "records": []})["records"].append(record)
 
     def compare_groups(left, right):
         return compare_group_keys(left, right, grouping['direction'], group_order)
 
     items, rows, enclosures, row_offset = [], [], [], 0
-    effective_height = 21 if presentation.get("compact") else requested_height
-    for key in sorted(groups, key=cmp_to_key(compare_groups)):
+    effective_height = (16 if presentation.get("durationLabels") == "after" else 21) if presentation.get("compact") else requested_height
+    for key in groups if grouping.get("order") == "encounter" else sorted(groups, key=cmp_to_key(compare_groups)):
         group = groups[key]
         if field:
             row = {"row": row_offset, "type": "group", "name": group["name"], "key": group_key(key),
@@ -265,6 +272,10 @@ def build_styled_layout(selected, request, width, requested_height, font_size, g
             if presentation.get("compact"):
                 label_y = 2
                 geometry_y = 2 + len(lines) * line_height / 2 if point else 2 + len(lines) * line_height + style["barHeight"] / 2
+            if not point and presentation.get("durationLabels") == "after":
+                # Keep duration bars and their measured labels on one horizontal line.
+                label_x = max(6, x_end + 5)
+                geometry_y = label_y + max(len(lines) * line_height, style["barHeight"], 16) / 2
             inside = not point and not style["icon"] and presentation.get("durationLabels") == "inside-when-fitting" and label_x >= x_start and label_x + label_width + 4 <= min(width, x_end)
             if inside:
                 style["barHeight"] = max(style["barHeight"], len(lines) * line_height + 2)
@@ -296,17 +307,42 @@ def build_styled_layout(selected, request, width, requested_height, font_size, g
                 item["baselineStart"], item["baselineEnd"] = project(baseline_start), project(baseline_end)
                 item["baselineOffsetY"] = geometry_y + (style["pointRadius"] if point else style["barHeight"] / 2) + 3
                 if point:
-                    item["baselineOffsetY"] = max(item["baselineOffsetY"], 6 + len(lines) * line_height + 3)
+                    item["baselineOffsetY"] = max(item["baselineOffsetY"], label_y + len(lines) * line_height + 3)
                 left = max(0, min(left, item["baselineStart"] - 2, item["baselineEnd"] - 2))
                 right = min(width, max(right, item["baselineStart"] + 2, item["baselineEnd"] + 2))
                 row_bottom = max(row_bottom, item["baselineOffsetY"] + 0.5 + 6)
             effective_height = max(effective_height, math.ceil(row_bottom))
             item.update(row=0, footprintStart=left, footprintEnd=right)
             group_items.append(item)
-        packed = {"rows": range(len(group_items)), "count": len(group_items)} if nested else pack_footprints(group_items)
+        overlay = nested and presentation["nesting"].get("layout") == "overlay"
+        if overlay:
+            # A legacy session with one identically bounded activity is one visual
+            # mark. Retain both records (and their descriptors), painting the child
+            # on top. All other records keep independent collision footprints.
+            representatives, units, unit_by_id = {}, [], {}
+            for item in group_items:
+                record = item["record"]
+                parent = record_map.get(item["parentId"])
+                # Colors/icons distinguish the activity from its container.
+                same = (parent and len(children.get(parent["id"], [])) == 1
+                    and all(record.get(field) == parent.get(field) for field in ("start", "end", "kind", "title", "sourceId"))
+                    and all(record.get("render", {}).get(field) == parent.get("render", {}).get(field)
+                            for field in ("fontSize", "fontWeight", "fontStyle")))
+                representative = representatives[parent["id"]] if same else record["id"]
+                representatives[record["id"]] = representative
+                if representative not in unit_by_id:
+                    unit_by_id[representative] = len(units)
+                    units.append({"footprintStart": item["footprintStart"], "footprintEnd": item["footprintEnd"]})
+                unit = units[unit_by_id[representative]]
+                unit["footprintStart"] = min(unit["footprintStart"], item["footprintStart"])
+                unit["footprintEnd"] = max(unit["footprintEnd"], item["footprintEnd"])
+            unit_packing = pack_footprints(units)
+            packed = {"count": unit_packing["count"], "rows": [unit_packing["rows"][unit_by_id[representatives[item["record"]["id"]]]] for item in group_items]}
+        else:
+            packed = {"rows": range(len(group_items)), "count": len(group_items)} if nested else pack_footprints(group_items)
         for item, row in zip(group_items, packed["rows"]):
             item["row"] = row_offset + row
-        if nested:
+        if nested and not overlay:
             descendant_items = {}
             for item in group_items:
                 for ancestor in item["ancestorIds"]:

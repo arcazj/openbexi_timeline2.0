@@ -23,5 +23,15 @@ test('short mobile Split pages use the real plot height without clipping label o
     const current = await page.evaluate(() => window.__timelineDebug); expect(current.queryId).toBe(before.queryId); expect(current.mapId).toBe(before.mapId); expect(current.fromMs).toBe(before.fromMs); expect(current.toMs).toBe(before.toMs);
   }
   await expect(page.locator('.overview-section')).toBeVisible(); expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(390);
+  const bounds = await page.evaluate(() => Object.fromEntries(['.main-axis', '.overview-section', '.table-view', 'footer'].map(selector => {
+    const box = document.querySelector(selector).getBoundingClientRect(); return [selector, { top: box.top, bottom: box.bottom }];
+  })));
+  expect(bounds['.main-axis'].bottom).toBeLessThanOrEqual(bounds['.overview-section'].top + 1);
+  expect(bounds['.overview-section'].bottom).toBeLessThanOrEqual(bounds['.table-view'].top + 1);
+  expect(bounds['.table-view'].bottom).toBeLessThanOrEqual(bounds.footer.top + 1);
+  expect(bounds.footer.bottom).toBeLessThanOrEqual(701);
+  const table = await page.evaluate(() => ({ row: document.querySelector('.table-scroll tbody tr').getBoundingClientRect().bottom,
+    visibleBottom: document.querySelector('.table-scroll').getBoundingClientRect().bottom }));
+  expect(table.row).toBeLessThanOrEqual(table.visibleBottom);
   await expect(page.locator('.toast')).toHaveCount(0); await page.screenshot({ path: info.outputPath('short-mobile-split-pagination.png') });
 });

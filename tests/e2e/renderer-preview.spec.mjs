@@ -20,6 +20,25 @@ test.beforeEach(async ({ page }) => {
 
 test.afterEach(async ({ page }) => { await page.evaluate(() => window.renderer?.dispose()); });
 
+test('Perspective camera projects HTML hit targets onto the same world plane and returns to 2D', async ({ page }) => {
+  await page.evaluate(() => { window.renderer.setCameraMode('Perspective'); window.paint([window.makeItem('projected')]); });
+  expect(await page.evaluate(() => window.renderer.camera.isPerspectiveCamera)).toBe(true);
+  const hit = page.locator('.record-hit[data-record-id="projected"]');
+  await hit.evaluate(node => node.addEventListener('click', () => { window.hitCount = (window.hitCount || 0) + 1; }));
+  const target = await hit.boundingBox();
+  const center = { x: target.x + target.width / 2, y: target.y + target.height / 2 };
+  const world = await page.evaluate(point => window.renderer.planePoint(point.x, point.y), center);
+  expect(world.x).toBeGreaterThan(20); expect(world.x).toBeLessThan(100);
+  expect(world.y).toBeGreaterThan(70); expect(world.y).toBeLessThan(85);
+  await page.mouse.click(center.x, center.y);
+  expect(await page.evaluate(() => window.hitCount)).toBe(1);
+  await page.evaluate(() => window.renderer.previewOffset(15));
+  await hit.click(); expect(await page.evaluate(() => window.hitCount)).toBe(2);
+  await page.evaluate(() => { window.renderer.setCameraMode('Orthographic'); window.paint([window.makeItem('projected')]); });
+  expect(await page.evaluate(() => window.renderer.camera.isOrthographicCamera)).toBe(true);
+  expect(await hit.evaluate(node => node.getBoundingClientRect().x)).toBe(20);
+});
+
 test('very long session bars remain clickable after camera movement without giant CSS geometry', async ({ page }) => {
   await page.evaluate(() => { window.paint([window.makeItem('long', -1e20, 1e20)]); });
   const target = page.locator('.record-hit[data-record-id="long"]');

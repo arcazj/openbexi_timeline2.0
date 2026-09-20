@@ -4,6 +4,7 @@ import { createElement, icons } from 'lucide';
 import { escapeHtml } from '../utils/dom.js';
 import { zoneLabels } from './zones.js';
 import { hazardIcons } from './hazard-icons.js';
+import { perspectiveCamera, projectedDomTransform, unprojectPlanePoint } from './camera-projection.js';
 import '../styles/grouping.css';
 const recordIcons = { circle: icons.Circle, check: icons.Check, 'alert-triangle': icons.AlertTriangle, info: icons.Info, flag: icons.Flag, radio: icons.Radio, clock: icons.Clock, 'file-text': icons.FileText, star: icons.Star };
 
@@ -13,6 +14,7 @@ export class TimelineRenderer {
     this.scene = new THREE.Scene();
     this.camera = new THREE.OrthographicCamera(0, 1, 1, 0, 0.1, 100);
     this.camera.position.z = 10;
+    this.orthographicCamera = this.camera; this.cameraMode = 'Orthographic';
     this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: false, preserveDrawingBuffer: true });
     this.renderer.setPixelRatio(Math.min(devicePixelRatio, 2));
     this.renderer.domElement.setAttribute('aria-hidden', 'true');
@@ -21,6 +23,21 @@ export class TimelineRenderer {
     this.labels.style.overflow = 'visible';
     host.append(this.renderer.domElement, this.labels);
   }
+  setCameraMode(mode) { this.cameraMode = mode === 'Perspective' ? 'Perspective' : 'Orthographic'; }
+  configureCamera(offset = 0) {
+    if (this.cameraMode === 'Perspective') {
+      this.perspective = perspectiveCamera(this.width, this.height, offset, this.perspective);
+      this.camera = this.perspective;
+      this.labels.style.transformOrigin = '0 0';
+      this.labels.style.transform = projectedDomTransform(this.camera, this.width, this.height);
+    } else {
+      this.camera = this.orthographicCamera;
+      this.camera.left = -offset; this.camera.right = this.width - offset; this.camera.top = this.height; this.camera.updateProjectionMatrix();
+      this.labels.style.transform = `translate3d(${offset}px,0,0)`;
+    }
+    this.host.dataset.camera = this.cameraMode;
+  }
+  planePoint(x, y) { return this.cameraMode === 'Perspective' ? unprojectPlanePoint(this.camera, x, y, this.width, this.height) : { x, y }; }
   clear() {
     for (const child of [...this.scene.children]) {
       this.scene.remove(child); child.geometry?.dispose(); child.material?.dispose();
@@ -76,7 +93,7 @@ export class TimelineRenderer {
     this.clear(); this.width = width; this.height = height;
     this.renderer.domElement.dataset.minorTicks = JSON.stringify(ticks.filter(t => t.minor && project(t.timeMs) >= 0 && project(t.timeMs) < width).map(t => t.timeMs));
     this.renderer.setSize(width, height);
-    this.camera.left = 0; this.camera.right = width; this.camera.top = height; this.camera.updateProjectionMatrix();
+    this.configureCamera();
     this.scene.background = new THREE.Color(presentation?.bands.primary.backgroundColor || (theme === 'dark' ? '#171c21' : theme === 'classic' ? '#a9d7ef' : '#eef0f0'));
     const rowSources = new Map();
     for (const item of rows.items || []) if (item.record) { const list = rowSources.get(item.row) || []; list.push(item); rowSources.set(item.row, list); }
@@ -110,12 +127,24 @@ export class TimelineRenderer {
         labels.push(`<button type="button" class="group-label group-toggle" data-group-key="${escapeHtml(group.key)}" data-continuation="${!!group.continuation}" aria-expanded="${!group.collapsed}" aria-label="${escapeHtml(`${action}, ${status}`)}" title="${escapeHtml(action)}" style="top:${y}px;height:${rowHeight - 2}px;max-width:${Math.max(1, width - 14)}px;color:${groupColor}">${disclosure}<span class="group-name">${escapeHtml(group.name)}</span><span class="group-count">${group.recordCount}</span>${group.continuation ? '<span class="group-continued">continued</span>' : ''}</button>`);
       } else labels.push(`<div class="group-label" style="top:${y}px;color:${groupColor}">${escapeHtml(group.name)}</div>`);
     }
+    const overlaidParents = new Map();
+    if (presentation?.nesting?.layout === 'overlay') {
+      const byId = new Map((rows.items || []).filter(item => item.record).map(item => [item.record.id, item]));
+      for (const item of byId.values()) {
+        const parent = byId.get(item.parentId);
+        if (parent && parent.row === item.row && parent.record.title === item.record.title
+            && parent.xStart === item.xStart && parent.xEnd === item.xEnd) overlaidParents.set(parent.record.id, item.record.id);
+      }
+    }
+    let paintedSelection = selectedId;
+    for (let depth = 0; depth < 9 && overlaidParents.has(paintedSelection); depth++) paintedSelection = overlaidParents.get(paintedSelection);
     for (const item of rows.items || []) {
       const record = item.record; if (!record) continue;
+      if (overlaidParents.has(record.id)) continue;
       const y = paddingTop + (item.row - rows.startRow) * rowHeight;
       if (item.style && item.labelLines) {
         const style = { ...item.style }, point = record.kind === 'event' || (record.end !== null && record.end === record.start), centerY = y + item.geometryOffsetY;
-        const selected = record.id === selectedId, left = item.xStart, right = item.xEnd;
+        const selected = record.id === paintedSelection, left = item.xStart, right = item.xEnd;
         if (selected) this.rect(0, y, width, rowHeight, '#3c94c4', 0.12, 0.4, true);
         if (item.baselineStart != null && item.baselineEnd != null) this.rect(Math.min(item.baselineStart, item.baselineEnd), y + item.baselineOffsetY, Math.abs(item.baselineEnd - item.baselineStart), 1, presentation?.baseline.color || '#78848d', 1, 0.7);
         if (point && !hazardIcons[style.icon]) this.point(item.xStart, centerY, style.pointRadius, style.color, selected);
@@ -186,7 +215,7 @@ export class TimelineRenderer {
   }
   previewOffset(dx) {
     if (!Number.isFinite(dx) || !this.width) return;
-    this.camera.left = -dx; this.camera.right = this.width - dx; this.camera.updateProjectionMatrix();
+    this.configureCamera(dx);
     for (const mesh of this.scene.children) {
       if (mesh.userData.fixed) mesh.position.x = this.width / 2 - dx;
       else if (mesh.userData.horizontalInterval) this.clipRectangle(mesh, dx);
@@ -198,7 +227,6 @@ export class TimelineRenderer {
       if (target.node.style.left !== left) target.node.style.left = left;
       if (target.node.style.width !== width) target.node.style.width = width;
     }
-    this.labels.style.transform = `translate3d(${dx}px,0,0)`;
     this.updatePreviewTabOrder(dx);
     for (const label of this.labels.querySelectorAll('.group-label')) label.style.transform = `translateX(${-dx}px)`;
     this.renderer.render(this.scene, this.camera);

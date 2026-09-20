@@ -4,7 +4,7 @@ import { Temporal } from '@js-temporal/polyfill';
 import { toMs, toIso } from '../timeline/time-scale.js';
 
 const BAND_FIELDS = { color: 'backgroundColor', textColor: 'textColor', dateColor: 'dateColor', SessionColor: 'sessionColor', eventColor: 'eventColor', sessionHeight: 'barHeight', defaultEventSize: 'pointRadius', intervalUnit: 'intervalUnit', dateFormat: 'dateFormat' };
-const PARAM_FIELDS = new Set(['name', 'title', 'date', 'timeZone', 'top', 'left', 'height', 'width', 'fontSize', 'fontFamily', 'fontWeight', 'fontStyle', 'camera', 'data', 'data_default_port', 'data_sse_port']);
+const PARAM_FIELDS = new Set(['name', 'title', 'date', 'timeZone', 'top', 'left', 'height', 'width', 'fontSize', 'fontFamily', 'fontWeight', 'fontStyle', 'camera', 'data', 'data_default_port', 'data_sse_port', 'compact', 'overviewVisible']);
 const OTHER_BAND_FIELDS = new Set(['name', 'height', 'intervalPixels', 'subIntervalPixels', 'intervalUnitPos', 'fontSize', 'fontWeight', 'fontStyle', 'fontFamily', 'textBackgroundColor', 'model']);
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
 const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
@@ -38,14 +38,20 @@ export function adaptLegacyPresentation(model, { sourceBindings = [], namespaceG
   const params = model.params[0], definition = clone(DEFAULT_DEFINITION), diagnostics = [];
   const notice = (path, code, message) => diagnostics.push({ path, code, severity: 'notice', message });
   const unsupported = path => diagnostics.push({ path, code: 'unsupported_legacy_presentation', severity: 'warning', message: 'This authored property is preserved in source provenance but is not rendered or executed.' });
-  if (params.camera !== undefined && params.camera !== 'Orthographic') throw problem('Perspective models require a separate explicit compatibility implementation');
+  if (params.camera !== undefined && !['Orthographic', 'Perspective'].includes(params.camera)) throw problem('Camera must be Orthographic or Perspective');
   const name = params.title ?? 'Legacy timeline';
   if (typeof name !== 'string' || !name.trim() || [...name].length > 100) throw problem('Model title must contain 1-100 characters');
   definition.fontSize = params.fontSize === undefined ? 12 : number(params.fontSize, 'fontSize');
   definition.rowHeight = Math.max(32, definition.fontSize + 19);
   definition.timeZone = params.timeZone ?? 'UTC';
   const presentation = { version: 1, bands: {}, labels: { fields: ['/title'] }, nesting: { enabled: true } };
-  const viewHints = { version: 1, focus: legacyModelFocus(focus ?? params.date), bands: {} };
+  if (params.compact !== undefined && typeof params.compact !== 'boolean') throw problem('compact must be boolean');
+  if (params.compact) Object.assign(presentation, { compact: true, durationLabels: 'after', nesting: { enabled: true, layout: 'overlay' } });
+  const viewHints = { version: 1, camera: params.camera ?? 'Orthographic', focus: legacyModelFocus(focus ?? params.date), bands: {} };
+  if (params.overviewVisible !== undefined) {
+    if (typeof params.overviewVisible !== 'boolean') throw problem('overviewVisible must be boolean');
+    viewHints.overviewVisible = params.overviewVisible;
+  }
   const authoredHeights = [];
   for (let index = 0; index < 2; index++) {
     const band = model.bands[index], role = index ? 'overview' : 'primary', target = {};
@@ -88,7 +94,8 @@ export function adaptLegacyPresentation(model, { sourceBindings = [], namespaceG
   const grouping = namespaceGrouping === true ? 'namespace' : namespaceGrouping === false ? 'NONE' : sortBy ?? model.bands[0].model?.[0]?.sortBy ?? 'NONE';
   if (grouping !== 'NONE') {
     if (typeof grouping !== 'string' || !/^[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*){0,7}$/.test(grouping)) throw problem('Legacy grouping must be a safe data-property chain');
-    presentation.grouping = { field: `/data/${grouping.split('.').join('/')}`, direction: 'asc' };
+    const canonical = ['namespace', 'description', 'text', 'system', 'type', 'status', 'priority'].includes(grouping);
+    presentation.grouping = { field: `/data/${canonical ? '' : 'legacy/'}${grouping.split('.').join('/')}`, direction: 'asc', recordPolicy: 'parent-family', order: 'encounter' };
   }
   presentation.sourceStyles = sourceBindings.flatMap((binding, index) => {
     if (!binding || typeof binding !== 'object' || Array.isArray(binding)) throw problem('Invalid source binding');

@@ -31,6 +31,7 @@ class LegacyRepository:
         self._index, self._starts, self._max_ends = [], [], []
         self.layout, self.audit_state, self.audit_entries = None, None, {}
         self.root = Path(state_root).resolve()
+        self.launch = copy.deepcopy(options.get("launch"))
         self.configuration = load_legacy_sources(
             options["yaml"], legacy_root=options["legacyRoot"], allow_roots=options["allowRoots"],
             path_maps=options.get("pathMaps"), timezone=options.get("timezone", "UTC"),
@@ -38,7 +39,10 @@ class LegacyRepository:
         if any(item["severity"] == "error" for item in self.configuration.diagnostics):
             raise DomainError("legacy_configuration_incomplete", "Enabled legacy source configuration is unsupported or unavailable. Inspect the YAML conversion report before serving.", 409)
         # Identity and application state may be written, but never inside an authority tree.
-        protected = [Path(options["legacyRoot"]).resolve(), *[Path(p).resolve() for p in options["allowRoots"]]]
+        protected = [*[Path(p).resolve() for p in options["allowRoots"]],
+                     *([] if self.launch else [Path(options["legacyRoot"]).resolve()])]
+        if self.launch:
+            protected.extend([Path(options["modelRoot"]).resolve(), Path(self.launch["filter"]).parent.resolve()])
         if any(self.root == p or self.root.is_relative_to(p) or p.is_relative_to(self.root) for p in protected):
             raise DomainError("legacy_state_path", "Server state and legacy authority roots must be disjoint.", 403)
         self.reader = LegacyReader(self.configuration.sources, allow_roots=options["allowRoots"],
@@ -47,7 +51,7 @@ class LegacyRepository:
         self.presentation = None
         if options.get("model"):
             # Keep the configured path spelling; safe_read checks aliases and reparse points.
-            legacy_root = Path(os.path.abspath(options["legacyRoot"]))
+            legacy_root = Path(os.path.abspath(options.get("modelRoot", options["legacyRoot"])))
             model_path = Path(options["model"])
             if not model_path.is_absolute():
                 model_path = legacy_root / model_path
@@ -55,7 +59,8 @@ class LegacyRepository:
             model, _ = parse_legacy_json(raw, "strict")
             self.presentation = adapt_legacy_presentation(
                 model, source_bindings=self.configuration.render_sources,
-                namespace_grouping=options.get("namespaceGrouping"))
+                namespace_grouping=options.get("namespaceGrouping"),
+                **({"focus": "current_time"} if self.launch else {}))
 
     def open(self, *, cancel=None, progress=None):
         self.reload(cancel=cancel, progress=progress)
@@ -80,11 +85,14 @@ class LegacyRepository:
                 snapshot = apply_legacy_presentation(metadata, self.presentation)
                 snapshot["records"] = records
                 snapshot["manifest"]["recordCount"] = len(records)
+            if self.launch:
+                from ..services.launch_environment import apply_environment
+                snapshot = apply_environment(snapshot, self.launch, self.root, persist=True)
             records = {record["id"]: record for record in snapshot["records"]}
             meta = normalize_metadata({key: value for key, value in snapshot.items() if key != "records"})
             meta["manifest"]["legacy"]["configuration"] = self.configuration.metadata()
             meta["manifest"]["legacy"]["queryScope"] = "overlapping-query-domain"
-            if result.report["domain"]:
+            if result.report["domain"] and not self.launch:
                 end = instant_ms(result.report["domain"]["to"])
                 meta["settings"]["range"] = {"from": iso_from_ms(max(MIN_INSTANT_MS, end - 3600000)), "to": iso_from_ms(end)}
                 meta["settings"]["overview"] = {"from": iso_from_ms(max(MIN_INSTANT_MS, end - 86400000)), "to": iso_from_ms(end)}
@@ -177,6 +185,14 @@ class LegacyRepository:
                 configuration["diagnostics"] = []
                 if 'sourcePredicates' in configuration:
                     configuration['sourcePredicates'] = {identity: expression for identity, expression in configuration['sourcePredicates'].items() if identity in allowed}
+                if 'sourceAliases' in configuration:
+                    configuration['sourceAliases'] = {alias: identity for alias, identity in configuration['sourceAliases'].items() if identity in allowed}
+            launch = node.get("launch")
+            if launch:
+                if "sourceAliases" in launch:
+                    launch["sourceAliases"] = {alias: identity for alias, identity in launch["sourceAliases"].items() if identity in allowed}
+                if "settings" in launch:
+                    presentation(launch["settings"])
 
         for name in ("settings", "models", "model", "defaults", "preferences", "views", "values", "layers"):
             if name in value:
@@ -206,7 +222,7 @@ class LegacyRepository:
             value["sourceIds"] = sorted(allowed)
         if "recordCount" in value:
             value["recordCount"] = len(visible)
-        if "settings" in value:
+        if "settings" in value and not self.launch:
             fallback = {"from": "2024-01-01T00:00:00.000Z", "to": "2024-01-02T00:00:00.000Z"}
             selected = domain or fallback
             end = instant_ms(selected["to"])

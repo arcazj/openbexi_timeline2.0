@@ -1,0 +1,27 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://openbexi.local/schemas/launch-profile.schema.json",
+  "title": "Version 2 YAML launch environment",
+  "type": "object", "additionalProperties": false,
+  "required": ["version", "server", "model", "filter", "data_sources"],
+  "properties": {
+    "version": {"const": 2},
+    "server": {"type": "object", "additionalProperties": false, "required": ["host", "port", "local_browser", "state_root"], "properties": {
+      "host": {"type": "string", "minLength": 1}, "port": {"type": "integer", "minimum": 1, "maximum": 65535}, "local_browser": {"type": "boolean"},
+      "state_root": {"type": "string", "minLength": 1}, "preferences_root": {"type": ["string", "null"], "minLength": 1},
+      "startup_mode": {"enum": ["background", "foreground"]}, "data_loading": {"enum": ["lazy", "eager"]}
+    }},
+    "model": {"type": "string", "minLength": 1, "maxLength": 4096}, "filter": {"type": "string", "minLength": 1, "maxLength": 4096},
+    "data_sources": {"type": "array", "minItems": 1, "maxItems": 100, "items": {"type": "object", "additionalProperties": false,
+      "required": ["id", "namespace", "type", "enable", "data_path", "data_model"], "properties": {
+        "id": {"type": "string", "pattern": "^[A-Za-z0-9_-]{1,128}$"}, "namespace": {"type": "string", "minLength": 1, "maxLength": 256},
+        "type": {"const": "json_file"}, "enable": {"type": "boolean"}, "data_path": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "data_model": {"enum": ["yyyy", "yyyy/mm", "yyyy/mm/dd"]}, "identity_path": {"type": "string", "minLength": 1, "maxLength": 4096},
+        "timezone": {"type": "string", "minLength": 1, "maxLength": 128}, "dialect": {"enum": ["strict", "legacy-json"]}, "render": {"type": "object"}
+      }
+    }},
+    "loading": {"type": "object", "additionalProperties": false, "properties": {
+      "buffer_ratio": {"type": "number", "minimum": 0, "maximum": 1}, "cache_mib": {"type": "integer", "minimum": 8, "maximum": 256}, "index_refresh_seconds": {"type": "number", "minimum": 5, "maximum": 3600}
+    }}
+  }
+}

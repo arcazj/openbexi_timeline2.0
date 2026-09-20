@@ -190,8 +190,25 @@ export async function startupTarget({ protocol = location.protocol, fetcher = fe
   if (protocol === 'file:') return { mode: 'standalone' };
   const controller = new AbortController(), timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetcher('/api/v1/bootstrap', { headers: { 'X-OpenBEXI-Local': '1' },
-      credentials: 'omit', cache: 'no-store', signal: controller.signal });
+    let response;
+    // A temporary browser/network resource failure is not an authoritative server response.
+    // Retry transport only, with all attempts and backoff sharing the same deadline.
+    for (let attempt = 0; ; attempt++) {
+      controller.signal.throwIfAborted();
+      try {
+        response = await fetcher('/api/v1/bootstrap', { headers: { 'X-OpenBEXI-Local': '1' },
+          credentials: 'omit', cache: 'no-store', signal: controller.signal });
+        break;
+      } catch (error) {
+        if (controller.signal.aborted || attempt >= 2) throw error;
+        await new Promise((resolve, reject) => {
+          const abort = () => { clearTimeout(retry); reject(controller.signal.reason); };
+          const retry = setTimeout(() => { controller.signal.removeEventListener('abort', abort); resolve(); }, 150 * (attempt + 1));
+          controller.signal.addEventListener('abort', abort, { once: true });
+          if (controller.signal.aborted) abort();
+        });
+      }
+    }
     if (response.status === 404) return { mode: 'standalone' };
     if (response.ok && response.headers?.get('content-type')?.includes('text/html')) return { mode: 'standalone' };
     if (!response.ok) throw new Error('Server configuration is unavailable');

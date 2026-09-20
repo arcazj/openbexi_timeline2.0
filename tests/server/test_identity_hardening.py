@@ -16,7 +16,7 @@ from server.app.services import identity as module
 from server.app.services.identity import IdentityStore, recover_identity
 
 SECRET = "hardening-bootstrap-secret"
-SEED = ROOT / "data/default-dataset.json"
+SEED = ROOT / "shared/fixtures/initial-snapshot.json"
 
 
 @pytest.fixture

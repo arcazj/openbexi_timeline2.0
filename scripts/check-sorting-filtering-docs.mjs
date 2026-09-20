@@ -45,7 +45,7 @@ for (const image of images.captures) {
   assert.equal(image.clippedControls, 0);
 }
 const names = new Set(execFileSync('git', ['ls-files', '-z', '--cached', '--others', '--exclude-standard'], { cwd: root }).toString().split('\0').filter(Boolean));
-const docs = ['OpenBEXI_Timeline_Sorting_Filtering_Prompt.md', 'docs/filters-and-search.md', ...(await readdir(new URL('../docs/sorting-filtering/', import.meta.url))).filter(name => name.endsWith('.md')).map(name => 'docs/sorting-filtering/' + name)];
+const docs = ['OpenBEXI_Timeline_Sorting_Filtering_Prompt.md', 'docs/reference/implementation/filters-and-search.md', ...(await readdir(new URL('../docs/sorting-filtering/', import.meta.url))).filter(name => name.endsWith('.md')).map(name => 'docs/sorting-filtering/' + name)];
 for (const file of docs) assert.deepEqual(documentationProblems(file, (await read(file)).toString(), names), [], file);
 const prompt = (await read(docs[0])).toString();
 for (let index = 1; index <= 11; index++) assert(prompt.includes(`## R${index}. `), `Missing R${index}`);

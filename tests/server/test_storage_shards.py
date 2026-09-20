@@ -11,7 +11,7 @@ from server.app.repositories import storage_migration as migration
 from server.app.repositories.json_repository import JsonRepository, atomic_json
 from server.app.services.identity import IdentityStore
 
-SEED = ROOT / "data/default-dataset.json"
+SEED = ROOT / "shared/fixtures/initial-snapshot.json"
 
 
 def migrated(tmp_path):
@@ -34,7 +34,7 @@ def test_explicit_migration_preserves_all_records_outcomes_controls_and_source_b
     identities.close()
     before = {str(path.relative_to(source)): path.read_bytes() for path in source.rglob("*.json")}
     report = migration.migrate_storage(source, destination, SEED)
-    assert report["activated"] is False and report["recordCount"] == 49
+    assert report["activated"] is False and report["recordCount"] == len(read_json(SEED)["records"]) + 1
     assert before == {str(path.relative_to(source)): path.read_bytes() for path in source.rglob("*.json")}
     assert read_json(destination / "control/identities.json") == identity_state
     assert not (destination / "records").exists()

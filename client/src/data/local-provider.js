@@ -118,7 +118,7 @@ export class LocalProvider {
       const data = await createQueryDataAsync(snapshot, clone(input), { signal: options.signal });
       this._assert(); abortIfNeeded(options.signal);
       const queryId = uuid();
-      const manifest = { queryId, snapshotId: uuid(), mapId: data.map.mapId, providerId: this.identity, generation, revision, baseTotal: data.records.length, matchTotal: data.matches.size, overviewTotal: data.overviewRecords.length, overviewMatchTotal: data.overviewRecords.filter(r => data.matches.has(r.id)).length, fieldTypes: data.fieldTypes, state: 'ready' };
+      const manifest = { queryId, snapshotId: uuid(), mapId: data.map.mapId, providerId: this.identity, generation, revision, baseTotal: data.records.length, matchTotal: data.matches.size, overviewTotal: data.overviewRecords.length, overviewMatchTotal: data.overviewRecords.filter(r => data.matches.has(r.id)).length, fieldTypes: data.fieldTypes, groupingFields: data.groupingFields, state: 'ready' };
       if (data.definitionVersion === 2) Object.assign(manifest, { definitionVersion: 2, relationshipMode: data.relationshipMode,
         baseTotal: data.eligibleIds.size, counts: scopedQueryCounts(data, data.map.domain, revision, generation, data.density.complete) });
       this.queries.set(queryId, { ...data, manifest, layouts: new Map(), tables: new Map(), expiresAt: Date.now() + 300000 });
@@ -194,7 +194,8 @@ export class LocalProvider {
     input = this._versionedInput(query, input);
     if (input.mapId && input.mapId !== query.map.mapId) throw new ProviderError('map_mismatch', 'Map belongs to a different query', 409);
     if (query.layouts.size >= 2) throw new ProviderError('layout_capacity', 'Release an old layout before creating another', 429);
-    const layout = buildLayout(query.records, query.map, input, query.matches);
+    const layoutRecords = query.contextRecords?.length ? [...new Map([...query.records, ...query.contextRecords].map(record => [record.id, record])).values()] : query.records;
+    const layout = buildLayout(layoutRecords, query.map, input, query.matches);
     if (query.provenance) for (const item of layout.items) item.provenance = query.provenance[item.record.id];
     abortIfNeeded(options.signal);
     const layoutId = uuid();

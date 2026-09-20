@@ -4,11 +4,12 @@ import { pathProblems, hasCredential, documentationProblems } from '../../script
 
 test('publication excludes runtime identities, exports, private profiles and installed tools', () => {
   for (const file of ['var/hazards/control/identities.json', '.env.production', 'runtime/secret.json', 'output/source-export.json',
-    'node_modules/three/package.json', 'tmp/tool/python.exe', '.idea/workspace.xml', 'yaml/local/private.yml']) {
+    'node_modules/three/package.json', 'tmp/tool/python.exe', '.idea/workspace.xml', 'yaml/local/private.yml',
+    'YAML/Local/private.yml', 'Config/LOCAL/private.yaml', 'output/pdf/local-test-data.pdf', 'OUTPUT/report.pdf']) {
     assert.ok(pathProblems([file]).length, file);
   }
   assert.deepEqual(pathProblems(['data/default-dataset.json', 'tests/fixtures/synthetic.json', '.env.example',
-    'output/pdf/local-test-data.pdf', '.run/Timeline.run.xml']), []);
+    'docs/openbexi_timeline2.0_user_manual.md', '.run/Timeline.run.xml']), []);
 });
 
 test('publication detects path case collisions and common credentials without returning their values', () => {
@@ -22,6 +23,7 @@ test('documentation links and images must be present in the selected publication
   const files = new Set(['README.md', 'docs/publishing.md', 'docs/ui/screen.png']);
   assert.deepEqual(documentationProblems('README.md', '[Guide](docs/publishing.md) ![App](docs/ui/screen.png) [Demo](https://example.org/) [Start](#start)', files), []);
   assert.deepEqual(documentationProblems('docs/publishing.md', '[Readme](../README.md)', files), []);
+  assert.deepEqual(documentationProblems('README.md', '[Guides](docs/)', files), []);
   assert.equal(documentationProblems('README.md', '[Missing](dist/index.html) ![Missing](docs/ui/absent.png)', files).length, 2);
   assert.equal(documentationProblems('README.md', '[Local](file:///C:/private/report.txt)', files).length, 1);
 });

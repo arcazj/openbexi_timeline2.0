@@ -25,6 +25,23 @@ function published(snapshot, family, definition, visibility = 'workspace', as = 
 }
 const code = (expected, status) => error => error.code === expected && (status === undefined || error.status === status);
 
+test('version-2 launch selection wins stale saved view pins; explicit view restoration remains available', () => {
+  const saved = published(normalized(), 'views', view(), 'personal', personal);
+  const snapshot = command(saved.snapshot, 'views', 'apply', { version: 1 }, saved.resource, personal).snapshot;
+  const range = { from: '2024-03-18T19:00:00.000Z', to: '2024-03-18T21:00:00.000Z' };
+  snapshot.manifest.legacy = { launch: { version: 2, settings: { modelId: 'dark', modelVersion: 1, theme: 'dark', filterId: null, filterVersion: null,
+    viewId: null, viewVersion: null, range, overview: range } } };
+  const fresh = effectiveSettings(snapshot, { principalId: personal.id });
+  assert.equal(fresh.values.modelId, 'dark');
+  assert.equal(fresh.values.viewId, null);
+  assert.deepEqual(fresh.values.range, range);
+  assert.equal(fresh.origins['/modelId'], 'launch-profile');
+  assert.equal(snapshot.preferences[0].values.viewId, saved.resource.id, 'Stored preferences remain intact');
+  const restored = effectiveSettings(snapshot, { principalId: personal.id, viewId: saved.resource.id, viewVersion: 1 });
+  assert.equal(restored.values.modelId, 'light');
+  assert.equal(restored.values.mode, 'split');
+});
+
 test('legacy normalization preserves complete source/group scope and old hashes until content changes', async () => {
   const input = structuredClone(initial);
   input.manifest.contentSha256 = await sha256(input.records);

@@ -153,7 +153,7 @@ def test_validation_is_readonly_and_unknown_properties_are_rejected(client, writ
 
 
 def test_model_commit_recovery_does_not_rewrite_record_files(tmp_path, monkeypatch):
-    seed = ROOT / "data" / "default-dataset.json"
+    seed = ROOT / "shared/fixtures/initial-snapshot.json"
     repo = JsonRepository(tmp_path / "data", seed).open()
     before = {path.name: path.read_bytes() for path in (repo.root / "records").glob("*.json")}
     generation = repo.metadata()["generation"]
@@ -196,7 +196,7 @@ def test_json_integral_numbers_have_the_same_model_semantics(client, write_heade
 
 
 def test_concurrent_model_edits_have_one_winner(tmp_path):
-    repo = JsonRepository(tmp_path / "data", ROOT / "data" / "default-dataset.json").open()
+    repo = JsonRepository(tmp_path / "data", ROOT / "shared/fixtures/initial-snapshot.json").open()
     generation = repo.metadata()["generation"]
 
     def edit(index):

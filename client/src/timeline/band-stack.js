@@ -12,6 +12,7 @@ export class BandStack {
   constructor(host, { select, center, updateIcons, error }) {
     Object.assign(this, { host, select, center, updateIcons, error });
     this.frames = []; this.layouts = []; this.pending = Promise.resolve(); this.key = '';
+    this.overviewVisible = true; this.cameraMode = 'Orthographic';
   }
   configure(presentation) {
     const bands = presentation?.bandLayout, key = JSON.stringify(bands || null);
@@ -27,7 +28,7 @@ export class BandStack {
     for (const node of [plot, axis, overview, guide]) node.style.removeProperty('grid-row');
     this.host.classList.toggle('reference-bands', !!bands); this.host.style.removeProperty('grid-template-rows');
     overview.hidden = !!bands && !bands.some(b => b.role === 'overview');
-    if (!bands) return;
+    if (!bands) { this.setOverviewVisible(this.overviewVisible); return; }
     const tracks = ['var(--reference-guide-height,38px)']; guide.style.gridRow = '1';
     for (const band of bands) {
       const row = tracks.length + 1;
@@ -41,6 +42,7 @@ export class BandStack {
         node.innerHTML = `<div class="band-plot" tabindex="0"></div><div class="axis band-axis"></div><div class="band-pager" hidden><button data-page="previous" title="Previous rows" aria-label="Previous rows">${icon('chevron-up')}</button><output></output><button data-page="next" title="Next rows" aria-label="Next rows">${icon('chevron-down')}</button></div><span class="band-error" role="status"></span>`;
         const surface = node.querySelector('.band-plot'); this.host.append(node);
         const renderer = band.role === 'detail' ? new TimelineRenderer(surface) : new OverviewRenderer(surface);
+        renderer.setCameraMode?.(this.cameraMode);
         const frame = { band, node, surface, renderer }; this.frames.push(frame);
         surface.addEventListener('click', event => {
           const id = event.target.closest('[data-record-id]')?.dataset.recordId;
@@ -57,7 +59,20 @@ export class BandStack {
         }; });
       }
     }
-    this.host.style.gridTemplateRows = tracks.join(' '); this.updateIcons();
+    this.gridTracks = tracks; this.overviewRow = Number(overview.style.gridRow); this.setOverviewVisible(this.overviewVisible); this.updateIcons();
+  }
+  setCameraMode(mode) { this.cameraMode = mode; for (const frame of this.frames) frame.renderer.setCameraMode?.(mode); }
+  setOverviewVisible(visible) {
+    this.overviewVisible = visible;
+    const overview = this.host.querySelector('.overview-section'); overview.hidden = !visible;
+    this.host.classList.toggle('overview-hidden', !visible);
+    if (!this.host.classList.contains('reference-bands')) return;
+    const tracks = [...(this.gridTracks || [])];
+    const row = this.overviewRow;
+    if (row > 0) { if (!visible) tracks[row - 1] = '0px'; }
+    else if (visible) { overview.style.gridRow = String(tracks.length + 1); tracks.push('minmax(70px,20fr)'); }
+    else overview.style.removeProperty('grid-row');
+    this.host.style.gridTemplateRows = tracks.join(' ');
   }
   idle() { return this.pending.catch(() => {}); }
   async releaseLayouts(provider, queryId) {

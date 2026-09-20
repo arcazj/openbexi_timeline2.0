@@ -16,7 +16,7 @@ from server.app.repositories.storage_migration import migrate_storage
 from server.app.services import backup
 from server.app.services.identity import IdentityStore, recover_identity
 
-SEED = ROOT / "data/default-dataset.json"
+SEED = ROOT / "shared/fixtures/initial-snapshot.json"
 SECRET = "backup-fixture-bootstrap-secret"
 
 
@@ -69,8 +69,8 @@ def test_live_complete_capture_includes_tombstone_outcomes_config_identity_and_r
     try:
         manifest = backup.create_live_backup(repository, identities, actor, archive)
         assert backup.verify_backup(archive) == manifest
-        assert manifest["workspace"]["recordCount"] == 49
-        assert manifest["workspace"]["activeRecordCount"] == 48
+        assert manifest["workspace"]["recordCount"] == len(read_json(SEED)["records"]) + 1
+        assert manifest["workspace"]["activeRecordCount"] == len(read_json(SEED)["records"])
         assert manifest["workspace"]["tombstoneCount"] == 1
         assert manifest["createdBy"] == actor["id"] and manifest["captureMode"] == "live"
         assert before == json_files(repository.root)
@@ -190,7 +190,7 @@ def test_live_barrier_blocks_mutation_and_captures_one_revision(tmp_path):
         assert finished.wait(3)
         worker.join(3)
         assert not errors
-        assert manifest["workspace"]["recordCount"] == 49 and len(repository.records) == 50
+        assert manifest["workspace"]["recordCount"] == len(read_json(SEED)["records"]) + 1 and len(repository.records) == len(read_json(SEED)["records"]) + 2
         assert backup.verify_backup(tmp_path / "backup")["workspace"]["revision"] + 1 == repository.meta["manifest"]["revision"]
     finally:
         worker.join(3)
@@ -525,7 +525,7 @@ def test_shard_backup_restore_and_repeat_restore_provenance_chain(tmp_path):
     try:
         assert repository.layout["generation"] == result["workspace"]["generation"]
         assert repository.layout["revision"] == result["workspace"]["revision"]
-        assert len(repository.records) == 49
+        assert len(repository.records) == len(read_json(SEED)["records"]) + 1
         with pytest.raises(DomainError):
             identities.authenticate(recovered["secret"])
         for path in (second_archive / "shards").glob("*.json"):
@@ -626,7 +626,7 @@ backup.restore_backup(source,destination,reason='Process-exit recovery drill',pr
     for _ in range(2):
         if phase == "after-marker-removal":
             repository = JsonRepository(destination, SEED).open()
-            assert len(repository.records) == 49
+            assert len(repository.records) == len(read_json(SEED)["records"]) + 1
             repository.close()
             identities = IdentityStore(destination / "control", None)
             identities.open()

@@ -56,7 +56,7 @@ def test_audit_permissions_hide_other_sources_and_foreign_cursors(client, write_
 
 @pytest.mark.parametrize("damage", ["missing", "changed", "extra", "state"])
 def test_audit_chain_damage_fails_closed_at_startup(tmp_path, damage):
-    seed = ROOT / "data" / "default-dataset.json"
+    seed = ROOT / "shared/fixtures/initial-snapshot.json"
     root = tmp_path / "data"
     repository = JsonRepository(root, seed).open()
     generation = repository.meta["manifest"]["generation"]
@@ -80,7 +80,7 @@ def test_audit_chain_damage_fails_closed_at_startup(tmp_path, damage):
 
 
 def test_restore_transition_retains_prior_entries_and_cannot_rewrite_generation(tmp_path):
-    seed = ROOT / "data" / "default-dataset.json"
+    seed = ROOT / "shared/fixtures/initial-snapshot.json"
     repository = JsonRepository(tmp_path / "data", seed).open()
     try:
         repository.mutate("create", None, {"title": "Audited"}, repository.meta["manifest"]["generation"], None, "audit", "actor")

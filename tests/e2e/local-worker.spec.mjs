@@ -74,7 +74,7 @@ test('copied file uses the embedded Blob worker for record/model edits, complete
   const downloadEvent = page.waitForEvent('download');
   await page.locator('#export-json').click();
   const exported = JSON.parse(await readFile(await (await downloadEvent).path(), 'utf8'));
-  expect(exported.records).toHaveLength(49);
+  expect(exported.records).toHaveLength(1009);
   expect(exported.models.some(model => model.name === 'Worker authored model')).toBe(true);
   page.on('dialog', dialog => dialog.accept());
   await page.locator('#json-file').setInputFiles({ name: 'worker-export.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(exported)) });

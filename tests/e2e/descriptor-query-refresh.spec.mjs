@@ -4,7 +4,7 @@ import { ServerProvider } from '../../client/src/data/server-provider.js';
 
 let server, remote, snapshot, parent, child;
 test.beforeEach(async () => {
-  server = await startServer(); remote = new ServerProvider(server); await remote.initialize();
+  server = await startServer({ seedPath: 'shared/fixtures/initial-snapshot.json' }); remote = new ServerProvider(server); await remote.initialize();
   const create = async (title, sourceId, parentSessionId = null) => (await remote.executeCommand({ type: 'create', generation: remote.metadata.generation,
     clientCommandId: crypto.randomUUID(), payload: { title, kind: parentSessionId ? 'event' : 'session', start: '2026-09-12T12:00:00.000Z',
       end: parentSessionId ? null : '2026-09-12T13:00:00.000Z', sourceId, parentSessionId } })).record;

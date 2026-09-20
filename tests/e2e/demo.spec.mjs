@@ -8,7 +8,7 @@ const artifact = path.resolve('artifacts/demo/index.html');
 const html = () => readFile(artifact, 'utf8');
 const ready = page => expect.poll(() => page.evaluate(() => window.__timelineDebug?.ready)).toBe(true);
 
-async function openHosted(page) {
+async function openHosted(page, query = '') {
   const errors = [], unexpected = [];
   page.on('pageerror', error => errors.push(error.message));
   page.on('console', message => {
@@ -19,12 +19,12 @@ async function openHosted(page) {
   const source = await html();
   await page.route(/^https?:/, route => {
     const url = route.request().url();
-    if (url === site) return route.fulfill({ status: 200, contentType: 'text/html', body: source });
+    if (url.split(/[?#]/)[0] === site) return route.fulfill({ status: 200, contentType: 'text/html', body: source });
     if (url === 'https://openbexi-demo.test/api/v1/bootstrap') return route.fulfill({ status: 404, contentType: 'text/html', body: 'Not found' });
     unexpected.push(url);
     return route.abort();
   });
-  await page.goto(site);
+  await page.goto(site + query);
   await ready(page);
   return { errors, unexpected };
 }
@@ -60,7 +60,7 @@ test('HTTPS project-site demo supports all datasets, row paging, and offline nav
   for (const field of ['fromMs', 'toMs', 'mapId']) expect(next[field]).toBe(initial[field]);
   await page.context().setOffline(true);
   try {
-    for (const [id, count] of [['ephemeris',127], ['jfk',130], ['monet',27], ['religions',730], ['space_exploration',1287], ['default-dataset',48]]) {
+    for (const [id, count] of [['ephemeris',127], ['jfk',130], ['monet',27], ['religions',730], ['space_exploration',1287], ['default-dataset',1008]]) {
       await page.locator('[data-action=help]').click();
       await page.getByLabel('Test local dataset', { exact: true }).selectOption(id);
       await page.locator('[data-help=open-test-data]').click();
@@ -78,6 +78,55 @@ test('HTTPS project-site demo supports all datasets, row paging, and offline nav
     expect(observed.errors).toEqual([]);
     expect(observed.unexpected).toEqual([]);
   } finally { await page.context().setOffline(false); }
+});
+
+for (const id of ['default-dataset', 'ephemeris', 'jfk', 'monet', 'religions', 'space_exploration']) {
+  test(`live demo deep link opens ${id}`, async ({ page }) => {
+    const observed = await openHosted(page, `?dataset=${id}`);
+    expect(await page.evaluate(() => window.__timelineDebug.testDatasetId)).toBe(id);
+    await expect(page.locator('.plot-wrap .record-label').first()).toBeVisible();
+    expect(observed.errors).toEqual([]);
+    expect(observed.unexpected).toEqual([]);
+  });
+}
+
+for (const query of ['?dataset=unknown', '?dataset=jfk&dataset=monet']) {
+  test(`invalid demo selection safely opens the default: ${query}`, async ({ page }) => {
+    const observed = await openHosted(page, query);
+    expect(await page.evaluate(() => window.__timelineDebug.testDatasetId)).toBe('default-dataset');
+    expect(observed.errors).toEqual([]);
+    expect(observed.unexpected).toEqual([]);
+  });
+}
+
+test('demo sharing retains the dataset and waits for review before applying the view', async ({ page }) => {
+  await openHosted(page, '?dataset=jfk');
+  await page.locator('[data-action=zoom-in]').click(); await ready(page);
+  const fromMs = await page.evaluate(() => window.__timelineDebug.fromMs);
+  await page.locator('[data-action=help]').click();
+  await page.locator('[data-help-tab=share]').click();
+  const link = await page.getByRole('textbox', { name: 'View link', exact: true }).inputValue();
+  expect(new URL(link).search).toBe('?dataset=jfk');
+  await page.goto(link); await page.reload(); await ready(page);
+  expect(await page.evaluate(() => window.__timelineDebug.testDatasetId)).toBe('jfk');
+  await expect(page.locator('.help-review')).toBeVisible();
+  expect(await page.evaluate(() => window.__timelineDebug.fromMs)).not.toBe(fromMs);
+  await page.locator('[data-help=apply-link]').click(); await ready(page);
+  expect(await page.evaluate(() => window.__timelineDebug.fromMs)).toBe(fromMs);
+});
+
+test('expanded default demo renders sessions and events in both surrounding months', async ({ page }) => {
+  await openHosted(page, '?dataset=default-dataset');
+  await page.getByRole('button', { name: 'Calendar', exact: true }).click();
+  const time = page.getByLabel('Calendar center time / UTC', { exact: true });
+  await time.fill('10:00'); await time.press('Tab'); await ready(page);
+  for (const [month, date] of [['8', '2026-08-13'], ['10', '2026-10-12']]) {
+    await page.getByRole('combobox', { name: 'Calendar month', exact: true }).selectOption(month);
+    await page.getByRole('button', { name: date, exact: true }).click(); await ready(page);
+    expect(await page.evaluate(() => window.__timelineDebug.detailTotal)).toBeGreaterThan(0);
+    await expect(page.locator('.plot-wrap .record-label').first()).toBeVisible();
+    expect(await page.locator('.plot-wrap .record-label').allTextContents()).toContain(`Daily shift / operations / ${date}`);
+  }
 });
 
 test('mobile project-site demo has visible canvases and no horizontal page overflow', async ({ page }, info) => {

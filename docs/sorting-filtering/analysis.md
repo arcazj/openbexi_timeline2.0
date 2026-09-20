@@ -75,7 +75,7 @@ Current implementation anchors:
 
 ## Model and Source Coverage
 
-The hash inventory includes seven production models: `MCC_timeline.json`, `SOC_timeline.json`, `regular_timeline.json`, `regular_timeline_earthquake.json`, `regular_timeline_esoc.json`, `regular_timeline_mcc.json`, `regular_timeline_pov.json`, plus `tests/models/regular_timeline.json`. They share `params` and `bands`, but vary colors, sizes, units, labels and transport/default settings. Hashing and structural inspection do not prove complete model import parity.
+The retained hash inventory includes five production model references plus `tests/models/regular_timeline.json`; retired production-specific entries were removed on 2026-09-20. They share `params` and `bands`, but vary colors, sizes, units, labels and transport/default settings. Hashing and structural inspection do not prove complete model import parity.
 
 Future qualification must dry-run every model and classify every property as mapped, intentionally replaced, unsupported or invalid. A partial preview must show diagnostics; publishing a model with unacknowledged unsupported behavior must fail. Preserve model-defined units, band proportions, zones, fonts, labels, namespace palettes and inspector fields. Old transport/Java settings are migration metadata, not executable instructions.
 

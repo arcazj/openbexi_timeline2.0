@@ -49,6 +49,49 @@ def test_inventory_detects_changes_to_the_embedded_project_license(tmp_path):
     assert module.source_inventory(tmp_path)["sha256"] != before["sha256"]
 
 
+@pytest.mark.parametrize("relative", [
+    "models/legacy_test.json", "filters/legacy_test.json", "tools/event-generator/environment.js",
+    "tools/event-generator/ui/app.js", "scripts/migrate-launch.py", "openbexi_timeline2.0_current_prompt.md",
+    "docs/ui/legacy-target/toolbar.png",
+    ".run/OpenBEXI Timeline legacy comparison.run.xml",
+])
+def test_inventory_binds_environment_generator_and_embedded_help_inputs(tmp_path, relative):
+    target = tmp_path / relative
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(b"original source")
+    before = module.source_inventory(tmp_path)
+    assert relative in before["files"]
+    target.write_bytes(b"changed source")
+    assert module.source_inventory(tmp_path)["sha256"] != before["sha256"]
+
+
+def test_inventory_does_not_hash_nested_tool_dependency_and_interpreter_caches(tmp_path):
+    source = tmp_path / "tools/event-generator/environment.js"
+    source.parent.mkdir(parents=True)
+    source.write_text("export const version = 1", encoding="utf-8")
+    before = module.source_inventory(tmp_path)
+    for relative in ("tools/event-generator/node_modules/dependency/index.js", "tools/event-generator/.venv/library.py",
+                     "tools/event-generator/__pycache__/temporary.pyc"):
+        path = tmp_path / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text("local cached dependency", encoding="utf-8")
+    assert module.source_inventory(tmp_path) == before
+
+
+def test_candidate_discovers_javascript_generator_tests_with_junit_reporting(tmp_path):
+    directory = tmp_path / "tools/event-generator/tests"
+    directory.mkdir(parents=True)
+    (directory / "environment.test.js").write_text("", encoding="utf-8")
+    (directory / "browser-smoke.js").write_text("", encoding="utf-8")
+    command = module.node_test_command("node", "generator", "tools/event-generator/tests", tmp_path, tmp_path / "reports", "*.test.js")
+    assert command[-1] == str((directory / "environment.test.js").relative_to(tmp_path))
+    assert not any("browser-smoke.js" in item for item in command)
+    assert "--test-reporter=junit" in command
+    assert f"--test-reporter-destination={tmp_path / 'reports/generator.xml'}" in command
+    with pytest.raises(ValueError, match="No generator tests"):
+        module.node_test_command("node", "generator", "tools/event-generator/tests", tmp_path, tmp_path / "reports")
+
+
 def test_check_records_exit_failure_and_scrubs_production_configuration(tmp_path, monkeypatch):
     monkeypatch.setenv("OPENBEXI_API_TOKEN", "must-not-enter-test-process")
     monkeypatch.setenv("OPENBEXI_DATA_ROOT", "must-not-enter-test-process")

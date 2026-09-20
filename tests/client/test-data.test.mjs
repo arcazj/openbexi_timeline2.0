@@ -7,6 +7,31 @@ import { fixedScaleMap } from '../../client/src/timeline/fixed-scale.js';
 import { setDateInput, inputIso } from '../../client/src/utils/dom.js';
 
 const catalog = JSON.parse(await readFile('data/catalog.json','utf8'));
+test('expanded operations preserve the original records and load past and future families', async () => {
+  const snapshot = JSON.parse(await readFile('data/default-dataset.json', 'utf8'));
+  const original = JSON.parse(await readFile('data/original/default-dataset.json', 'utf8'));
+  assert.deepEqual(snapshot.records.slice(0, original.records.length), original.records);
+  assert.equal(snapshot.records.length, original.records.length + 60 * 16);
+  assert.equal(new Set(snapshot.records.map(record => record.id)).size, snapshot.records.length);
+  const provider = new LocalProvider(snapshot);
+  try {
+    await provider.initialize();
+    for (const day of ['2026-08-13', '2026-10-12']) {
+      const domain = { from: `${day}T00:00:00Z`, to: `${day}T23:59:59Z` };
+      const query = await provider.createQuery({ domain, scaleMode: 'uniform' });
+      const layout = await provider.createLayout(query.queryId, { mapId: query.mapId, ...domain, width: 1000, availableHeight: 600 });
+      assert.equal(layout.detailTotal, 16);
+      await provider.releaseQuery(query.queryId);
+    }
+    for (const record of snapshot.records.slice(original.records.length)) {
+      if (!record.parentSessionId) continue;
+      const parent = snapshot.records.find(item => item.id === record.parentSessionId);
+      assert.equal(parent.kind, 'session');
+      assert.ok(record.start >= parent.start && (record.end || record.start) <= parent.end);
+    }
+  } finally { provider.dispose(); }
+});
+
 for(const entry of catalog.datasets) test(`${entry.id}: complete provider, coherent preset and stable row pages`,async()=>{
   const snapshot = JSON.parse(await readFile(entry.file,'utf8')), provider = new LocalProvider(snapshot);
   const info = await provider.initialize(); assert.equal(info.recordCount,snapshot.records.length);

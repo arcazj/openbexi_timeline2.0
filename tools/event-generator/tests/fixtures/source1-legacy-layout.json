@@ -1,0 +1,249 @@
+{
+  "source": "openbexi_timeline/tests/data/SOURCES1/2024/03/18/events.json",
+  "sourceSha256": "71de39c955224010b3dc5c111372c8355dbcc3809ff333a22fb0d74e7ca82476",
+  "dateTimeFormat": "iso8601",
+  "eventCount": 50,
+  "referenceDate": "Mon Mar 18 19:27:24 UTC 2024",
+  "expected": [
+    {
+      "index": 0,
+      "fields": {
+        "namespace": "SOURCE1",
+        "original_start": "Mon Mar 18 19:27:24 UTC 2024",
+        "start": "Mon Mar 18 19:27:24 UTC 2024",
+        "original_end": "Mon Mar 18 19:29:04 UTC 2024",
+        "end": "Mon Mar 18 19:44:04 UTC 2024"
+      },
+      "activityCount": 4,
+      "tolerance": "100"
+    },
+    {
+      "index": 1,
+      "fields": {
+        "namespace": "SOURCE1",
+        "original_start": "Mon Mar 18 19:27:24 UTC 2024",
+        "start": "Mon Mar 18 19:27:24 UTC 2024",
+        "original_end": "Mon Mar 18 19:29:04 UTC 2024",
+        "end": "Mon Mar 18 19:44:04 UTC 2024"
+      },
+      "activityCount": 3,
+      "tolerance": "100"
+    },
+    {
+      "index": 3,
+      "fields": {
+        "namespace": "SOURCE1",
+        "original_start": "Mon Mar 18 18:57:24 UTC 2024",
+        "start": "Mon Mar 18 19:02:24 UTC 2024",
+        "original_end": "Mon Mar 18 19:50:44 UTC 2024",
+        "end": "Mon Mar 18 19:52:24 UTC 2024"
+      },
+      "activityCount": 1,
+      "tolerance": "1000"
+    },
+    {
+      "index": 4,
+      "fields": {
+        "namespace": "SOURCE1",
+        "original_start": "Mon Mar 18 20:00:44 UTC 2024",
+        "start": "Mon Mar 18 20:00:44 UTC 2024",
+        "original_end": "Mon Mar 18 19:32:24 UTC 2024",
+        "end": "Mon Mar 18 20:17:24 UTC 2024"
+      },
+      "activityCount": 6,
+      "tolerance": "100"
+    },
+    {
+      "index": 5,
+      "fields": {
+        "namespace": "SOURCE1",
+        "original_start": "Mon Mar 18 20:00:44 UTC 2024",
+        "start": "Mon Mar 18 20:00:44 UTC 2024",
+        "original_end": "Mon Mar 18 19:32:24 UTC 2024",
+        "end": "Mon Mar 18 20:17:24 UTC 2024"
+      },
+      "activityCount": 2,
+      "tolerance": "100"
+    },
+    {
+      "index": 6,
+      "fields": {
+        "namespace": "SOURCE1",
+        "original_start": "",
+        "start": "Mon Mar 18 20:00:44 UTC 2024",
+        "original_end": "",
+        "end": "Mon Mar 18 20:59:04 UTC 2024"
+      },
+      "activityCount": 1,
+      "tolerance": "100"
+    },
+    {
+      "index": 7,
+      "fields": {
+        "namespace": "SOURCE1",
+        "original_start": "Mon Mar 18 20:07:24 UTC 2024",
+        "start": "Mon Mar 18 20:09:04 UTC 2024",
+        "original_end": "Mon Mar 18 19:32:14 UTC 2024",
+        "end": "Mon Mar 18 20:17:24 UTC 2024"
+      },
+      "activityCount": 1,
+      "tolerance": "100"
+    },
+    {
+      "index": 8,
+      "fields": {
+        "namespace": "SOURCE1",
+        "original_start": "",
+        "start": "Mon Mar 18 19:10:44 UTC 2024",
+        "original_end": "",
+        "end": ""
+      },
+      "activityCount": 1,
+      "tolerance": "100"
+    },
+    {
+      "index": 10,
+      "fields": {
+        "namespace": "SOURCE1",
+        "original_start": "",
+        "start": "Mon Mar 18 19:10:44 UTC 2024",
+        "original_end": "",
+        "end": ""
+      },
+      "activityCount": 1,
+      "tolerance": "100"
+    },
+    {
+      "index": 12,
+      "fields": {
+        "namespace": "SOURCE1",
+        "original_start": "",
+        "start": "Mon Mar 18 19:10:44 UTC 2024",
+        "original_end": "",
+        "end": ""
+      },
+      "activityCount": 1,
+      "tolerance": "100"
+    },
+    {
+      "index": 20,
+      "fields": {
+        "namespace": "SOURCE1",
+        "original_start": "",
+        "start": "Mon Mar 18 20:50:44 UTC 2024",
+        "original_end": "",
+        "end": ""
+      },
+      "activityCount": 1,
+      "tolerance": "100"
+    },
+    {
+      "index": 21,
+      "fields": {
+        "namespace": "SOURCE1",
+        "original_start": "",
+        "start": "Mon Mar 18 20:34:04 UTC 2024",
+        "original_end": "",
+        "end": ""
+      },
+      "activityCount": 1,
+      "tolerance": "100"
+    },
+    {
+      "index": 22,
+      "fields": {
+        "namespace": "SOURCE1",
+        "original_start": "",
+        "start": "Mon Mar 18 20:34:04 UTC 2024",
+        "original_end": "",
+        "end": ""
+      },
+      "activityCount": 1,
+      "tolerance": "100"
+    },
+    {
+      "index": 23,
+      "fields": {
+        "namespace": "SOURCE1",
+        "original_start": "",
+        "start": "Mon Mar 18 20:34:04 UTC 2024",
+        "original_end": "",
+        "end": ""
+      },
+      "activityCount": 1,
+      "tolerance": "100"
+    },
+    {
+      "index": 24,
+      "fields": {
+        "namespace": "SOURCE1",
+        "original_start": "",
+        "start": "Mon Mar 18 20:34:04 UTC 2024",
+        "original_end": "",
+        "end": ""
+      },
+      "activityCount": 2,
+      "tolerance": "100"
+    },
+    {
+      "index": 25,
+      "fields": {
+        "namespace": "SOURCE1",
+        "original_start": "",
+        "start": "Mon Mar 18 20:34:04 UTC 2024",
+        "original_end": "",
+        "end": ""
+      },
+      "activityCount": 1,
+      "tolerance": "100"
+    },
+    {
+      "index": 26,
+      "fields": {
+        "namespace": "SOURCE1",
+        "original_start": "",
+        "start": "Mon Mar 18 20:34:04 UTC 2024",
+        "original_end": "",
+        "end": ""
+      },
+      "activityCount": 1,
+      "tolerance": "100"
+    },
+    {
+      "index": 27,
+      "fields": {
+        "namespace": "SOURCE1",
+        "original_start": "",
+        "start": "Mon Mar 18 20:34:04 UTC 2024",
+        "original_end": "",
+        "end": ""
+      },
+      "activityCount": 1,
+      "tolerance": "100"
+    },
+    {
+      "index": 28,
+      "fields": {
+        "namespace": "SOURCE1",
+        "original_start": "",
+        "start": "Mon Mar 18 20:34:04 UTC 2024",
+        "original_end": "",
+        "end": ""
+      },
+      "activityCount": 1,
+      "tolerance": "100"
+    },
+    {
+      "index": 30,
+      "fields": {
+        "namespace": "SOURCE1",
+        "original_start": "Mon Mar 18 20:50:44 UTC 2024",
+        "start": "Mon Mar 18 20:50:44 UTC 2024",
+        "original_end": "Mon Mar 18 19:40:44 UTC 2024",
+        "end": "Mon Mar 18 21:40:44 UTC 2024"
+      },
+      "activityCount": 12,
+      "tolerance": "100"
+    }
+  ]
+}

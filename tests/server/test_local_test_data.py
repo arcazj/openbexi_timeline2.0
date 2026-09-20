@@ -30,7 +30,8 @@ def test_complete_source_normalization_and_read_only_api(entry, tmp_path):
     snapshot = json.loads(path.read_text())
     validate_snapshot(snapshot)
     report = json.loads((ROOT / entry['report']).read_text())
-    assert len(snapshot['records']) == report['inputRecords'] == report['outputRecords']
+    added = report.get('syntheticExpansion', {}).get('addedRecords', 0)
+    assert len(snapshot['records']) == report['outputRecords'] == report['inputRecords'] + added
     assert report['inputSha256'] == hashlib.sha256((ROOT / entry['original']).read_bytes()).hexdigest()
     profile = load_launch_configuration(ROOT / entry['yaml'])
     assert profile['snapshot_file'] == path
@@ -73,6 +74,22 @@ def test_historical_dates_roundtrip_and_known_eras():
     for bad in ['-000000-01-01T00:00:00Z', '-010000-01-01T00:00:00Z', '0001-02-29T00:00:00Z']:
         with pytest.raises(DomainError):
             instant_ms(bad)
+
+
+def test_fresh_default_workspace_loads_expanded_records_in_both_time_directions(tmp_path):
+    source = json.loads((ROOT / 'data/default-dataset.json').read_text())
+    app = create_app(tmp_path / 'new-workspace', TOKEN)
+    with TestClient(app, headers={'Authorization': 'Bearer ' + TOKEN}) as client:
+        exported = client.get(BASE + '/snapshot').json()
+        assert exported['manifest']['recordCount'] == len(exported['records']) == 1008
+        assert {r['id'] for r in exported['records']} == {r['id'] for r in source['records']}
+        for day in ('2026-08-13', '2026-10-12'):
+            domain = {'from': day + 'T00:00:00Z', 'to': day + 'T23:59:59Z'}
+            query = ready(client, client.post(BASE + '/query-sessions', json={'domain': domain}))
+            layout = ready(client, client.post(BASE + f'/query-sessions/{query["queryId"]}/layouts', json={
+                'mapId': query['mapId'], **domain, 'width': 1200, 'availableHeight': 600}))
+            assert layout['detailTotal'] == 16
+            assert client.delete(BASE + f'/query-sessions/{query["queryId"]}').status_code == 204
 
 
 def test_conversion_rejects_active_markup_and_preserves_uncertainty():

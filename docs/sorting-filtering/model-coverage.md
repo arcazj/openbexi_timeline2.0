@@ -4,20 +4,20 @@ Generated: 2026-09-15T01:53:46.808Z. Node v24.13.0; Python 3.12.14.
 
 Runtime adapter parity and complete per-property disposition; not pixel-perfect historical rendering qualification.
 
+This historical report was curated on 2026-09-20 to remove retired production-specific entries; remaining results were not rerun.
+
 ## Model Ledger
 
 | Model | JS/Python adapter | Catalog dry-run | Input unchanged | Properties |
 | --- | --- | --- | --- | --- |
-| models/MCC_timeline.json | Same adapted result | blocked | Yes | 36 individually classified |
 | models/regular_timeline.json | Same adapted result | blocked | Yes | 34 individually classified |
 | models/regular_timeline_earthquake.json | Same adapted result | blocked | Yes | 34 individually classified |
 | models/regular_timeline_esoc.json | Same adapted result | blocked | Yes | 36 individually classified |
-| models/regular_timeline_mcc.json | Same adapted result | blocked | Yes | 36 individually classified |
 | models/regular_timeline_pov.json | Same adapted result | blocked | Yes | 36 individually classified |
 | models/SOC_timeline.json | Same adapted result | blocked | Yes | 36 individually classified |
 | tests/models/regular_timeline.json | Same adapted result | blocked | Yes | 36 individually classified |
 
-All eight configured models can be adapted at runtime with explicit corrections/substitutions. This does **not** mean that every authored property has equivalent behavior. The JSON ledger records every property, its runtime disposition, and its independent catalog dry-run disposition. Disabled connectors are never activated.
+The six retained models can be adapted at runtime with explicit corrections/substitutions. This does **not** mean that every authored property has equivalent behavior. The JSON ledger records every property, its runtime disposition, and its independent catalog dry-run disposition. Disabled connectors are never activated.
 
 Shared limitations: measured Noto Sans replaces legacy font geometry; fixed placement becomes responsive; independent overview sort/label typography is not applied; inactive alternate-color declarations are not fabricated. Subdivision conversion is explicitly limited to the supported quarter-hour rule. Catalog creation remains blocked until unsupported/restricted properties are reviewed.
 

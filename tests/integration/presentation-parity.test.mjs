@@ -46,6 +46,10 @@ function nearlyEqual(a, b, path = '') {
 const itemFields = ['record', 'row', 'xStart', 'xEnd', 'labelX', 'labelWidth', 'labelLines', 'labelInkOffsets', 'labelLineHeight', 'labelOffsetY', 'geometryOffsetY', 'fullLabel', 'displayTitle', 'overflow', 'style', 'parentId', 'ancestorIds', 'depth', 'iconX', 'baselineStart', 'baselineEnd', 'baselineOffsetY', 'footprintStart', 'footprintEnd', 'match'];
 const projectItem = item => Object.fromEntries(itemFields.filter(key => Object.hasOwn(item, key)).map(key => [key, item[key]]));
 
+test('compact after-bar labels and overlay nesting have exact provider parity', async () => {
+  await compareLayout({ ...modelDefinition.presentation, compact: true, durationLabels: 'after', nesting: { enabled: true, layout: 'overlay' } });
+});
+
 async function compareLayout(presentation, { width = 480, height = 320, search = '', filters = {}, scaleMode = 'uniform', viewFromMs, viewToMs } = {}) {
   const request = { domain: { from, to }, filters, search, scaleMode, bins: 16, ratio: 4 };
   const lq = await local.createQuery(request), rq = await remote.createQuery(request);

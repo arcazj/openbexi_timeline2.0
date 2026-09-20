@@ -137,10 +137,10 @@ test('a dead retained Local branch cannot masquerade as its modified snapshot du
   expect(writes).toEqual([]);
   await page.screenshot({ path: info.outputPath('server-outage-lost-local-branch.png'), fullPage: true });
   await page.locator('[data-action=sources]').first().click();
-  await expect(page.locator('.source-facts')).toContainText('48 in declared snapshot');
+  await expect(page.locator('.source-facts')).toContainText('1008 in declared snapshot');
   const download = page.waitForEvent('download'); await page.locator('#export-json').click();
   const exported = JSON.parse(await readFile(await (await download).path(), 'utf8'));
-  expect(exported.records).toHaveLength(48);
+  expect(exported.records).toHaveLength(1008);
   expect(exported.records.some(record => record.title === 'Retained Local change that must not reappear')).toBe(false);
   expect(errors).toEqual([]);
 });
@@ -159,10 +159,10 @@ test('a healthy retained Local worker returns fresh modified counts on Server ou
   await expect(page.locator('.notice')).not.toContainText('unexported changes were not recovered');
   await noAutomaticReplay(page, 1, 1);
   await page.locator('[data-action=sources]').first().click();
-  await expect(page.locator('.source-facts')).toContainText('49 in declared snapshot');
+  await expect(page.locator('.source-facts')).toContainText('1009 in declared snapshot');
   const download = page.waitForEvent('download'); await page.locator('#export-json').click();
   const exported = JSON.parse(await readFile(await (await download).path(), 'utf8'));
-  expect(exported.records).toHaveLength(49);
+  expect(exported.records).toHaveLength(1009);
   expect(exported.records.filter(record => record.title === 'Retained Local record survives the Server visit')).toHaveLength(1);
   expect(errors).toEqual([]);
 });

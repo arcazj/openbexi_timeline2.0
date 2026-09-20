@@ -10,7 +10,7 @@ for (const width of [1600, 390]) test(`server startup shows only configured sour
   await page.setViewportSize({ width, height: width === 390 ? 844 : 900 });
   await page.addInitScript(() => { const Worker = window.Worker; window.__workers = 0; window.Worker = class extends Worker { constructor(...args) { super(...args); window.__workers++; } }; });
   expect((await fetch(`${server.baseUrl}/health/ready`)).status).toBe(503);
-  await page.goto(server.baseUrl);
+  await page.goto(`${server.baseUrl}/?dataset=jfk`);
   await expect(page.locator('.server-startup')).toContainText('SOURCE1');
   await expect(page.locator('.record-label')).toHaveCount(0);
   await expect(page.locator('.provider-status')).not.toContainText('Local');
@@ -28,8 +28,11 @@ for (const width of [1600, 390]) test(`server startup shows only configured sour
 });
 
 test('failed initialization keeps the configured source and provides retry without sample fallback', async ({ page }) => {
+  let bootstrapAttempts = 0;
+  await page.route('**/api/v1/bootstrap', route => ++bootstrapAttempts === 1 ? route.abort('failed') : route.continue());
   await page.goto(server.baseUrl);
   await expect(page.locator('.server-startup')).toContainText('SOURCE1');
+  expect(bootstrapAttempts).toBe(2);
   await server.releaseStartup(true);
   await expect(page.locator('.server-startup')).toContainText('initialization failed');
   await page.getByRole('button', { name: 'Retry server connection', exact: true }).click();

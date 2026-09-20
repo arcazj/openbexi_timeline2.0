@@ -17,7 +17,7 @@ const python = path.join(root, '.venv', process.platform === 'win32' ? 'Scripts/
 const baseline = new Map();
 for (const model of models) baseline.set(model, await readFile(path.join(legacyRoot, model)));
 const backend = JSON.parse(execFileSync(python, ['scripts/qualify-sorting-models.py'], { cwd: root, windowsHide: true, encoding: 'utf8', timeout: 180000,
-  input: JSON.stringify({ legacyRoot, models, profiles: values['skip-sources'] ? [] : ['yaml/multiple_sources_test.yml', 'yaml/earthquake_volcano_data.yml'].map(name => path.join(root, name)) }), maxBuffer: 16 * 1024 * 1024 }));
+  input: JSON.stringify({ legacyRoot, models, profiles: values['skip-sources'] ? [] : ['yaml/default_test.yml'].map(name => path.join(root, name)) }), maxBuffer: 16 * 1024 * 1024 }));
 
 function runtimeDisposition(pointer, source) {
   const params = /^\/params\/0\/([^/]+)$/.exec(pointer);
@@ -75,14 +75,14 @@ for (const model of models) {
 }
 const result = { format: 'openbexi-model-coverage-v1', generatedAt: new Date().toISOString(), nodeVersion: process.version, pythonVersion: backend.pythonVersion,
   qualification: 'Runtime adapter parity and complete per-property disposition; not pixel-perfect historical rendering qualification.',
-  expectedModelCount: 8, models: records, realSourceWindows: backend.sources,
+  expectedModelCount: models.length, models: records, realSourceWindows: backend.sources,
   privacy: 'No raw records, descriptor text, configured connector values or unhashed source record paths are emitted.',
   limitations: ['Archive-wide indexing and all-record completeness are not qualified by foreground window probes.', 'Cross-partition long-session correctness is covered by synthetic tests, not asserted for unscanned production partitions.', 'Historical exact glyph/layout parity is not claimed for font substitution or responsive geometry.', 'Catalog visual dry-run remains deliberately stricter than the runtime compatibility adapter.'] };
-if (records.length !== 8 || records.some(item => !item.unchanged || !item.providerAdapterParity) || backend.sources.some(item => !item.allReadFilesUnchanged)) throw new Error('Qualification found changed inputs or divergent provider model adaptation');
+if (!models.length || records.length !== models.length || records.some(item => !item.unchanged || !item.providerAdapterParity) || backend.sources.some(item => !item.allReadFilesUnchanged)) throw new Error('Qualification found changed inputs or divergent provider model adaptation');
 const lines = ['# Model and Source Coverage', '', `Generated: ${result.generatedAt}. Node ${process.version}; Python ${backend.pythonVersion}.`, '', result.qualification, '',
   '## Model Ledger', '', '| Model | JS/Python adapter | Catalog dry-run | Input unchanged | Properties |', '| --- | --- | --- | --- | --- |',
   ...records.map(item => `| ${item.path} | ${item.providerAdapterParity ? 'Same adapted result' : 'Divergent'} | ${item.catalogDryRun.status} | ${item.unchanged ? 'Yes' : 'NO'} | ${item.properties.length} individually classified |`), '',
-  'All eight configured models can be adapted at runtime with explicit corrections/substitutions. This does **not** mean that every authored property has equivalent behavior. The JSON ledger records every property, its runtime disposition, and its independent catalog dry-run disposition. Disabled connectors are never activated.', '',
+  'All selected models can be adapted at runtime with explicit corrections/substitutions. This does **not** mean that every authored property has equivalent behavior. The JSON ledger records every property, its runtime disposition, and its independent catalog dry-run disposition. Disabled connectors are never activated.', '',
   'Shared limitations: measured Noto Sans replaces legacy font geometry; fixed placement becomes responsive; independent overview sort/label typography is not applied; inactive alternate-color declarations are not fabricated. Subdivision conversion is explicitly limited to the supported quarter-hour rule. Catalog creation remains blocked until unsupported/restricted properties are reviewed.', '',
   '## Bounded Real Sources', '', '| Profile | Probe | Metadata ready | Window read | Records | Namespace groups | All configured sources |', '| --- | --- | --- | --- | --- | --- | --- |',
   ...backend.sources.map(item => `| ${item.profile} | ${item.probe}: ${item.status}${item.code ? ` (${item.code})` : ''} | ${item.metadataReadyMs ?? '-'} ms | ${item.foregroundWindowMs ?? '-'} ms | ${item.records ?? '-'} | ${item.logicalNamespaceGroups ?? '-'} | ${item.allConfiguredSourcesRepresented ? 'Yes' : 'No'} |`), '',

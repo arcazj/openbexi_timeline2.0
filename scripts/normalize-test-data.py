@@ -99,6 +99,47 @@ def identity(name):
     return str(uuid.uuid5(uuid.NAMESPACE_URL, "openbexi:test-data:" + name))
 
 
+def extend_operations(snapshot):
+    """Keep the original day intact and add reproducible surrounding shifts."""
+    snapshot = copy.deepcopy(snapshot)
+    records = snapshot["records"]
+    anchor = instant_ms("2026-09-12T00:00:00.000Z")
+    minute = 60_000
+    for day in range(-30, 31):
+        if day == 0:
+            continue
+        for shift, source in enumerate(("operations", "verification")):
+            base = anchor + day * 86_400_000 + (6 + shift * 8) * 60 * minute
+            label = iso_from_ms(base)[:10]
+            prefix = f"operations-expansion-v1:{day}:{source}"
+            session_id = identity(prefix + ":shift")
+            activity_id = identity(prefix + ":activity")
+            recipe = [
+                ("shift", "Daily shift", 0, 360, None),
+                ("activity", "Telemetry processing", 60, 240, session_id),
+                ("handover", "Shift handover", 10, None, session_id),
+                ("acquisition", "Signal acquired", 70, None, activity_id),
+                ("validation", "Data validation", 120, 180, activity_id),
+                ("checkpoint", "Quality checkpoint", 190, None, activity_id),
+                ("report", "Report published", 300, None, session_id),
+                ("milestone", "Daily milestone", 370, None, None),
+            ]
+            for key, title, start, end, parent in recipe:
+                record = normalize_record({"title": f"{title} / {source} / {label}",
+                                           "start": iso_from_ms(base + start * minute),
+                                           **({"end": iso_from_ms(base + end * minute)} if end is not None else {})},
+                                          "default-dataset", len(records), False, source)
+                record.update(id=identity(prefix + ":" + key), parentSessionId=parent,
+                              tags=["sample", "expanded"], createdBy="sample", updatedBy="sample")
+                record["data"].update(status=("Scheduled" if day > 0 else "Completed"),
+                                      description="Synthetic operations demonstration.")
+                record["extensions"] = {"sampleRecipe": "operations-expansion-v1"}
+                records.append(record)
+    snapshot["manifest"].update(recordCount=len(records), snapshotAt=STAMP,
+                                generation=identity("operations-expansion-v1"))
+    return snapshot
+
+
 def normalize_record(item, dataset, index, markup, source):
     original = copy.deepcopy(item)
     title = item.get("title") or item.get("data", {}).get("title") or item.get("text")
@@ -150,7 +191,7 @@ def convert(dataset, profile, *, check=False):
         if not isinstance(items, list):
             raise ValueError("Expected events or records array")
     if dataset == "default-dataset":
-        snapshot = parsed
+        snapshot = extend_operations(parsed)
     else:
         template = json.loads((folder / "original" / "default-dataset.json").read_text(encoding="utf-8"))
         snapshot = {key: copy.deepcopy(value) for key, value in template.items() if key not in ("records", "zones")}
@@ -193,6 +234,10 @@ def convert(dataset, profile, *, check=False):
               "referenceStatus": snapshot["manifest"]["testDataset"]["referenceStatus"],
               "domain": {"from": min((record["start"] for record in records), key=instant_ms), "to": max((record["end"] or record["start"] for record in records), key=instant_ms)}}
     validate_snapshot(snapshot)
+    if dataset == "default-dataset":
+        report["syntheticExpansion"] = {"recipe": "operations-expansion-v1", "addedRecords": len(records) - len(items),
+                                        "daysBefore": 30, "daysAfter": 30, "recordsPerDay": 16,
+                                        "originalRecordsUnchanged": True}
     for target, value in ((folder / f"{dataset}.json", snapshot), (folder / "reports" / f"{dataset}.json", report)):
         encoded = json.dumps(value, ensure_ascii=True, indent=2, sort_keys=True) + "\n"
         if check:

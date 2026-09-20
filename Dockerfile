@@ -9,6 +9,7 @@ COPY shared/ shared/
 COPY scripts/build-standalone.mjs scripts/third-party-notices.mjs scripts/help-content.mjs scripts/
 COPY docs/ docs/
 COPY README.md LICENSE NOTICE ./
+COPY openbexi_timeline2.0_current_prompt.md ./
 RUN npm run build
 
 FROM python:3.12-slim-bookworm@sha256:782412e85d0f0984994c290652577d4018aff08145c85b262bb63dc0c7522254 AS python-base
@@ -32,12 +33,15 @@ RUN apt-get install -y --no-install-recommends libegl1 libgl1 xauth xvfb
 COPY --from=client-build /app/dist/ dist/
 COPY client/ client/
 COPY data/ data/
-COPY yaml/test-data/ yaml/test-data/
+COPY yaml/ yaml/
+COPY models/ models/
+COPY filters/ filters/
+COPY tools/event-generator/ tools/event-generator/
 COPY shared/ shared/
-COPY docs/licenses/ docs/licenses/
-COPY docs/*.md docs/
-COPY docs/releases/ docs/releases/
+COPY docs/ docs/
+COPY openbexi_timeline2.0_current_prompt.md ./
 COPY .github/workflows/ .github/workflows/
+COPY .run/ .run/
 COPY config/github-protection.json config/github-protection.json
 COPY README.md Dockerfile .dockerignore ./
 COPY server/ server/
@@ -49,7 +53,9 @@ CMD ["uv", "run", "--locked", "pytest", "tests/server", "-q"]
 FROM python-base AS runtime
 COPY --from=client-build /app/dist/ dist/
 COPY --from=client-build /app/data/ data/
-COPY --from=client-build /app/yaml/test-data/ yaml/test-data/
+COPY yaml/ yaml/
+COPY models/ models/
+COPY filters/ filters/
 COPY --from=client-build /app/client/assets/ client/assets/
 COPY shared/ shared/
 COPY server/ server/

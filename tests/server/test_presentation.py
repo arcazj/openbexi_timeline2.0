@@ -193,6 +193,34 @@ def test_nested_parent_outside_window_is_not_injected(bundle):
     assert page["items"][0]["ancestorIds"] == [] and page["items"][0]["depth"] == 0
 
 
+@pytest.mark.parametrize("separate", [False, True])
+def test_compact_overlay_packs_matching_activities_without_losing_records(bundle, separate):
+    engine, value = engine_records(bundle, 6)
+    for index in range(3):
+        parent, child = value["records"][index * 2:index * 2 + 2]
+        for record in (parent, child):
+            record.update(title=f"Session {index}", start=f"2026-09-12T{9 + index * 3:02}:00:00.000Z",
+                          end=f"2026-09-12T{9 + index * 3:02}:10:00.000Z", render={})
+        parent["render"] = {"color": "#ff0000"}
+        child.update(parentSessionId=parent["id"], render={"color": "#777777", "icon": "check"})
+        if separate:
+            child["title"] = "Distinct activity"
+    before = copy.deepcopy(value)
+    query, result, page = layout(engine, value, {"version": 1, "compact": True, "durationLabels": "after",
+        "labels": {"fontSize": 11}, "nesting": {"enabled": True, "layout": "overlay"}})
+    assert result["detailTotal"] == page["loadedCount"] == 6
+    assert result["totalRows"] == (2 if separate else 1)
+    assert result["rowHeight"] == 19
+    assert page["enclosures"] == []
+    assert value == before
+    by_id = {item["record"]["id"]: item for item in page["items"]}
+    for parent, child in zip(value["records"][::2], value["records"][1::2]):
+        assert (by_id[parent["id"]]["row"] == by_id[child["id"]]["row"]) is not separate
+        assert by_id[child["id"]]["ancestorIds"] == [parent["id"]]
+        assert by_id[child["id"]]["labelX"] >= by_id[child["id"]]["xEnd"] + 5
+        assert engine.placement(query["queryId"], result["layoutId"], child["id"])["pageIndex"] == 0
+
+
 def test_baseline_uses_original_dates_and_reserves_height(bundle):
     engine, value = engine_records(bundle, 1)
     record = value["records"][0]
@@ -293,7 +321,7 @@ def test_record_style_http_write_roundtrip_and_pinned_overview(client, app, writ
 
 def test_styled_record_and_model_survive_json_repository_restart(tmp_path):
     root = tmp_path / "data"
-    seed = ROOT / "data" / "default-dataset.json"
+    seed = ROOT / "shared/fixtures/initial-snapshot.json"
     repository = JsonRepository(root, seed)
     repository.open()
     try:

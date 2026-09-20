@@ -52,6 +52,175 @@ def window():
     return {"domain": {"from": "2024-02-10T11:30:00Z", "to": "2024-02-10T12:30:00Z"}}
 
 
+def test_unchanged_refresh_does_not_advance_revision_or_rewrite_index(archive):
+    repository = opened(archive)
+    try:
+        repository._reconcile()
+        revision = repository.coverage()["indexVersion"]
+        before = repository._index_path.read_bytes()
+        repository._reconcile()
+        assert repository.coverage()["indexVersion"] == revision
+        assert repository._index_path.read_bytes() == before
+        assert len(repository.capture_query_domain(window())["records"]) == 2
+    finally:
+        repository.close()
+
+
+def test_waiting_foreground_capture_obeys_cancellation(archive):
+    import threading
+    from server.app.services.preparation_control import preparation_control
+    repository = opened(archive)
+    try:
+        repository._foreground_lock.acquire()
+        with pytest.raises(DomainError, match="deadline"):
+            with preparation_control(threading.Event(), time.monotonic() + .03):
+                repository.capture_query_domain(window())
+        assert repository._foreground == 0
+    finally:
+        repository._foreground_lock.release()
+        repository.close()
+
+
+def test_prefetch_yields_between_files_and_does_not_build_full_window(archive, monkeypatch):
+    repository = opened(archive)
+    original = repository.reader.scan
+    calls = []
+    def scan(**kwargs):
+        calls.append(kwargs["file_selection"])
+        result = original(**kwargs)
+        repository._foreground = 1
+        return result
+    try:
+        monkeypatch.setattr(repository.reader, "scan", scan)
+        result = repository.prefetch({"domain": {"from": "2024-02-01T00:00:00Z", "to": "2024-02-20T00:00:00Z"}})
+        assert result["status"] == "busy"
+        assert len(calls) == 1
+        assert sum(map(len, calls[0].values())) == 1
+        assert repository._metrics["windowReads"] == 0
+    finally:
+        repository._foreground = 0
+        repository.close()
+
+
+def test_capture_memory_admission_precedes_snapshot_copy(archive):
+    from dataclasses import replace
+    repository = opened(archive)
+    try:
+        repository.reader.limits = replace(repository.reader.limits, max_capture_bytes=100)
+        with pytest.raises(DomainError, match="memory budget"):
+            repository.capture_query_domain(window())
+    finally:
+        repository.close()
+
+
+@pytest.mark.parametrize("payload", [None, [], {}, {"domain": None}, {"domain": {}},
+    {**window(), "filters": []}, {**window(), "filters": {"sourceIds": "REAL"}},
+    {**window(), "filters": {"sourceIds": [1]}}, {**window(), "filters": {"sourceId": 1}}])
+def test_prefetch_rejects_malformed_requests_without_poisoning_gate(archive, payload):
+    repository = opened(archive)
+    try:
+        with pytest.raises(DomainError):
+            repository.prefetch(payload)
+        assert repository._prefetch_gate.acquire(blocking=False)
+        repository._prefetch_gate.release()
+    finally:
+        repository.close()
+
+
+def test_refresh_reports_provisional_counts_until_reconciliation_completes(archive, monkeypatch):
+    repository = opened(archive)
+    try:
+        repository._reconcile()
+        prior_version = repository.coverage()["indexVersion"]
+        original = repository._index_file
+        observations = []
+        def indexing(source, path):
+            observations.append(repository.coverage())
+            return original(source, path)
+        monkeypatch.setattr(repository, "_index_file", indexing)
+        repository._reconcile()
+        assert observations and all(not item["complete"] and item["recordCount"] is None for item in observations)
+        assert repository.coverage()["complete"]
+        assert repository.coverage()["indexVersion"] == prior_version
+    finally:
+        repository.close()
+
+
+def test_foreground_read_enters_before_export_next_file(archive, monkeypatch):
+    import threading
+    from concurrent.futures import ThreadPoolExecutor
+    repository = opened(archive)
+    started, release = threading.Event(), threading.Event()
+    original = repository.reader._convert
+    order = []
+    export_thread = []
+    def convert(*args, **kwargs):
+        name = threading.current_thread().name
+        order.append(name)
+        result = original(*args, **kwargs)
+        if len(order) == 1:
+            export_thread.append(name)
+            started.set()
+            assert release.wait(5)
+        return result
+    try:
+        monkeypatch.setattr(repository.reader, "_convert", convert)
+        with ThreadPoolExecutor(max_workers=2) as workers:
+            exporting = workers.submit(repository.query_snapshot)
+            assert started.wait(5)
+            foreground = workers.submit(repository.capture_query_domain, window())
+            deadline = time.monotonic() + 5
+            while not repository._foreground and time.monotonic() < deadline:
+                time.sleep(.005)
+            assert repository._foreground == 1
+            release.set()
+            assert foreground.result(timeout=5)["records"]
+            assert len(exporting.result(timeout=10)["records"]) == 121
+        assert order[0] == export_thread[0] and order[1] != export_thread[0]
+        assert repository._foreground == 0
+    finally:
+        release.set()
+        repository.close()
+
+
+def test_cancelled_export_yield_does_not_release_an_unowned_reader_lock(archive):
+    import threading
+    from server.app.services.preparation_control import preparation_control
+    repository = opened(archive)
+    try:
+        with pytest.raises(DomainError, match="deadline"):
+            with preparation_control(threading.Event(), time.monotonic() + .03):
+                repository.reader.scan(foreground_waiting=lambda: True)
+        assert repository.reader._mutex.acquire(blocking=False)
+        repository.reader._mutex.release()
+        assert repository.capture_query_domain(window())["records"]
+    finally:
+        repository.close()
+
+
+def test_waiting_interval_lookup_obeys_publication_deadline(archive):
+    import threading
+    from server.app.services.preparation_control import preparation_control
+    repository = opened(archive)
+    entered, release = threading.Event(), threading.Event()
+    def hold_index():
+        with repository._index_lock:
+            entered.set()
+            release.wait(5)
+    holder = threading.Thread(target=hold_index)
+    holder.start()
+    try:
+        assert entered.wait(5)
+        with pytest.raises(DomainError, match="deadline"):
+            with preparation_control(threading.Event(), time.monotonic() + .03):
+                repository.capture_query_domain(window())
+        assert repository._foreground == 0
+    finally:
+        release.set()
+        holder.join(5)
+        repository.close()
+
+
 def test_startup_reads_no_record_files_and_cold_window_is_honestly_partial(archive, monkeypatch):
     reads = []
     original = legacy_reader.safe_read

@@ -5,6 +5,7 @@ import { ViewDecimal as D, toMs, toIso, decimalString } from '../timeline/time-s
 import { ProviderError, uuid } from './data-provider.js';
 import { resolveRelationshipSteps } from './query-relationships.js';
 import { drainQuerySteps, drainQueryStepsAsync } from './query-work.js';
+import { discoverGroupingFieldsSteps } from './grouping-fields.js';
 
 export function createQueryData(snapshot, input, options = {}) {
   return drainQuerySteps(createQueryDataSteps(snapshot, input, options), options);
@@ -133,5 +134,7 @@ export function* createQueryDataSteps(snapshot, input, options = {}) {
   const mapId = uuid();
   const fixed = input.fixedScale === undefined ? null : fixedScaleMap({ from: toIso(from), to: toIso(to) }, input.fixedScale, mapId);
   const overviewBins = bins.map(bin => ({ from: bin.from, to: bin.to, total: bin.records, matched: bin.matches }));
-  return { ...(relationships ?? {}), ...(definitionVersion === 2 ? { explanationDefinition: configuration.explanationDefinition } : {}), definitionVersion, relationshipMode, records, zones, matches, overviewRecords, overviewBins, fieldTypes, hasSearch: search.active, map: mode === 'uniform' && fixed ? fixed : { mapId, domain: { from: toIso(from), to: toIso(to) }, knots, mode, ratio }, density: { bins: densityBins, complete: true, total: overviewRecords.length } };
+  const complete = snapshot.manifest?.legacy?.coverage?.complete ?? true;
+  const groupingFields = yield* discoverGroupingFieldsSteps(overviewRecords, { complete });
+  return { ...(relationships ?? {}), ...(definitionVersion === 2 ? { explanationDefinition: configuration.explanationDefinition } : {}), definitionVersion, relationshipMode, records, zones, matches, overviewRecords, overviewBins, fieldTypes, groupingFields, hasSearch: search.active, map: mode === 'uniform' && fixed ? fixed : { mapId, domain: { from: toIso(from), to: toIso(to) }, knots, mode, ratio }, density: { bins: densityBins, complete, total: overviewRecords.length } };
 }

@@ -16,7 +16,7 @@ const input = { from, to, width: 2000, rowHeight: 32, fontSize: 12, availableHei
 const event = (i, time = from + (i + 0.5) * 3600000) => ({ ...structuredClone(initial.records[0]), id: `90000000-0000-4000-8000-${String(i).padStart(12, '0')}`, title: `Hazard ${i}`, kind: 'event', start: new Date(time).toISOString(), end: null, parentSessionId: null, render: { icon: 'legacy-green-flag' } });
 
 test('hazard images use a closed approved registry with embedded PNG inputs', async () => {
-  assert.equal(new Set(Object.values(icons)).size, 8);
+  assert.equal(new Set(Object.values(icons)).size, 10);
   for (const [file, id] of Object.entries(icons)) {
     assert.ok(APPROVED_ICONS.includes(id)); assert.equal(isHazardIcon(id), true);
     const bytes = await readFile(new URL(`../../client/assets/legacy-hazards/${file}`, import.meta.url));

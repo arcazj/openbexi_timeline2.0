@@ -168,10 +168,19 @@ def components():
         "rejectedFiles": integer(), "recordCount": nullable(integer())},
         ["complete", "state", "indexVersion", "checkedAt", "indexedFiles", "indexedRecords", "rejectedFiles", "recordCount"],
         description="Legacy file-index coverage pinned to this query. Provisional counts are not complete archive counts; incomplete coverage forces a uniform map.")
+    schemas['GroupingFieldInventory'] = obj({
+        'fields': array(obj({'path': field, 'label': string(maxLength=256),
+                            'types': array(enum('null', 'boolean', 'number', 'string'), maxItems=4, uniqueItems=True),
+                            'count': integer()}, ['path', 'label', 'types', 'count']), maxItems=256),
+        'complete': boolean, 'truncated': boolean, 'scannedRecords': integer(), 'totalRecords': integer(),
+        'scope': {'const': 'query-domain'},
+        'limits': obj({name: integer(1) for name in ('records', 'fields', 'nodes', 'depth')}, ['records', 'fields', 'nodes', 'depth'])},
+        ['fields', 'complete', 'truncated', 'scannedRecords', 'totalRecords', 'scope', 'limits'],
+        description='Observed scalar metadata after source and predicate selection in this query domain, before pagination. Incomplete source coverage or admission limits are explicit; discovery does not authorize filter expressions.')
     schemas["QueryManifest"] = obj({**provenance, "queryId": identity, "snapshotId": identity, "mapId": identity, "coverage": ref("WindowCoverage"),
         'definitionVersion': {'const': 2}, 'relationshipMode': enum('independent', 'family'), 'counts': ref('QueryCounts'), 'preferencesRevision': integer(),
         "baseTotal": integer(), "matchTotal": integer(), "overviewTotal": integer(), "overviewMatchTotal": integer(),
-        "fieldTypes": obj({}, additional=string()), "state": {"const": "ready"}},
+        "fieldTypes": obj({}, additional=string()), "groupingFields": ref('GroupingFieldInventory'), "state": {"const": "ready"}},
         [*provenance, "queryId", "snapshotId", "mapId", "baseTotal", "matchTotal", "overviewTotal", "overviewMatchTotal", "fieldTypes", "state"])
     schemas["PreparationError"] = obj({"code": string(maxLength=128), "message": string(maxLength=256), "status": integer(400, 599), 'diagnostic': schemas['Problem']['properties']['diagnostic']}, ["code", "message", "status"])
     query_preparation = {**provenance, "queryId": identity, "snapshotId": identity, "mapId": identity}
@@ -373,6 +382,10 @@ def _operation(path, method, name):
     suffix = path[len(BASE):] if path.startswith(BASE) else path
     if path == "/":
         return None
+    if path == "/openbexi_timeline/sessions":
+        return "LegacyReply", "LegacyActionRequest" if method == "POST" else None, 200, "queries", "Legacy session/descriptor/filter envelope over authorized queries. POST mutations require canonical validated command bodies and original write preconditions. Archive sources remain read-only; parameter usernames never grant identity.", True
+    if path == "/openbexi_timeline_sse/sessions":
+        return "LegacyStream", None, 200, "queries", "Legacy SSE message frame followed by heartbeats; five-second leases reconnect to a fresh authorized snapshot. Close the previous stream on navigation. Use the authenticated fetch transport shim because native EventSource cannot add required headers.", True
     if path in ("/api/v1/health", "/health/live", "/health/ready"):
         return "Health", None, 200, "operations", "Process liveness or JSON-store readiness; contains no records or secrets.", False
     if path == "/api/v1/capabilities":
@@ -465,9 +478,9 @@ def _operation(path, method, name):
 
 def build_contract(app):
     inventory = route_inventory(app)
-    contract = get_openapi(title="OpenBEXI Timeline implemented JSON API", version="1.0.0", openapi_version="3.1.1", routes=app.routes)
+    contract = get_openapi(title="OpenBEXI Timeline implemented JSON API", version="2.0.0", openapi_version="3.1.1", routes=app.routes)
     contract["jsonSchemaDialect"] = DIALECT
-    contract["info"]["description"] = "Current registered Python/JSON handlers only. Single default workspace. This artifact is not a full-release certification; pending normative routes are tracked in docs/api-contract.md."
+    contract["info"]["description"] = "Current registered Python/JSON handlers only. Single default workspace. This artifact is not a full-release certification; pending normative routes are tracked in docs/reference/implementation/api-contract.md."
     contract["servers"] = [{"url": "/", "description": "Same-origin API; separately configured explicit CORS origins are permitted."}]
     contract["security"] = [{"BearerAuth": []}]
     contract["components"] = {"schemas": components(), "responses": {}, "securitySchemes": {"BearerAuth": {"type": "http", "scheme": "bearer", "description": "Opaque high-entropy token. Server checks active principal, expiry/revocation and workspace/source capabilities on every request."}}}
@@ -476,6 +489,16 @@ def build_contract(app):
     schemas["ModelApply"] = obj({"version": integer(1, 32)}, ["version"])
     schemas["ModelValidation"] = obj({"definition": ref("VisualDefinition")}, ["definition"])
     schemas["OpenApiDocument"] = obj({"openapi": {"const": "3.1.1"}, "info": obj({}, additional=True), "paths": obj({}, additional=True), "components": obj({}, additional=True)}, ["openapi", "info", "paths", "components"], additional=True)
+    schemas["LegacyEvent"] = obj({"id": {"type": ["string", "integer"]}, "canonicalId": string(),
+        "start": string(), "end": string(), "data": obj({}, additional=True), "render": obj({}, additional=True),
+        "activities": array(ref("LegacyEvent"))}, ["id", "start", "data"], additional=True)
+    schemas["LegacyReply"] = {"anyOf": [obj({"dateTimeFormat": {"const": "iso8601"}, "scene": string(),
+        "events": array(ref("LegacyEvent")), "coverage": nullable(ref("WindowCoverage")), "queryRevision": integer(1)}, ["dateTimeFormat", "scene", "events"], additional=True),
+        obj({"openbexi_timeline": array(obj({}, additional=True))}, ["openbexi_timeline"], additional=True),
+        obj({"event_descriptor": array(obj({}, additional=True)), "scene": string()}, ["event_descriptor"], additional=True),
+        ref("RecordCommit"), ref("ConfigurationCommit")]}
+    schemas["LegacyStream"] = string(description="UTF-8 SSE: unnamed data messages carry LegacyReply; comments are heartbeats, named error events terminate the stream. Reconnect after the five-second lease for fresh data.")
+    schemas["LegacyActionRequest"] = {"anyOf": [ref("RecordCreate"), ref("ConfigurationCommand")]}
     samples = examples(schemas)
     errors = {400: "Malformed JSON/request/cursor", 401: "Missing, expired, disabled or revoked authentication", 403: "Missing capability or read-only source", 404: "Absent or inaccessible resource", 408: "Preparation publication deadline exceeded", 409: "Business/reference/generation/idempotency or expired-view conflict", 410: "Owned query expired; prepare a replacement", 412: "Stale resource or preference revision", 413: "Request, storage or retained-memory limit", 415: "Unsupported request media type", 422: "Invalid field, schema, relationship or query", 428: "Missing write precondition", 429: "Retained-query/layout capacity exhausted", 500: "Preparation failed without publishing a result", 503: "Storage integrity/recovery or service unavailable"}
     headers = {"X-Request-Id": {"schema": string(), "description": "Correlation ID; never a token."}, "Cache-Control": {"schema": {"const": "no-store"}}}
@@ -557,10 +580,24 @@ def build_contract(app):
             operation["responses"][str(status)]["headers"]["ETag"] = {"schema": string(), "description": "Current strong generation:resource revision."}
         if request:
             media = "application/json-patch+json" if request == "JsonPatch" else "application/json"
-            operation["requestBody"] = {"required": request != "EmptyObject", "content": {media: {"schema": ref(request)}}}
+            operation["requestBody"] = {"required": request not in ("EmptyObject", "LegacyActionRequest"), "content": {media: {"schema": ref(request)}}}
             if request in samples:
                 operation["requestBody"]["content"][media]["example"] = copy.deepcopy(samples[request])
             operation["x-request-byte-limit"] = 8388608 if request == "BatchRequest" else 65536 if request in ("QueryRequest", "LayoutRequest", "TableRequest") else 1048576
+        if response in ("LegacyReply", "LegacyStream"):
+            for key in ("startDate", "endDate", "scene", "namespace", "filterName", "filter", "search", "timelineName", "userName", "ob_request", "event_id", "start"):
+                parameters.append({"name": key, "in": "query", "required": False, "schema": string(maxLength=4096)})
+            operation["x-legacy-limits"] = {"queryBytes": 16384, "records": 10000, "responseBytes": 8388608,
+                "range": "Half-open [startDate,endDate); missing both uses the configured interval.",
+                "filter": "Bounded RE2 include|exclude, semicolon OR, plus AND. Ambiguous expressions fail explicitly.",
+                "authentication": "Bearer header or configured same-origin loopback header; no URL tokens."}
+            if method == "POST":
+                for key in ("X-Workspace-Generation", "Idempotency-Key", "If-Match"):
+                    parameters.append({"name": key, "in": "header", "required": False, "schema": string(),
+                        "description": "Required by the matching canonical write command; omitted for read actions."})
+            if response == "LegacyStream":
+                operation["responses"]["200"]["content"] = {"text/event-stream": {"schema": ref("LegacyStream")}}
+                operation["x-stream-limits"] = {"global": 32, "perPrincipal": 2, "leaseSeconds": 5, "sendTimeoutSeconds": 1}
         if response == "Health":
             operation["responses"]["503"] = {"description": "Not ready or recovery-required", "headers": copy.deepcopy(headers), "content": {"application/json": {"schema": ref("Health")}}}
         operation["x-permission-policy"] = {"identity": "Admin for principal mutation/listing and issuance for another principal; own token issuance/listing/revocation where allowed.",

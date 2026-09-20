@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs';
 
 export default defineConfig({
   metadata: { standaloneBundleSha256: createHash('sha256').update(readFileSync(new URL('./dist/index.html', import.meta.url))).digest('hex') },
-  testDir: './tests/e2e', testIgnore: ['demo.spec.mjs'], timeout: 30000, expect: { timeout: 10000 },
+  testDir: './tests/e2e', testIgnore: ['demo.spec.mjs', 'legacy-reference.spec.mjs'], timeout: 30000, expect: { timeout: 10000 },
   fullyParallel: false, workers: 1, retries: 0,
   outputDir: 'artifacts/browser/results',
   reporter: [['list'], ['json', { outputFile: 'artifacts/browser/results.json' }]],

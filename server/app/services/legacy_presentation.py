@@ -17,7 +17,7 @@ BAND_FIELDS = {"color": "backgroundColor", "textColor": "textColor", "dateColor"
                "SessionColor": "sessionColor", "eventColor": "eventColor", "sessionHeight": "barHeight",
                "defaultEventSize": "pointRadius", "intervalUnit": "intervalUnit", "dateFormat": "dateFormat"}
 PARAM_FIELDS = {"name", "title", "date", "timeZone", "top", "left", "height", "width", "fontSize",
-                "fontFamily", "fontWeight", "fontStyle", "camera", "data", "data_default_port", "data_sse_port"}
+                "fontFamily", "fontWeight", "fontStyle", "camera", "data", "data_default_port", "data_sse_port", "compact", "overviewVisible"}
 OTHER_BAND_FIELDS = {"name", "height", "intervalPixels", "subIntervalPixels", "intervalUnitPos", "fontSize",
                      "fontWeight", "fontStyle", "fontFamily", "textBackgroundColor", "model"}
 MONTHS = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"]
@@ -85,8 +85,8 @@ def adapt_legacy_presentation(model, *, source_bindings=None, namespace_grouping
         diagnostics.append({"path": path, "code": "unsupported_legacy_presentation", "severity": "warning",
                             "message": "This authored property is preserved in source provenance but is not rendered or executed."})
 
-    if params.get("camera", "Orthographic") != "Orthographic":
-        raise _problem("Perspective models require a separate explicit compatibility implementation")
+    if params.get("camera", "Orthographic") not in ("Orthographic", "Perspective"):
+        raise _problem("Camera must be Orthographic or Perspective")
     name = params.get("title", "Legacy timeline")
     if not isinstance(name, str) or not name.strip() or len(name) > 100:
         raise _problem("Model title must contain 1-100 characters")
@@ -94,7 +94,15 @@ def adapt_legacy_presentation(model, *, source_bindings=None, namespace_grouping
     definition["rowHeight"] = max(32, definition["fontSize"] + 19)
     definition["timeZone"] = params.get("timeZone", "UTC")
     presentation = {"version": 1, "bands": {}, "labels": {"fields": ["/title"]}, "nesting": {"enabled": True}}
-    hints = {"version": 1, "focus": legacy_model_focus(focus if focus is not None else params.get("date")), "bands": {}}
+    if "compact" in params and not isinstance(params["compact"], bool):
+        raise _problem("compact must be boolean")
+    if params.get("compact"):
+        presentation.update(compact=True, durationLabels="after", nesting={"enabled": True, "layout": "overlay"})
+    hints = {"version": 1, "camera": params.get("camera", "Orthographic"), "focus": legacy_model_focus(focus if focus is not None else params.get("date")), "bands": {}}
+    if "overviewVisible" in params:
+        if not isinstance(params["overviewVisible"], bool):
+            raise _problem("overviewVisible must be boolean")
+        hints["overviewVisible"] = params["overviewVisible"]
     heights = []
     for index, band in enumerate(model["bands"]):
         role = "overview" if index else "primary"
@@ -150,7 +158,9 @@ def adapt_legacy_presentation(model, *, source_bindings=None, namespace_grouping
     if grouping != "NONE":
         if not isinstance(grouping, str) or not re.fullmatch(r"[A-Za-z_$][\w$]*(?:\.[A-Za-z_$][\w$]*){0,7}", grouping, re.ASCII):
             raise _problem("Legacy grouping must be a safe data-property chain")
-        presentation["grouping"] = {"field": "/data/" + grouping.replace(".", "/"), "direction": "asc"}
+        canonical = grouping in {"namespace", "description", "text", "system", "type", "status", "priority"}
+        presentation["grouping"] = {"field": "/data/" + ("" if canonical else "legacy/") + grouping.replace(".", "/"),
+                                    "direction": "asc", "recordPolicy": "parent-family", "order": "encounter"}
     presentation["sourceStyles"] = []
     for index, binding in enumerate(source_bindings):
         if not isinstance(binding, dict):

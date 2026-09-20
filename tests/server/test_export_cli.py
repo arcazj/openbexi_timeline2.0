@@ -31,7 +31,7 @@ def test_export_uses_complete_endpoint_and_validates_full_schema(bundle):
     raw, validated = CLI.download_snapshot("http://127.0.0.1:8765", "default", "test-token", opener)
     assert opener.request.full_url.endswith("/workspaces/default/snapshot")
     assert "query-sessions" not in opener.request.full_url
-    assert validated["manifest"]["recordCount"] == len(validated["records"]) == 48
+    assert validated["manifest"]["recordCount"] == len(validated["records"]) == len(bundle["records"])
     assert raw == json_bytes(bundle)
     incomplete = {"format": "timeline-snapshot", "manifest": {"completeness": "complete-for-declared-universe", "recordCount": 0}, "records": []}
     with pytest.raises(DomainError):

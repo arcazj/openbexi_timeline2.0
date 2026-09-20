@@ -28,7 +28,7 @@ def package_preview(root, tag, *, publication_approved=False):
     content = {
         "index.html": html,
         "THIRD-PARTY-NOTICES.json": (root / "dist/THIRD-PARTY-NOTICES.json").read_bytes(),
-        "README-OFFLINE.md": (root / "docs/standalone-download.md").read_bytes(),
+        "README-OFFLINE.md": (root / "docs/reference/implementation/standalone-download.md").read_bytes(),
         "RELEASE-NOTES.md": (root / f"docs/releases/{tag}.md").read_bytes(),
         "DATA-NOTICES.md": (root / "docs/data-licensing.md").read_bytes(),
         "LICENSE": (root / "LICENSE").read_bytes(),

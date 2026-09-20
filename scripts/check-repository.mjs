@@ -6,15 +6,6 @@ import { marked } from 'marked';
 
 const root = fileURLToPath(new URL('../', import.meta.url));
 const forbidden = /(^|\/)(node_modules|\.venv|venv|__pycache__|\.idea|\.vscode|\.pytest_cache|\.ruff_cache)(\/|$)|^(dist|runtime|var|tmp|artifacts|test-results|playwright-report|coverage)\/|^(yaml|config)\/local\/|(^|\/)\.env(?:$|\.(?!example$))|(^|\/)local-browser-key\.json$|\/control\/identities\.json$|\.(?:log|pyc|pem|key|p12|pfx)$/i;
-const documentationPdfs = new Set([
-  'output/pdf/OpenBEXI_Timeline_Implementation_Preview.pdf',
-  'output/pdf/OpenBEXI_Local_Source_Paths.pdf',
-  'output/pdf/OpenBEXI_Legacy_JSON_Preview.pdf',
-  'output/pdf/OpenBEXI_Hazard_Comparison.pdf',
-  'output/pdf/local-test-data.pdf',
-  'output/pdf/OpenBEXI_Timeline_Sorting_Filtering_Prompt.pdf',
-  'output/pdf/sorting-filtering-candidate.pdf',
-]);
 const credentialPatterns = [
   /-----BEGIN (?:RSA |OPENSSH |EC |DSA )?PRIVATE KEY-----/,
   /\bgh[pousr]_[A-Za-z0-9]{30,}\b/,
@@ -25,7 +16,7 @@ const credentialPatterns = [
 export function pathProblems(files) {
   const errors = [], seen = new Map();
   for (const file of files) {
-    if (forbidden.test(file) || (file.startsWith('output/') && !documentationPdfs.has(file))) errors.push(`Excluded local/generated path: ${file}`);
+    if (forbidden.test(file) || /^output\//i.test(file)) errors.push(`Excluded local/generated path: ${file}`);
     if (file.includes('\\') || file.split('/').some(part => part === '..' || part === '.')) errors.push(`Nonportable path: ${file}`);
     const lower = file.toLowerCase();
     if (seen.has(lower) && seen.get(lower) !== file) errors.push(`Case-colliding paths: ${seen.get(lower)} and ${file}`);
@@ -46,7 +37,7 @@ export function documentationProblems(file, source, files) {
     if (!href || /^(?:https?:|mailto:|#)/i.test(href)) return;
     if (/^(?:[a-z]:|\/|\\)/i.test(href)) { errors.push(`Machine-local documentation link in ${file}`); return; }
     let target;
-    try { target = path.posix.normalize(path.posix.join(path.posix.dirname(file), decodeURIComponent(href.split(/[?#]/)[0]))); }
+    try { target = path.posix.normalize(path.posix.join(path.posix.dirname(file), decodeURIComponent(href.split(/[?#]/)[0]))).replace(/\/$/, ''); }
     catch { errors.push(`Invalid documentation link in ${file}`); return; }
     if (!files.has(target) && ![...files].some(name => name.startsWith(`${target}/`))) errors.push(`Unpublished documentation target: ${file} -> ${target}`);
   });
@@ -55,7 +46,8 @@ export function documentationProblems(file, source, files) {
 
 export function checkRepository({ staged = false, build = false } = {}) {
   const git = args => execFileSync('git', args, { cwd: root, maxBuffer: 32 * 1024 * 1024 });
-  const names = [...new Set(git(['ls-files', '-z', '--cached', ...(staged ? [] : ['--others', '--exclude-standard'])]).toString('utf8').split('\0').filter(Boolean))];
+  const names = [...new Set(git(['ls-files', '-z', '--cached', ...(staged ? [] : ['--others', '--exclude-standard'])]).toString('utf8').split('\0').filter(Boolean))]
+    .filter(file => staged || lstatSync(path.join(root, file), { throwIfNoEntry: false }));
   const files = new Set(names), errors = pathProblems(names);
   const contents = file => staged ? git(['show', `:${file}`]) : readFileSync(path.join(root, file));
   let bytes = 0;
@@ -66,7 +58,7 @@ export function checkRepository({ staged = false, build = false } = {}) {
     if (data.length > 50 * 1024 * 1024) errors.push(`File exceeds 50 MiB publication limit: ${file}`);
     if (/\.(?:md|json|yml|yaml|js|mjs|py|html|css|xml|toml|txt)$/.test(file) && hasCredential(data.toString('utf8'))) errors.push(`Possible credential in ${file} (value suppressed)`);
   }
-  for (const file of ['README.md', 'CONTRIBUTING.md', 'SECURITY.md', 'docs/publishing.md']) {
+  for (const file of ['README.md', 'CONTRIBUTING.md', 'SECURITY.md', 'docs/README.md', 'docs/openbexi_timeline2.0_user_manual.md', 'docs/openbexi_timeline2.0_deployment.md', 'docs/reference/implementation/publishing.md']) {
     if (!files.has(file)) { errors.push(`Missing publication document: ${file}`); continue; }
     errors.push(...documentationProblems(file, contents(file).toString('utf8'), files));
   }

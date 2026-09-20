@@ -12,7 +12,7 @@ import { writeArtifacts } from '../cli.js';
 import { startServer } from '../serve.js';
 
 test('startup YAML/JSON preserves disabled sources, random daily counts and source date carryover', async () => {
-  const yaml = await readFile(new URL('../../../yaml/sources_default_test.yml', import.meta.url), 'utf8');
+  const yaml = await readFile(new URL('../examples/sources_default_test.yml', import.meta.url), 'utf8');
   const startup = parseStartup(yaml);
   assert.equal(startup.data_sources.length, 2);
   assert.equal(startup.data_sources[1].namespace, 'SOURCE2');

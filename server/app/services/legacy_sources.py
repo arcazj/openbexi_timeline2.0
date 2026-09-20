@@ -67,6 +67,7 @@ class LegacySourceConfiguration:
     render_sources: list[dict]
     timezone: str
     approved_predicates: dict = dataclass_field(default_factory=dict)
+    aliases: dict = dataclass_field(default_factory=dict)
 
     def metadata(self):
         return {
@@ -78,6 +79,7 @@ class LegacySourceConfiguration:
                         for source in self.sources],
             "diagnostics": list(self.diagnostics),
             **({'sourcePredicates': self.approved_predicates} if self.approved_predicates else {}),
+            **({'sourceAliases': self.aliases} if self.aliases else {}),
         }
 
 
@@ -255,17 +257,18 @@ def load_legacy_sources(config_path, *, legacy_root, allow_roots, path_maps=None
         if entry.get("connector"):
             report(index, "legacy_connector_not_executed", "info")
         known = {"namespace", "type", "enable", "permission", "converter2events_class", "data_path",
-                 "data_model", "filter", "approved_filter", "connector", "render"}
+                 "data_model", "filter", "approved_filter", "connector", "render", "identity_path", "source_alias", "timezone", "dialect"}
         for field in sorted(set(entry) - known):
             report(index, "legacy_source_option_unsupported", field=field[:64])
-        accepted.append((index, namespace, logical, root, model, colors, approval))
+        accepted.append((index, namespace, logical, root, model, colors, approval, entry))
 
     counts = {}
     for _, namespace, *_ in accepted:
         counts[namespace] = counts.get(namespace, 0) + 1
-    sources, styles, seen, approved_predicates = [], [], set(), {}
-    for index, namespace, logical, root, model, colors, approval in accepted:
-        digest = hashlib.sha256((namespace + "\0" + logical + "/" + model).encode()).hexdigest()[:16]
+    sources, styles, seen, approved_predicates, aliases = [], [], set(), {}, {}
+    for index, namespace, logical, root, model, colors, approval, entry in accepted:
+        identity_path = _logical_path(entry["identity_path"]) if "identity_path" in entry else logical + "/" + model
+        digest = hashlib.sha256((namespace + "\0" + identity_path).encode()).hexdigest()[:16]
         identity = (namespace[:100] if _SOURCE_ID.fullmatch(namespace) else "legacy") + "-" + digest
         authority = (namespace, root, model)
         if authority in seen:
@@ -273,11 +276,22 @@ def load_legacy_sources(config_path, *, legacy_root, allow_roots, path_maps=None
         seen.add(authority)
         if counts[namespace] > 1:
             report(index, "legacy_namespace_multiple_sources", "info", sourceId=identity)
-        sources.append(LegacySource(identity, root, namespace, timezone, dialect, data_model=model))
+        source_timezone, source_dialect = entry.get("timezone", timezone), entry.get("dialect", dialect)
+        _zone(source_timezone)
+        if source_dialect not in ("strict", "legacy-json"):
+            raise DomainError("legacy_dialect", "Unknown legacy JSON dialect.")
+        if "source_alias" in entry:
+            alias = entry["source_alias"]
+            if not isinstance(alias, str) or not _SOURCE_ID.fullmatch(alias) or alias in aliases:
+                raise DomainError("legacy_source_alias", "Source aliases must be unique bounded identifiers.")
+            aliases[alias] = identity
+        if identity in {source.id for source in sources}:
+            raise DomainError("legacy_source_duplicate", "Duplicate legacy source identity.")
+        sources.append(LegacySource(identity, root, namespace, source_timezone, source_dialect, data_model=model))
         styles.append({"sourceId": identity, "namespace": namespace, "render": colors})
         if approval is not None:
             approved_predicates[identity] = approval['expression']
-    return LegacySourceConfiguration(tuple(sources), diagnostics, styles, timezone, approved_predicates)
+    return LegacySourceConfiguration(tuple(sources), diagnostics, styles, timezone, approved_predicates, aliases)
 
 
 def _relative_parts(relative):

@@ -31,7 +31,7 @@ def test_batch_one_revision_and_exact_retry_with_stale_versions(client, write_he
     assert client.get(BASE + "/command-results/batch").json() == result
     assert client.get(BASE).json()["revision"] == 2
     assert client.get(BASE + f'/query-sessions/{query["queryId"]}/overview').json()["total"] == 48
-    assert len(app.state.repository.records) == 49
+    assert len(app.state.repository.records) == len(bundle["records"]) + 1
 
 
 @pytest.mark.parametrize("failure", ["stale", "schema", "duplicate", "immutable", "missing"])
@@ -101,7 +101,7 @@ def test_batch_authorization_checks_every_item_and_replayed_result(client, write
 
 @pytest.mark.parametrize("committed", [False, True])
 def test_batch_fault_boundary_recovers_all_old_or_all_new_twice(tmp_path, monkeypatch, committed):
-    seed = ROOT / "data" / "default-dataset.json"
+    seed = ROOT / "shared/fixtures/initial-snapshot.json"
     root = tmp_path / "data"
     repository = JsonRepository(root, seed).open()
     records = list(repository.records.values())[:3]

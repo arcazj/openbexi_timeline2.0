@@ -46,7 +46,7 @@ test('legacy dates are explicit, strict and independent of browser-local timezon
 });
 
 test('unsupported active geometry fails and inactive authored fields are visible diagnostics', () => {
-  for (const edit of [model => model.bands.push(model.bands[0]), model => model.params[0].camera = 'Perspective', model => model.bands[0].height = '74%', model => model.bands[0].model[0].sortBy = 'constructor', model => model.bands[0].intervalPixels = '1e4']) {
+  for (const edit of [model => model.bands.push(model.bands[0]), model => model.params[0].camera = 'Unknown', model => model.bands[0].height = '74%', model => model.bands[0].model[0].sortBy = 'constructor', model => model.bands[0].intervalPixels = '1e4']) {
     const model = structuredClone(fixtures.hazard.model); edit(model);
     assert.throws(() => adaptLegacyPresentation(model), { code: 'invalid_legacy_presentation' });
   }
@@ -55,6 +55,13 @@ test('unsupported active geometry fails and inactive authored fields are visible
   assert.ok(result.diagnostics.some(item => item.path === '/bands/0/image' && item.severity === 'warning'));
   assert.ok(result.diagnostics.some(item => item.code === 'connector_not_activated'));
   for (const sourceBindings of [[null], [{ sourceId: 'A', render: null }]]) assert.throws(() => adaptLegacyPresentation(model, { sourceBindings }), { code: 'invalid_legacy_presentation' });
+});
+
+test('legacy Perspective and custom grouping retain explicit display semantics', () => {
+  const model = structuredClone(fixtures.hazard.model); model.params[0].camera = 'Perspective';
+  const result = adaptLegacyPresentation(model, { sortBy: 'magType' });
+  assert.equal(result.viewHints.camera, 'Perspective');
+  assert.deepEqual(result.definition.presentation.grouping, { field: '/data/legacy/magType', direction: 'asc', recordPolicy: 'parent-family', order: 'encounter' });
 });
 
 test('namespace selectors cannot be ambiguous after normalization or be blank', () => {

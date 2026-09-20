@@ -34,10 +34,7 @@ jobs:
         with:
           python-version: ${{ matrix.python }}
       - name: Install locked dependencies
-        run: |
-          python -m pip install uv==0.12.13
-          uv sync --locked --python ${{ matrix.python }}
-          npm ci --ignore-scripts
+        run: python scripts/start.py --setup-only --python ${{ matrix.python }}
       - name: Install Linux test browsers
         if: runner.os == 'Linux'
         run: |
@@ -49,7 +46,13 @@ jobs:
       - name: Check repository publication boundaries
         run: npm run check:repo
       - name: Verify unchanged candidate
-        run: uv run --locked python scripts/verify-candidate.py --matrix --output artifacts/verification/ci
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            .venv/Scripts/python.exe scripts/verify-candidate.py --matrix --output artifacts/verification/ci
+          else
+            .venv/bin/python scripts/verify-candidate.py --matrix --output artifacts/verification/ci
+          fi
       - name: Preserve evidence, including failures
         if: always()
         uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1

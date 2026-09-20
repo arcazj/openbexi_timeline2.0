@@ -13,12 +13,13 @@ BASE = "/api/v1/workspaces/default"
 
 @pytest.fixture
 def bundle():
-    return read_json(ROOT / "data" / "default-dataset.json")
+    return read_json(ROOT / "shared/fixtures/initial-snapshot.json")
 
 
 @pytest.fixture
 def app(tmp_path):
-    return create_app(tmp_path / "data", TOKEN)
+    # Contract tests use a stable, compact fixture; test_local_test_data covers shipped demos.
+    return create_app(tmp_path / "data", TOKEN, ROOT / "shared/fixtures/initial-snapshot.json")
 
 
 @pytest.fixture

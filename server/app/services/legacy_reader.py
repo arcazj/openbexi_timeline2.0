@@ -19,6 +19,8 @@ from typing import Optional, Union
 
 from ..models.domain import DomainError, instant_ms, iso_from_ms, json_bytes, now_iso, validate_snapshot
 from .legacy_json import legacy_instant, parse_legacy_json
+from .preparation_control import cancellable_lock
+from .json_memory import json_heap_size
 
 
 LEGACY_ID_NAMESPACE = uuid.UUID("c51e00ef-a902-521c-9c51-b8f64c6634a1")
@@ -55,11 +57,12 @@ class LegacyLimits:
     max_records: int = 250000
     max_seconds: float = 180
     cache_bytes: int = 64 * 1024 * 1024
+    max_capture_bytes: int = 128 * 1024 * 1024
     max_diagnostics: int = 2000
 
     def __post_init__(self):
         for name in ("max_files", "max_directories", "max_file_bytes", "max_scan_bytes",
-                     "max_records", "cache_bytes", "max_diagnostics"):
+                     "max_records", "cache_bytes", "max_capture_bytes", "max_diagnostics"):
             value = getattr(self, name)
             if type(value) is not int or value < 0:
                 raise DomainError("legacy_limits", "Legacy count and byte limits require nonnegative integers.")
@@ -235,7 +238,7 @@ class LegacyReader:
         self.generation = str(uuid.uuid4())
 
     def _remember(self, key, value):
-        size = len(json_bytes(value))
+        size = json_heap_size(value, self.limits.cache_bytes)
         old = self._cache.pop(key, None)
         if old:
             self._cache_size -= old[0]
@@ -379,17 +382,18 @@ class LegacyReader:
             visit(item, f"/events/{index}")
         return records, zones
 
-    def scan(self, *, time_range=None, cancel=None, include_inventory=True, progress=None, file_selection=None, cache_result=True, reuse_unchanged=False):
+    def scan(self, *, time_range=None, cancel=None, include_inventory=True, progress=None, file_selection=None, cache_result=True, reuse_unchanged=False, foreground_waiting=None):
         """Capture all authority files; optional range limits retained records, not file membership.
 
         Sidecars are independently read by descriptor(), never bulk-traversed.
         Whole-file conversion failures retain a cached last-good image when present.
         """
-        with self._mutex:
+        with cancellable_lock(self._mutex, cancel, time.monotonic() + self.limits.max_seconds) as lease:
             return self._scan(time_range=time_range, cancel=cancel, include_inventory=include_inventory, progress=progress,
-                              file_selection=file_selection, cache_result=cache_result, reuse_unchanged=reuse_unchanged)
+                              file_selection=file_selection, cache_result=cache_result, reuse_unchanged=reuse_unchanged,
+                              yield_reader=(lambda: lease.yield_until(foreground_waiting)) if foreground_waiting else None)
 
-    def _scan(self, *, time_range, cancel, include_inventory, progress=None, file_selection=None, cache_result=True, reuse_unchanged=False):
+    def _scan(self, *, time_range, cancel, include_inventory, progress=None, file_selection=None, cache_result=True, reuse_unchanged=False, yield_reader=None):
         started, timestamp = time.monotonic(), now_iso()
         last_progress = started - 1
         reading = True
@@ -404,6 +408,13 @@ class LegacyReader:
         if selected_range and selected_range[0] >= selected_range[1]:
             raise DomainError("legacy_range", "Legacy analysis range must be positive.")
         domain_min, domain_max = None, None
+        retained_bytes = 0
+
+        def admit(value):
+            nonlocal retained_bytes
+            retained_bytes += json_heap_size(value, self.limits.max_capture_bytes - retained_bytes)
+            if retained_bytes > self.limits.max_capture_bytes:
+                raise DomainError("legacy_memory_limit", "Selected records exceed the capture memory budget; use a smaller time range.", 413)
 
         def check():
             nonlocal last_progress
@@ -430,6 +441,8 @@ class LegacyReader:
             report["sources"].append(source_report)
             paths = self._files(source, check, counters, report) if file_selection is None else file_selection.get(source.id, ())
             for path in paths:
+                if yield_reader:
+                    yield_reader()
                 check()
                 if file_selection is not None:
                     counters["files"] += 1
@@ -514,6 +527,7 @@ class LegacyReader:
                             raise DomainError("legacy_duplicate_id", "Conflicting legacy records share a source, namespace and ID; snapshot was not published.", 409)
                         report["duplicateRecords"] += 1
                     else:
+                        admit(record)
                         records[identity] = record
                     parent = record["parentSessionId"]
                     while parent is not None and parent not in required_parents:
@@ -522,6 +536,8 @@ class LegacyReader:
                     if len(records) > self.limits.max_records:
                         raise DomainError("legacy_record_limit", "Selected legacy records exceed the admission limit.", 413)
                 for identity in required_parents:
+                    if identity not in records:
+                        admit(file_records[identity])
                     records.setdefault(identity, file_records[identity])
                 for zone in image["zones"]:
                     start, end = instant_ms(zone["start"]), instant_ms(zone["end"])
@@ -531,6 +547,8 @@ class LegacyReader:
                         continue
                     if zone["id"] in zones and zone != zones[zone["id"]]:
                         raise DomainError("legacy_duplicate_id", "Conflicting legacy zones share an identity.", 409)
+                    if zone["id"] not in zones:
+                        admit(zone)
                     zones[zone["id"]] = zone
         for key in (self._known_files - seen if file_selection is None else ()):
             report["missingFiles"] += 1
@@ -547,6 +565,7 @@ class LegacyReader:
         report["recordCount"] = len(records)
         report["allRecordCount"] = len(all_ids)
         report["zoneCount"] = len(zones)
+        report["retainedHeapBytes"] = retained_bytes
         report["domain"] = {"from": iso_from_ms(domain_min), "to": iso_from_ms(domain_max)} if domain_min is not None else None
         report["declaredRange"] = time_range
         report["status"] = "incomplete" if report["rejectedFiles"] else "stale" if report["staleFiles"] else "current"
@@ -599,6 +618,8 @@ class LegacyReader:
         # ID to yyyy/mm/dd/descriptors/id.json. Also try the event file's day.
         start = legacy_instant(record["start"])
         day = start[:10].split("-")
+        if source.data_model:
+            day = day[:len(source.data_model.split("/"))]
         relative = Path(legacy.get("file", ""))
         candidates = [source.root.joinpath(*day, "descriptors", identity + ".json"),
                       source.root / relative.parent / "descriptors" / (identity + ".json")]

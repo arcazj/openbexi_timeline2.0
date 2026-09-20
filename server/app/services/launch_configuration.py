@@ -28,10 +28,15 @@ def load_launch_configuration(filename):
         document = yaml.load(raw.decode("utf-8-sig"), Loader=_SourceLoader)
     except (yaml.YAMLError, UnicodeError, RecursionError) as error:
         raise ValueError("Invalid YAML: duplicate keys, aliases and unsafe tags are not allowed") from error
-    document = _mapping(document, "Profile", {"version", "server", "legacy", "data_sources", "loading", "snapshot"},
+    document = _mapping(document, "Profile", {"version", "server", "legacy", "data_sources", "loading", "snapshot", "model", "filter"},
                         ("version", "server"))
-    if type(document["version"]) is not int or document["version"] != 1:
-        raise ValueError("Profile version must be 1")
+    if type(document["version"]) is not int or document["version"] not in (1, 2):
+        raise ValueError("Profile version must be 1 or 2")
+    version = document["version"]
+    if version == 1 and any(key in document for key in ("model", "filter")):
+        raise ValueError("Top-level model and filter references require profile version 2")
+    if version == 2 and any(key in document for key in ("legacy", "snapshot")):
+        raise ValueError("Version 2 uses model, filter and data_sources instead of legacy or snapshot")
     server = _mapping(document["server"], "server", {"host", "port", "local_browser", "state_root", "preferences_root", "startup_mode", "data_loading"},
                       ("host", "port", "local_browser", "state_root"))
     if "snapshot" in document and any(key in document for key in ("legacy", "data_sources", "loading")):
@@ -65,8 +70,8 @@ def load_launch_configuration(filename):
                 "state_root": state_root, "preferences_root": preferences_root, "host": host, "port": port,
                 "local_browser": server["local_browser"], "background_startup": True, "lazy": False,
                 "source_document": {}, "loading": {}}
-    legacy = _mapping(document.get("legacy"), "legacy", {"root", "allow_roots", "path_maps", "model", "timezone", "dialect", "namespace_grouping"},
-                      ("root", "allow_roots"))
+    legacy = (_mapping(document.get("legacy"), "legacy", {"root", "allow_roots", "path_maps", "model", "timezone", "dialect", "namespace_grouping"},
+                       ("root", "allow_roots")) if version == 1 else {})
     startup_mode = server.get("startup_mode", "background")
     if startup_mode not in ("background", "foreground"):
         raise ValueError("server.startup_mode must be background or foreground")
@@ -86,11 +91,22 @@ def load_launch_configuration(filename):
             raise ValueError(f"loading.{key} must be {'an integer' if integer else 'a number'} from {low} to {high}")
         normalized_loading[target] = value
     if "initial_range" in loading:
+        if version == 2:
+            raise ValueError("Version 2 initial_range belongs in the selected filter, not loading.initial_range")
         from ..models.domain import instant_ms
         bounds = _mapping(loading["initial_range"], "loading.initial_range", {"from", "to"}, ("from", "to"))
         if instant_ms(bounds["from"]) >= instant_ms(bounds["to"]):
             raise ValueError("loading.initial_range.to must follow from")
         normalized_loading["initialRange"] = bounds
+    if version == 2:
+        from .launch_environment import load_environment
+        environment = load_environment(document, path, state_root, resolve)
+        if isinstance(environment["launch"]["initialRange"], dict):
+            normalized_loading["initialRange"] = environment["launch"]["initialRange"]
+        return {"source_yaml": path, **environment, "state_root": state_root,
+                "preferences_root": preferences_root, "host": host, "port": port,
+                "local_browser": server["local_browser"], "background_startup": startup_mode == "background",
+                "lazy": data_loading == "lazy", "loading": normalized_loading}
     root = resolve(legacy["root"], "legacy.root")
     roots = legacy["allow_roots"]
     if not isinstance(roots, list) or not 1 <= len(roots) <= 100:

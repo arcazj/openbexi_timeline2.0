@@ -1,13 +1,14 @@
 import { test, expect } from '@playwright/test';
+import { openContractFixture } from './contract-fixture.mjs';
 import { startServer } from '../integration/server-fixture.mjs';
 import fixture from '../../shared/fixtures/initial-snapshot.json' with { type: 'json' };
 
 let server;
-test.beforeEach(async () => { server = await startServer(); });
+test.beforeEach(async () => { server = await startServer({ seedPath: 'shared/fixtures/initial-snapshot.json' }); });
 test.afterEach(async () => { await server?.stop(); });
 async function ready(page) { await expect(page.locator('.busy-indicator')).toHaveCount(0); }
 async function open(page, mode) {
-  await page.goto(server.baseUrl); await expect(page.locator('.record-label').first()).toBeVisible(); await ready(page);
+  await openContractFixture(page, server.baseUrl); await expect(page.locator('.record-label').first()).toBeVisible(); await ready(page);
   if (mode === 'server') {
     await page.locator('[data-action=sources]').first().click();
     await page.locator('#server-form [name=baseUrl]').fill(server.baseUrl); await page.locator('#server-form [name=token]').fill(server.token);

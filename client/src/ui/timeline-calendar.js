@@ -2,7 +2,7 @@ import { calendarDate, calendarTimeOptions, calendarInstant, monthDays, MONTHS, 
 import { toIso } from '../timeline/time-scale.js';
 import { icon } from '../utils/dom.js';
 
-export function openTimelineCalendar({ host, center, unit, onSelect, onClose, openRange, updateIcons }) {
+export function openTimelineCalendar({ host, center, unit, onSelect, onClose, openRange, updateIcons, onCreate, canCreate = false }) {
   let selected = calendarDate(toIso(center).split('T')[0]), month = selected.with({ day: 1 }), focused = selected;
   let activeUnit = unit, disposed = false, request = 0;
   const panel = document.createElement('aside'); panel.className = 'timeline-calendar'; panel.setAttribute('aria-label', 'Calendar');
@@ -69,6 +69,12 @@ export function openTimelineCalendar({ host, center, unit, onSelect, onClose, op
   panel.addEventListener('keydown', event => { if (event.key === 'Escape') { event.preventDefault(); event.stopPropagation(); onClose(); } });
   panel.querySelector('.calendar-close').onclick = onClose;
   panel.querySelector('.calendar-range').onclick = openRange;
+  if (onCreate) {
+    const create = document.createElement('button'); create.type = 'button'; create.disabled = !canCreate;
+    create.innerHTML = `${icon('plus')}Create record`; create.title = canCreate ? 'Create an event or session on the selected date' : 'This workspace is read-only';
+    create.onclick = () => { if (!time.disabled && !time.reportValidity()) return; onCreate(calendarInstant(selected.toString(), time.value, activeUnit)); };
+    panel.querySelector('.calendar-actions').append(create);
+  }
   panel.querySelector('.calendar-today').onclick = () => { void select(new Date().toISOString().slice(0, 10)); };
   panel.querySelector('.calendar-apply').onclick = () => { void select(selected.toString()); };
   time.onchange = () => { void select(selected.toString()); };

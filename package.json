@@ -1,6 +1,6 @@
 {
   "name": "openbexi-timeline2.0",
-  "version": "1.0.0",
+  "version": "2.0.0",
   "license": "PolyForm-Noncommercial-1.0.0",
   "private": true,
   "type": "module",
@@ -18,8 +18,9 @@
     "test": "node --test tests/client/*.test.mjs",
     "test:e2e": "playwright test",
     "test:matrix": "playwright test --config playwright.matrix.config.mjs",
-    "test:parity": "node --test tests/integration/*.test.mjs",
-    "test:demo": "playwright test --config playwright.demo.config.mjs"
+    "test:parity": "node --test --test-concurrency=1 tests/integration/*.test.mjs",
+    "test:demo": "playwright test --config playwright.demo.config.mjs",
+    "test:reference": "playwright test --config playwright.reference.config.mjs"
   },
   "dependencies": {
     "@fontsource/noto-sans": "5.3.0",

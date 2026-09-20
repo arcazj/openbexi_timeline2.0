@@ -11,7 +11,7 @@ from conftest import ROOT
 from server.app.models.domain import DomainError, json_bytes, read_json
 from server.app.repositories import json_repository as storage
 
-SEED = ROOT / "data/default-dataset.json"
+SEED = ROOT / "shared/fixtures/initial-snapshot.json"
 
 
 def open_repo(tmp_path):
@@ -405,7 +405,7 @@ def test_interrupted_initial_seed_recovers_before_readiness_twice(tmp_path, monk
     assert repo.owner is None and not repo.available
     for _ in range(2):
         recovered = open_repo(tmp_path)
-        assert len(recovered.records) == 48 and recovered.meta["manifest"]["revision"] == 1
+        assert len(recovered.records) == len(read_json(SEED)["records"]) and recovered.meta["manifest"]["revision"] == 1
         assert not (repo.root / "transaction.json").exists()
         recovered.close()
 

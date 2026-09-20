@@ -393,13 +393,17 @@ test('canceling an admitted retry keeps its HTTP reply drain until completion', 
   } finally { provider.dispose(); globalThis.fetch = original; }
 });
 
-test('table capacity retry deadline retains the last structured429 without transport or mutation retries', async () => {
+test('table capacity retry deadline retains the last structured429 without transport or mutation retries', async t => {
   const original = globalThis.fetch, provider = new ServerProvider();
-  let calls = 0;
+  let calls = 0, now = 1000;
+  const clock = t.mock.method(Date, 'now', () => now);
   try {
-    globalThis.fetch = async () => { calls++; return new Response(JSON.stringify({ code: 'preparation_capacity', requestId: 'last-busy', message: 'Another tab is preparing' }), { status: 429 }); };
+    // The rejected request consumes its whole budget. Real timers may wake a
+    // millisecond early, in which case an additional in-budget retry is valid.
+    globalThis.fetch = async () => { calls++; now += 15; return new Response(JSON.stringify({ code: 'preparation_capacity', requestId: 'last-busy', message: 'Another tab is preparing' }), { status: 429 }); };
     await assert.rejects(provider.queryRecords('query', {}, { timeout: 15 }), { code: 'preparation_capacity', status: 429, requestId: 'last-busy' });
     assert.equal(calls, 1); await provider.awaitPreparationCleanup();
+    clock.mock.restore();
     for (const [status, code] of [[429, 'rate_limited'], [503, 'preparation_capacity'], [401, 'unauthorized']]) {
       calls = 0;
       globalThis.fetch = async () => { calls++; return new Response(JSON.stringify({ code }), { status }); };

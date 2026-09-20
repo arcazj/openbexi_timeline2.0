@@ -9,7 +9,7 @@ import { prepareScaledQuery } from '../../client/src/timeline/optimize-scale.js'
 let fixture, server;
 before(async () => {
   fixture = JSON.parse(await readFile(new URL('../../shared/fixtures/initial-snapshot.json', import.meta.url), 'utf8'));
-  server = await startServer();
+  server = await startServer({ seedPath: 'shared/fixtures/initial-snapshot.json' });
 });
 after(async () => { await server?.stop(); });
 

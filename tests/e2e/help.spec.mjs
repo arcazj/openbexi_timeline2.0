@@ -2,6 +2,7 @@ import { test, expect } from '@playwright/test';
 import { pathToFileURL } from 'node:url';
 import path from 'node:path';
 import { startLocalPathsServer } from '../integration/local-paths-server-fixture.mjs';
+import packageManifest from '../../package.json' with { type: 'json' };
 
 const fileUrl = pathToFileURL(path.resolve('dist/index.html')).href;
 const debug = page => page.evaluate(() => window.__timelineDebug);
@@ -34,8 +35,20 @@ for (const viewport of [{ width: 1600, height: 900 }, { width: 390, height: 844 
     await help(page); await page.screenshot({ path: info.outputPath('help-menu.png'), fullPage: true });
     await expect(page.locator('[data-help=live-api]')).toBeDisabled();
     await page.locator('[data-help=readme]').click(); await expect(page.locator('.help-document h1')).toContainText('OpenBEXI');
+    for (const guide of ['user-manual', 'design', 'data-design', 'architecture', 'testing', 'deployment', 'prompt-history']) {
+      await page.locator('[data-help=home]').click();
+      await page.locator(`[data-help=${guide}]`).click();
+      await expect(page.locator('.help-document h1')).toContainText('OpenBEXI Timeline 2.0');
+      if (guide === 'user-manual') {
+        await expect(page.locator('.help-document img')).toHaveCount(7);
+        expect(await page.locator('.help-document img').evaluateAll(async images => {
+          await Promise.all(images.map(img => img.decode()));
+          return images.every(img => img.naturalWidth > 0 && img.naturalHeight > 0);
+        })).toBe(true);
+      }
+    }
     await page.locator('[data-help=home]').click(); await page.locator('[data-help=releases]').click();
-    await expect(page.locator('.help-document')).toContainText('Current release candidate');
+    await expect(page.locator('.help-document')).toContainText('2.0.0');
     await page.locator('[data-help=home]').click(); await page.locator('[data-help=licenses]').click();
     await page.locator('summary').filter({ hasText: 'swagger-ui-dist' }).click();
     await expect(page.locator('details[open] pre')).toContainText('Apache License');
@@ -127,7 +140,7 @@ test('PNG preview and downloads contain nonblank main and overview images, with 
   await expect(page.locator('[data-help=copy-image]')).toBeDisabled();
   await page.locator('[data-help-tab=diagnostics]').click();
   const report = JSON.parse(await page.getByRole('textbox', { name: 'Diagnostic report' }).inputValue());
-  expect(report.provider).toBe('local'); expect(report.version).toBe('0.1.0');
+  expect(report.provider).toBe('local'); expect(report.version).toBe(packageManifest.version);
   expect(JSON.stringify(report)).not.toMatch(/token|C:|title|Telemetry|sourceName|searchFields/);
   await expect(page.locator('[data-help=health]')).toBeDisabled();
 });

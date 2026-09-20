@@ -29,6 +29,7 @@ from .services.configuration import ConfigurationService
 from .services.audit import AuditService
 from .services.changes import ChangeService
 from .api.changes import changes_router
+from .api.legacy import legacy_router
 from .repositories.json_repository import JsonRepository
 from .repositories.legacy_repository import LegacyRepository
 from .repositories.snapshot_file_repository import SnapshotFileRepository
@@ -122,7 +123,7 @@ def create_app(data_root=None, token=None, seed_path=None, metrics_path=None, le
             if repository:
                 repository.close()
 
-    app = FastAPI(title="OpenBEXI Timeline JSON API", version="1.0.0", lifespan=lifespan,
+    app = FastAPI(title="OpenBEXI Timeline JSON API", version="2.0.0", lifespan=lifespan,
                   docs_url=None, redoc_url=None, openapi_url=None)
     app.state.startup = StartupStatus()
     cors_origins = [origin.strip() for origin in os.environ.get("OPENBEXI_CORS_ORIGINS", "").split(",") if origin.strip()]
@@ -166,7 +167,7 @@ def create_app(data_root=None, token=None, seed_path=None, metrics_path=None, le
     @app.middleware("http")
     async def security_headers(request, call_next):
         request.state.request_id = str(uuid.uuid4())
-        if (not app.state.startup.ready and request.url.path.startswith("/api/")
+        if (not app.state.startup.ready and (request.url.path.startswith("/api/") or request.url.path in ("/openbexi_timeline/sessions", "/openbexi_timeline_sse/sessions"))
                 and request.url.path not in ("/api/v1/health", "/api/v1/capabilities", "/api/v1/bootstrap")):
             failed = app.state.startup.snapshot()["status"] == "failed"
             response = await domain_error(request, DomainError("startup_failed" if failed else "server_starting",
@@ -176,7 +177,7 @@ def create_app(data_root=None, token=None, seed_path=None, metrics_path=None, le
         response.headers["X-Request-Id"] = request.state.request_id
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["Referrer-Policy"] = "no-referrer"
-        if request.url.path.startswith("/api/"):
+        if request.url.path.startswith(("/api/", "/openbexi_timeline/", "/openbexi_timeline_sse/")):
             response.headers["Cache-Control"] = "no-store"
         return response
 
@@ -235,6 +236,11 @@ def create_app(data_root=None, token=None, seed_path=None, metrics_path=None, le
     app.include_router(identity_router(authenticated, body))
     app.include_router(configuration_router(authenticated, body))
     app.include_router(changes_router(authenticated))
+    app.include_router(legacy_router(authenticated, body))
+
+    @app.get("/openbexi_timeline/transport.js", include_in_schema=False)
+    async def legacy_transport():
+        return FileResponse(PROJECT_ROOT / "client" / "src" / "data" / "legacy-transport.js", media_type="text/javascript")
 
     def workspace_metadata(identity):
         with app.state.identities.mutex, app.state.repository.mutex:

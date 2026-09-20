@@ -10,7 +10,7 @@ From the repository root:
 node tools/event-generator/serve.js
 ```
 
-Open **http://127.0.0.1:8089/**. Expand the settings branches, edit the controls, and select **Generate timeline**. Generation runs in a cancellable worker. The preview includes a timeline, event table, and sample JSON. Import/save configuration files to reuse scenarios. **Download all files (ZIP)** includes daily `events.json` files, external descriptors, and the exact configuration used; **Download events JSON** contains the aggregate timeline only. Events using external descriptions need their descriptor files too.
+Open **http://127.0.0.1:8089/**. Follow Environment, Data, Model, Filter and Review / save, then select **Generate timeline**. Advanced data settings remain available in a collapsed section. Generation runs in a cancellable worker. The preview includes a timeline, event table, and sample JSON. **Download environment (ZIP)** produces a complete version-2 environment with `yaml/`, `models/`, `filters/` and `data/`. Extract it into a new folder and launch `python scripts/start.py -- --yaml <folder>/yaml/timeline.yml` from this project. **Download data files (ZIP)** retains the data-only export, including descriptors; **Download events JSON** contains the aggregate timeline only.
 
 In **Dates and boundaries**, use the calendar instead of typing timestamps. **Clear selection** starts a new selection; click days to add or remove them, or Shift-click to select a continuous range. The earliest and latest selected days set both range and timeline boundaries, including the entire last day. Generation skips gaps between selected days. Select **Reference date** and click a day to split past/future events at noon UTC; its ring marks that date. Month/year controls let you jump to other dates. Existing imported timestamp precision is retained until the calendar is edited. Clearing all days asks you to select a day before generating.
 
@@ -23,8 +23,31 @@ All work occurs locally. Serve the page over HTTP; browser ES modules and worker
 ```sh
 node tools/event-generator/cli.js --config tools/event-generator/examples/business.json --output generated
 node tools/event-generator/cli.js --config tools/event-generator/examples/legacy.json --zip timeline.zip
-node tools/event-generator/cli.js -data_conf yaml/sources_default_test.yml --output generated-legacy --seed demo --reference-date 2026-01-15T00:00:00Z
+node tools/event-generator/cli.js -data_conf tools/event-generator/examples/sources_default_test.yml --output generated-legacy --seed demo --reference-date 2026-01-15T00:00:00Z
+node tools/event-generator/cli.js --config tools/event-generator/examples/business.json --environment --output generated-environment
 ```
+
+The environment workflow has **Environment**, **Data**, **Model**, **Filter** and
+**Review / save** steps. The model controls black/light appearance, 2D/3D, compact
+activities and overview visibility. Sort by choices come from generated metadata.
+The filter owns title search and the opening interval: current time by default,
+the generated data interval, or explicit offset-bearing ISO bounds. Advanced data
+controls and the calendar remain available in a collapsed section.
+
+`--environment` adds a runnable profile, model and filter. Add
+`--initial-range generated` to open the generated interval instead of current
+time. Directory export writes immutable versions below `models/`, `filters/` and
+`data/`, then activates `yaml/timeline.yml` with one atomic filesystem operation.
+`--force` allows replacing that YAML activation; published version files are never
+overwritten. A failed preparation keeps the previous active environment intact.
+Each generated version receives separate application state under `var/`. A ZIP
+has the same linked files and must be extracted into a new directory. Data-only
+exports remain available without `--environment`.
+
+Legacy multi-source generator output sometimes stores a descriptor under another
+source's directory. Environment export routes each descriptor beside its owning
+record and preserves source identity when configured source order changes. The
+data-only legacy export continues to reproduce the legacy paths.
 
 Run `node tools/event-generator/cli.js --help` for all options. Existing artifacts cause an error unless `--force` is explicitly provided. Output paths must be relative and stay inside the selected directory. For startup files containing absolute Java `data_model` paths (such as `/data/...`), copy the configuration and make those paths relative to `--output`.
 

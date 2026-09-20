@@ -621,11 +621,19 @@ def effective_settings(snapshot, *, view_id=_UNSET, view_version=_UNSET, princip
     values, origins = {}, {}
     preference = next((item for item in snapshot.get("preferences", []) if item["principalId"] == principal_id), None)
     personal = preference["values"] if preference else {}
+    launch = snapshot["manifest"].get("legacy", {}).get("launch", {})
+    launch_values = (launch.get("settings", {}) if launch.get("version") == 2 and view_id is _UNSET
+                     and view_version is _UNSET and not transient.get("viewId") else {})
+    # A fresh file environment owns its selection and viewport. Saved values
+    # remain intact and become available through explicit view restoration.
+    if launch_values:
+        personal = {key: value for key, value in personal.items() if key not in launch_values}
     _validate_settings(transient, {"snapshot": snapshot, "visibility": "personal", "ownerId": principal_id})
     selector, selector_origins = {}, {}
     _merge_settings(selector, snapshot["settings"], selector_origins, "workspace-active")
     _merge_settings(selector, snapshot.get("defaults", {}).get("values", {}), selector_origins, "workspace-defaults")
     _merge_settings(selector, personal, selector_origins, f"personal:{principal_id}")
+    _merge_settings(selector, launch_values, selector_origins, "launch-profile")
     _merge_settings(selector, transient, selector_origins, "transient")
     if view_id is not _UNSET or view_version is not _UNSET:
         if view_id is _UNSET or view_version is _UNSET:
@@ -642,6 +650,7 @@ def effective_settings(snapshot, *, view_id=_UNSET, view_version=_UNSET, princip
     _merge_settings(values, snapshot["settings"], origins, "workspace-active")
     _merge_settings(values, snapshot.get("defaults", {}).get("values", {}), origins, "workspace-defaults")
     _merge_settings(values, model, origins, f"model:{model_pin['id']}@{model_pin['version']}")
+    _merge_settings(values, launch_values, origins, "launch-profile")
     if selected_filter:
         versioned = {"definitionVersion": 2, "relationshipMode": selected_filter.get("relationshipMode", "independent")} if selected_filter.get("definitionVersion") == 2 else {}
         _merge_settings(values, {**versioned, "search": selected_filter["search"]}, origins, f"filter:{filter_pin['id']}@{filter_pin['version']}")
@@ -806,7 +815,9 @@ def apply_configuration_command(input_snapshot, input_command, *, actor, now=Non
     snapshot["manifest"].pop("contentSha256", None)
     result = {"snapshot": snapshot, "resource": resource}
     if operation == "apply":
-        result["effectiveSettings"] = effective_settings(snapshot, principal_id=actor["id"])
+        applied = next(item["values"] for item in snapshot["preferences"] if item["principalId"] == actor["id"])
+        result["effectiveSettings"] = effective_settings(snapshot, principal_id=actor["id"],
+                                                        **({"transient": applied} if snapshot["manifest"].get("legacy", {}).get("launch", {}).get("version") == 2 else {}))
         definition = next(item["definition"] for item in resource["versions"] if item["version"] == payload["version"])
         keys = ["filterId", "filterVersion", "viewId", "viewVersion", "search", *(["definitionVersion", "relationshipMode"] if definition.get("definitionVersion") == 2 else [])] if family == "filters" else ["modelId", "modelVersion", "filterId", "filterVersion", "viewId", "viewVersion", *(["search"] if definition["filter"] else []), *definition["settings"]]
         result["resetTransientKeys"] = list(dict.fromkeys(keys))

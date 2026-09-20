@@ -16,11 +16,12 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
-SOURCE_DIRS = ("client", "server", "shared", "scripts", "tests", ".github", "data", "yaml", "config")
+SOURCE_DIRS = ("client", "server", "shared", "scripts", "tests", ".github", ".run", "data", "yaml", "models", "filters", "tools", "config")
 SOURCE_FILES = ("package.json", "package-lock.json", "pyproject.toml", "uv.lock",
-                "playwright.config.mjs", "playwright.matrix.config.mjs", "playwright.demo.config.mjs", "Dockerfile",
+                "playwright.config.mjs", "playwright.matrix.config.mjs", "playwright.demo.config.mjs", "playwright.reference.config.mjs", "Dockerfile",
                 ".dockerignore", ".gitignore", ".gitattributes", ".editorconfig", "README.md",
-                "CONTRIBUTING.md", "SECURITY.md", "LICENSE", "OpenBEXI_Timeline_Rebuild_Prompt.md")
+                "CONTRIBUTING.md", "SECURITY.md", "LICENSE", "NOTICE", "OpenBEXI_Timeline_Rebuild_Prompt.md",
+                "openbexi_timeline2.0_current_prompt.md")
 
 
 def stamp():
@@ -35,12 +36,23 @@ def source_inventory(root):
     files = [root / name for name in SOURCE_FILES if (root / name).is_file()]
     for directory in SOURCE_DIRS:
         files.extend(path for path in (root / directory).rglob("*") if path.is_file()
-                     and "__pycache__" not in path.parts and path.suffix not in (".pyc", ".log")
+                     and not set(path.relative_to(root).parts).intersection({"__pycache__", "node_modules", ".venv", "venv", ".pytest_cache", ".ruff_cache"})
+                     and path.suffix not in (".pyc", ".log")
                      and not path.relative_to(root).as_posix().startswith(("yaml/local/", "config/local/")))
     files.extend((root / "docs").rglob("*.md"))
     files.extend(path for path in (root / "docs/licenses").rglob("*") if path.is_file())
+    files.extend((root / "docs/ui/legacy-target").glob("*.png"))
     hashes = {path.relative_to(root).as_posix(): sha256(path.read_bytes()) for path in sorted(set(files))}
     return {"sha256": sha256(json.dumps(hashes, sort_keys=True, separators=(",", ":")).encode()), "files": hashes}
+
+
+def node_test_command(node, name, directory, root, output, pattern="*.test.mjs"):
+    files = sorted((root / directory).glob(pattern))
+    if not files:
+        raise ValueError(f"No {name} tests were found in {directory}")
+    return [node, "--test", "--test-concurrency=1", "--test-reporter=spec", "--test-reporter-destination=stdout",
+            "--test-reporter=junit", f"--test-reporter-destination={output / (name + '.xml')}",
+            *[str(path.relative_to(root)) for path in files]]
 
 
 def stop_tree(process):
@@ -158,13 +170,12 @@ def main():
     if node is None:
         parser.error("Node.js is required")
     python = str(ROOT / ".venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python"))
-    def node_tests(name, directory):
-        return [node, "--test", "--test-concurrency=1", "--test-reporter=spec", "--test-reporter-destination=stdout",
-                "--test-reporter=junit", f"--test-reporter-destination={output / (name + '.xml')}",
-                *[str(path.relative_to(ROOT)) for path in sorted((ROOT / directory).glob("*.test.mjs"))]]
+    def node_tests(name, directory, pattern="*.test.mjs"):
+        return node_test_command(node, name, directory, ROOT, output, pattern)
     checks = [
         ("ruff", [python, "-m", "ruff", "check", "server", "tests/server", "scripts"]),
         ("client", node_tests("client", "tests/client")),
+        ("generator", node_tests("generator", "tools/event-generator/tests", "*.test.js")),
         ("server", [python, "-m", "pytest", "tests/server", "-q", f"--junitxml={output / 'server.xml'}"]),
         ("parity", node_tests("parity", "tests/integration")),
         ("openapi", [python, "scripts/export-openapi.py", "--check"]),
@@ -197,7 +208,7 @@ def main():
             print(f"Running {name}...", flush=True)
             result = run_step(name, command, ROOT, output)
             report["checks"].append(result)
-            if name in ("client", "server", "parity"):
+            if name in ("client", "generator", "server", "parity"):
                 path = output / (name + ".xml")
                 if path.exists():
                     assess_junit(result, junit_summary(path))

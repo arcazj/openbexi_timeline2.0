@@ -53,10 +53,14 @@ export function decodeSharedView(link) {
   const bytes = Uint8Array.from(atob(encoded.replace(/-/g, '+').replace(/_/g, '/')), char => char.charCodeAt(0));
   return validateSharedView(parseStrictJson(new TextDecoder('utf-8', { fatal: true }).decode(bytes)));
 }
-export function sharedViewLink(locationHref, view) {
+export function sharedViewLink(locationHref, view, { datasetId } = {}) {
   const url = new URL(locationHref), fragment = encodeSharedView(view);
   if (url.protocol === 'file:') return fragment;
   if (!['http:', 'https:'].includes(url.protocol)) fail('Unsupported application URL');
   url.username = ''; url.password = ''; url.search = ''; url.hash = fragment;
+  if (datasetId !== undefined) {
+    if (typeof datasetId !== 'string' || !/^[a-z0-9_-]{1,80}$/.test(datasetId)) fail('Invalid demo dataset');
+    url.searchParams.set('dataset', datasetId);
+  }
   return url.href;
 }

@@ -177,7 +177,16 @@ test('offline Local touch threshold and DPR2 time edits export canonical JSON wi
     await page.locator('[data-action=settings]').click(); await page.locator('#source-command').click(); await page.locator('#json-file').setInputFiles({ name: 'Touch snapshot.json', mimeType: 'application/json', buffer: Buffer.from(JSON.stringify(await remote.exportSnapshot())) }); await expect.poll(() => page.evaluate(() => window.__timelineDebug.providerId)).not.toBe(prior); await ready(page); await editMode(page);
     const touch = await context.newCDPSession(page);
     const gesture = async dx => {
-      // Imported layouts can replace a label between lookup and measurement.
+      // On mobile the compact toolbar leaves only a few visible rows. Find the
+      // target through the real paging controls before testing its touch threshold.
+      if (!(await label(page, records.point).count())) {
+        const previous = page.getByRole('button', { name: 'Previous rows', exact: true });
+        for (let i = 0; i < 60 && await previous.isEnabled(); i++) { await previous.click(); await ready(page); }
+        const next = page.getByRole('button', { name: 'Next rows', exact: true });
+        for (let i = 0; i < 60 && !(await label(page, records.point).count()) && await next.isEnabled(); i++) {
+          await next.click(); await ready(page);
+        }
+      }
       let box;
       await expect.poll(async () => { box = await label(page, records.point).boundingBox(); return box; }).not.toBeNull();
       const x = box.x + Math.min(20, box.width / 2), y = box.y + box.height / 2;

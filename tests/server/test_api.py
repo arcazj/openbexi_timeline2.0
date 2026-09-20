@@ -167,7 +167,7 @@ def test_query_snapshot_does_not_change_after_mutation(client, bundle, write_hea
     assert client.get(BASE + f'/query-sessions/{manifest["queryId"]}/density').json() == density_before
     assert query(client, bundle)["baseTotal"] == 49
     export = client.get(BASE + "/snapshot").json()
-    assert export["manifest"]["recordCount"] == len(export["records"]) == 49
+    assert export["manifest"]["recordCount"] == len(export["records"]) == len(bundle["records"]) + 1
 
 
 def test_handles_are_bounded_and_releasable(client, bundle, app):

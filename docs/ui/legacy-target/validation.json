@@ -1,0 +1,103 @@
+{
+  "date": "2026-09-20",
+  "scope": "Read-only data loading and source audit; screenshot and toolbar runtime parity remain pending.",
+  "legacyToolbarSource": {
+    "path": "src/openbexi_timeline.js",
+    "sha256": "d3d1450ef3ba10dc7aac321e28a1135a312d78f15b2998a8bbabc1da9f850503"
+  },
+  "inventory": [
+    {
+      "path": "tests/data/SOURCES1/2024/03/18/events.json",
+      "sha256": "71de39c955224010b3dc5c111372c8355dbcc3809ff333a22fb0d74e7ca82476",
+      "topLevelEvents": 50,
+      "activities": 73,
+      "dialectDiagnostics": [
+        {
+          "code": "legacy_trailing_commas",
+          "count": 370
+        }
+      ]
+    },
+    {
+      "path": "tests/data/SOURCES2/2024/03/18/events.json",
+      "sha256": "e3ce9bc43b1c533a5f73de89f9e433a1024ae71549f70d2b8e8ec066a331e01e",
+      "topLevelEvents": 50,
+      "activities": 80,
+      "dialectDiagnostics": [
+        {
+          "code": "legacy_trailing_commas",
+          "count": 391
+        }
+      ]
+    }
+  ],
+  "window": {
+    "profile": "default_test.yml",
+    "probe": "configured-window",
+    "scope": "Bounded configured partitions, foreground-only, no archive reconciliation",
+    "archiveQualification": "not-performed",
+    "readOnly": true,
+    "metadataReadyMs": 38.29,
+    "recordFilesReadBeforeMetadataReady": 0,
+    "domain": {
+      "from": "2024-03-18T19:00:00Z",
+      "to": "2024-03-18T21:00:00Z"
+    },
+    "foregroundWindowMs": 100.07,
+    "records": 130,
+    "coverageComplete": false,
+    "recordKinds": {
+      "session": 102,
+      "event": 28
+    },
+    "configuredNamespaces": [
+      "SOURCE1",
+      "SOURCE2"
+    ],
+    "partitionModels": [
+      "yyyy/mm/dd"
+    ],
+    "logicalNamespaceGroups": 2,
+    "allConfiguredSourcesRepresented": true,
+    "namespaceCounts": [
+      {
+        "typedIdentitySha256": "5ef18adb6f3122100deeb15c46fe3bdfe824f18805b71e38c694b1e980f9b14f",
+        "records": 63
+      },
+      {
+        "typedIdentitySha256": "534722f49b60987350a0f5f7f87bb0d9791b24ce840bdf49282914dfd3644b0a",
+        "records": 67
+      }
+    ],
+    "combinedViewUniqueIds": 130,
+    "combinedMembershipMatchesWindow": true,
+    "timestampValidity": true,
+    "sessionsCrossingStart": 0,
+    "descriptorSampleStatus": {
+      "missing": 24
+    },
+    "descriptorSampleLimitPerSource": 12,
+    "status": "bounded-window-verified",
+    "readReceipts": [
+      {
+        "bytes": 52380,
+        "beforeSha256": "71de39c955224010b3dc5c111372c8355dbcc3809ff333a22fb0d74e7ca82476",
+        "readCount": 1,
+        "changedDuringRead": false,
+        "sourcePathSha256": "8c1a47c056ba5ff5a270f9a3ca3e4a2fb191548c414cd5c2c05b2062d68aa79a",
+        "afterSha256": "71de39c955224010b3dc5c111372c8355dbcc3809ff333a22fb0d74e7ca82476",
+        "unchanged": true
+      },
+      {
+        "bytes": 55192,
+        "beforeSha256": "e3ce9bc43b1c533a5f73de89f9e433a1024ae71549f70d2b8e8ec066a331e01e",
+        "readCount": 1,
+        "changedDuringRead": false,
+        "sourcePathSha256": "d471793d44afee83307408060fd2c8c61f81b9a3b25d9ee66f78af1f0cbb020e",
+        "afterSha256": "e3ce9bc43b1c533a5f73de89f9e433a1024ae71549f70d2b8e8ec066a331e01e",
+        "unchanged": true
+      }
+    ],
+    "allReadFilesUnchanged": true
+  }
+}

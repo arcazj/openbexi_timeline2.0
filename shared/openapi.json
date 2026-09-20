@@ -3467,6 +3467,117 @@
         ],
         "type": "object"
       },
+      "GroupingFieldInventory": {
+        "additionalProperties": false,
+        "description": "Observed scalar metadata after source and predicate selection in this query domain, before pagination. Incomplete source coverage or admission limits are explicit; discovery does not authorize filter expressions.",
+        "properties": {
+          "complete": {
+            "type": "boolean"
+          },
+          "fields": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "count": {
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer"
+                },
+                "label": {
+                  "maxLength": 256,
+                  "type": "string"
+                },
+                "path": {
+                  "description": "Declared core/custom JSON Pointer; schema pins determine custom types.",
+                  "maxLength": 256,
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "types": {
+                  "items": {
+                    "enum": [
+                      "null",
+                      "boolean",
+                      "number",
+                      "string"
+                    ]
+                  },
+                  "maxItems": 4,
+                  "type": "array",
+                  "uniqueItems": true
+                }
+              },
+              "required": [
+                "path",
+                "label",
+                "types",
+                "count"
+              ],
+              "type": "object"
+            },
+            "maxItems": 256,
+            "type": "array"
+          },
+          "limits": {
+            "additionalProperties": false,
+            "properties": {
+              "depth": {
+                "maximum": 9007199254740991,
+                "minimum": 1,
+                "type": "integer"
+              },
+              "fields": {
+                "maximum": 9007199254740991,
+                "minimum": 1,
+                "type": "integer"
+              },
+              "nodes": {
+                "maximum": 9007199254740991,
+                "minimum": 1,
+                "type": "integer"
+              },
+              "records": {
+                "maximum": 9007199254740991,
+                "minimum": 1,
+                "type": "integer"
+              }
+            },
+            "required": [
+              "records",
+              "fields",
+              "nodes",
+              "depth"
+            ],
+            "type": "object"
+          },
+          "scannedRecords": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "scope": {
+            "const": "query-domain"
+          },
+          "totalRecords": {
+            "maximum": 9007199254740991,
+            "minimum": 0,
+            "type": "integer"
+          },
+          "truncated": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "fields",
+          "complete",
+          "truncated",
+          "scannedRecords",
+          "totalRecords",
+          "scope",
+          "limits"
+        ],
+        "type": "object"
+      },
       "Health": {
         "additionalProperties": true,
         "properties": {
@@ -4165,6 +4276,16 @@
           }
         ]
       },
+      "LegacyActionRequest": {
+        "anyOf": [
+          {
+            "$ref": "#/components/schemas/RecordCreate"
+          },
+          {
+            "$ref": "#/components/schemas/ConfigurationCommand"
+          }
+        ]
+      },
       "LegacyDescriptor": {
         "additionalProperties": false,
         "description": "Read-only sidecar matched by source namespace and legacy ID. Authored strings are untrusted text, never executable HTML.",
@@ -4207,6 +4328,50 @@
         },
         "required": [
           "status"
+        ],
+        "type": "object"
+      },
+      "LegacyEvent": {
+        "additionalProperties": true,
+        "properties": {
+          "activities": {
+            "items": {
+              "$ref": "#/components/schemas/LegacyEvent"
+            },
+            "type": "array"
+          },
+          "canonicalId": {
+            "type": "string"
+          },
+          "data": {
+            "additionalProperties": true,
+            "properties": {},
+            "required": [],
+            "type": "object"
+          },
+          "end": {
+            "type": "string"
+          },
+          "id": {
+            "type": [
+              "string",
+              "integer"
+            ]
+          },
+          "render": {
+            "additionalProperties": true,
+            "properties": {},
+            "required": [],
+            "type": "object"
+          },
+          "start": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "start",
+          "data"
         ],
         "type": "object"
       },
@@ -4331,6 +4496,97 @@
         },
         "required": [],
         "type": "object"
+      },
+      "LegacyReply": {
+        "anyOf": [
+          {
+            "additionalProperties": true,
+            "properties": {
+              "coverage": {
+                "anyOf": [
+                  {
+                    "$ref": "#/components/schemas/WindowCoverage"
+                  },
+                  {
+                    "type": "null"
+                  }
+                ]
+              },
+              "dateTimeFormat": {
+                "const": "iso8601"
+              },
+              "events": {
+                "items": {
+                  "$ref": "#/components/schemas/LegacyEvent"
+                },
+                "type": "array"
+              },
+              "queryRevision": {
+                "maximum": 9007199254740991,
+                "minimum": 1,
+                "type": "integer"
+              },
+              "scene": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "dateTimeFormat",
+              "scene",
+              "events"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": true,
+            "properties": {
+              "openbexi_timeline": {
+                "items": {
+                  "additionalProperties": true,
+                  "properties": {},
+                  "required": [],
+                  "type": "object"
+                },
+                "type": "array"
+              }
+            },
+            "required": [
+              "openbexi_timeline"
+            ],
+            "type": "object"
+          },
+          {
+            "additionalProperties": true,
+            "properties": {
+              "event_descriptor": {
+                "items": {
+                  "additionalProperties": true,
+                  "properties": {},
+                  "required": [],
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              "scene": {
+                "type": "string"
+              }
+            },
+            "required": [
+              "event_descriptor"
+            ],
+            "type": "object"
+          },
+          {
+            "$ref": "#/components/schemas/RecordCommit"
+          },
+          {
+            "$ref": "#/components/schemas/ConfigurationCommit"
+          }
+        ]
+      },
+      "LegacyStream": {
+        "description": "UTF-8 SSE: unnamed data messages carry LegacyReply; comments are heartbeats, named error events terminate the stream. Reconnect after the five-second lease for fresh data.",
+        "type": "string"
       },
       "ModelApply": {
         "additionalProperties": false,
@@ -5129,7 +5385,8 @@
           "durationLabels": {
             "enum": [
               "above",
-              "inside-when-fitting"
+              "inside-when-fitting",
+              "after"
             ]
           },
           "grouping": {
@@ -5145,6 +5402,18 @@
                 "maxLength": 256,
                 "minLength": 1,
                 "type": "string"
+              },
+              "order": {
+                "enum": [
+                  "value",
+                  "encounter"
+                ]
+              },
+              "recordPolicy": {
+                "enum": [
+                  "independent",
+                  "parent-family"
+                ]
               }
             },
             "required": [
@@ -5250,6 +5519,12 @@
               "enabled": {
                 "type": "boolean"
               },
+              "layout": {
+                "enum": [
+                  "rows",
+                  "overlay"
+                ]
+              },
               "opacity": {
                 "maximum": 0.35,
                 "minimum": 0,
@@ -5321,7 +5596,7 @@
         "title": "Versioned timeline presentation",
         "type": "object",
         "x-source-file": "shared/schemas/presentation.schema.json",
-        "x-source-sha256": "590e1cd7a3e3b3b383e27d5f23f4e20105fbb8c2a64bb5451d36b0da9ce0ee8d"
+        "x-source-sha256": "ffcc67361d945b0ca71ccfaee7b4ca5f6383c3dfa374dcf0a50cb6b82bbadab3"
       },
       "Principal": {
         "additionalProperties": false,
@@ -5944,6 +6219,9 @@
             "maxLength": 128,
             "minLength": 1,
             "type": "string"
+          },
+          "groupingFields": {
+            "$ref": "#/components/schemas/GroupingFieldInventory"
           },
           "mapId": {
             "maxLength": 128,
@@ -6951,6 +7229,8 @@
             "enum": [
               "circle",
               "check",
+              "legacy-check-failed",
+              "legacy-check-aborted",
               "alert-triangle",
               "info",
               "flag",
@@ -6983,7 +7263,7 @@
         "title": "Approved record render overrides",
         "type": "object",
         "x-source-file": "shared/schemas/record-render.schema.json",
-        "x-source-sha256": "3d89f0a504748554aca3e11f4b36fb8b8da044d9c3c10e40f9f7a412b073e7ae"
+        "x-source-sha256": "d924f479395ed522a1bb39f84d311d2187149d97a21a701ab4829d462d55fb84"
       },
       "RecordReplace": {
         "additionalProperties": false,
@@ -8763,9 +9043,9 @@
     "url": "https://spec.openapis.org/oas/v3.1.1.html"
   },
   "info": {
-    "description": "Current registered Python/JSON handlers only. Single default workspace. This artifact is not a full-release certification; pending normative routes are tracked in docs/api-contract.md.",
+    "description": "Current registered Python/JSON handlers only. Single default workspace. This artifact is not a full-release certification; pending normative routes are tracked in docs/reference/implementation/api-contract.md.",
     "title": "OpenBEXI Timeline implemented JSON API",
-    "version": "1.0.0"
+    "version": "2.0.0"
   },
   "jsonSchemaDialect": "https://json-schema.org/draft/2020-12/schema",
   "openapi": "3.1.1",
@@ -19011,6 +19291,663 @@
         "x-handler": "readiness",
         "x-permission-policy": "Authentication where security is declared; no record payloads/secrets in health."
       }
+    },
+    "/openbexi_timeline/sessions": {
+      "get": {
+        "description": "Legacy session/descriptor/filter envelope over authorized queries. POST mutations require canonical validated command bodies and original write preconditions. Archive sources remain read-only; parameter usernames never grant identity.",
+        "operationId": "get__openbexi_timeline_sessions",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "startDate",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "endDate",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scene",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "namespace",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "filterName",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "timelineName",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "userName",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ob_request",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "event_id",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegacyReply"
+                }
+              }
+            },
+            "description": "Successful read-only result",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              },
+              "X-Request-Id": {
+                "description": "Correlation ID; never a token.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem404"
+          },
+          "408": {
+            "$ref": "#/components/responses/Problem408"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Problem410"
+          },
+          "412": {
+            "$ref": "#/components/responses/Problem412"
+          },
+          "413": {
+            "$ref": "#/components/responses/Problem413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Problem415"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem422"
+          },
+          "428": {
+            "$ref": "#/components/responses/Problem428"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problem500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem503"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Legacy sessions",
+        "tags": [
+          "queries"
+        ],
+        "x-handler": "legacy_sessions",
+        "x-legacy-limits": {
+          "authentication": "Bearer header or configured same-origin loopback header; no URL tokens.",
+          "filter": "Bounded RE2 include|exclude, semicolon OR, plus AND. Ambiguous expressions fail explicitly.",
+          "queryBytes": 16384,
+          "range": "Half-open [startDate,endDate); missing both uses the configured interval.",
+          "records": 10000,
+          "responseBytes": 8388608
+        },
+        "x-permission-policy": "records.read with source scope rechecked on every page; changed scope invalidates entire handle."
+      },
+      "post": {
+        "description": "Legacy session/descriptor/filter envelope over authorized queries. POST mutations require canonical validated command bodies and original write preconditions. Archive sources remain read-only; parameter usernames never grant identity.",
+        "operationId": "post__openbexi_timeline_sessions",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "startDate",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "endDate",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scene",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "namespace",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "filterName",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "timelineName",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "userName",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ob_request",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "event_id",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "description": "Required by the matching canonical write command; omitted for read actions.",
+            "in": "header",
+            "name": "X-Workspace-Generation",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Required by the matching canonical write command; omitted for read actions.",
+            "in": "header",
+            "name": "Idempotency-Key",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "description": "Required by the matching canonical write command; omitted for read actions.",
+            "in": "header",
+            "name": "If-Match",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LegacyActionRequest"
+              }
+            }
+          },
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegacyReply"
+                }
+              }
+            },
+            "description": "Successful read-only result",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              },
+              "X-Request-Id": {
+                "description": "Correlation ID; never a token.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem404"
+          },
+          "408": {
+            "$ref": "#/components/responses/Problem408"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Problem410"
+          },
+          "412": {
+            "$ref": "#/components/responses/Problem412"
+          },
+          "413": {
+            "$ref": "#/components/responses/Problem413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Problem415"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem422"
+          },
+          "428": {
+            "$ref": "#/components/responses/Problem428"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problem500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem503"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Legacy action",
+        "tags": [
+          "queries"
+        ],
+        "x-handler": "legacy_action",
+        "x-legacy-limits": {
+          "authentication": "Bearer header or configured same-origin loopback header; no URL tokens.",
+          "filter": "Bounded RE2 include|exclude, semicolon OR, plus AND. Ambiguous expressions fail explicitly.",
+          "queryBytes": 16384,
+          "range": "Half-open [startDate,endDate); missing both uses the configured interval.",
+          "records": 10000,
+          "responseBytes": 8388608
+        },
+        "x-permission-policy": "records.read with source scope rechecked on every page; changed scope invalidates entire handle.",
+        "x-request-byte-limit": 1048576
+      }
+    },
+    "/openbexi_timeline_sse/sessions": {
+      "get": {
+        "description": "Legacy SSE message frame followed by heartbeats; five-second leases reconnect to a fresh authorized snapshot. Close the previous stream on navigation. Use the authenticated fetch transport shim because native EventSource cannot add required headers.",
+        "operationId": "get__openbexi_timeline_sse_sessions",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "startDate",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "endDate",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "scene",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "namespace",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "filterName",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "filter",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "search",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "timelineName",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "userName",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "ob_request",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "event_id",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "start",
+            "required": false,
+            "schema": {
+              "maxLength": 4096,
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "text/event-stream": {
+                "schema": {
+                  "$ref": "#/components/schemas/LegacyStream"
+                }
+              }
+            },
+            "description": "Successful read-only result",
+            "headers": {
+              "Cache-Control": {
+                "schema": {
+                  "const": "no-store"
+                }
+              },
+              "X-Request-Id": {
+                "description": "Correlation ID; never a token.",
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          },
+          "400": {
+            "$ref": "#/components/responses/Problem400"
+          },
+          "401": {
+            "$ref": "#/components/responses/Problem401"
+          },
+          "403": {
+            "$ref": "#/components/responses/Problem403"
+          },
+          "404": {
+            "$ref": "#/components/responses/Problem404"
+          },
+          "408": {
+            "$ref": "#/components/responses/Problem408"
+          },
+          "409": {
+            "$ref": "#/components/responses/Problem409"
+          },
+          "410": {
+            "$ref": "#/components/responses/Problem410"
+          },
+          "412": {
+            "$ref": "#/components/responses/Problem412"
+          },
+          "413": {
+            "$ref": "#/components/responses/Problem413"
+          },
+          "415": {
+            "$ref": "#/components/responses/Problem415"
+          },
+          "422": {
+            "$ref": "#/components/responses/Problem422"
+          },
+          "428": {
+            "$ref": "#/components/responses/Problem428"
+          },
+          "429": {
+            "$ref": "#/components/responses/Problem429"
+          },
+          "500": {
+            "$ref": "#/components/responses/Problem500"
+          },
+          "503": {
+            "$ref": "#/components/responses/Problem503"
+          }
+        },
+        "security": [
+          {
+            "BearerAuth": []
+          }
+        ],
+        "summary": "Legacy stream",
+        "tags": [
+          "queries"
+        ],
+        "x-handler": "legacy_stream",
+        "x-legacy-limits": {
+          "authentication": "Bearer header or configured same-origin loopback header; no URL tokens.",
+          "filter": "Bounded RE2 include|exclude, semicolon OR, plus AND. Ambiguous expressions fail explicitly.",
+          "queryBytes": 16384,
+          "range": "Half-open [startDate,endDate); missing both uses the configured interval.",
+          "records": 10000,
+          "responseBytes": 8388608
+        },
+        "x-permission-policy": "records.read with source scope rechecked on every page; changed scope invalidates entire handle.",
+        "x-stream-limits": {
+          "global": 32,
+          "leaseSeconds": 5,
+          "perPrincipal": 2,
+          "sendTimeoutSeconds": 1
+        }
+      }
     }
   },
   "security": [
@@ -19473,6 +20410,21 @@
       "handler": "readiness",
       "method": "GET",
       "path": "/health/ready"
+    },
+    {
+      "handler": "legacy_sessions",
+      "method": "GET",
+      "path": "/openbexi_timeline/sessions"
+    },
+    {
+      "handler": "legacy_action",
+      "method": "POST",
+      "path": "/openbexi_timeline/sessions"
+    },
+    {
+      "handler": "legacy_stream",
+      "method": "GET",
+      "path": "/openbexi_timeline_sse/sessions"
     }
   ]
 }

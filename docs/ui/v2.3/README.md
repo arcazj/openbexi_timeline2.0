@@ -2,7 +2,7 @@
 
 Revision 2.3, 12 September 2026. The two newly supplied SIMILE screenshots are the primary visual references. The five new images below are **static document-design mockups, not application screenshots or evidence of implemented interactions**. Their purpose is to make the proposed layout and states inspectable before code generation.
 
-The default keeps a light main timeline above a smaller synchronized overview, bottom time axes, compact colored markers/bars, reusable readable tracks and translucent vertical zones. A compact legacy menu remains, with model/filter/search management and optional descriptor access. Earlier Classic blue and dark images remain compatibility references, not the current default. See the [main specification](../../../OpenBEXI_Timeline_Rebuild_Prompt.md), [scale contract](../../adaptive-scale-contract.md), [query contract](../../adaptive-query-contract.md) and [integration plan](../../integration-test-plan.md).
+The default keeps a light main timeline above a smaller synchronized overview, bottom time axes, compact colored markers/bars, reusable readable tracks and translucent vertical zones. A compact legacy menu remains, with model/filter/search management and optional descriptor access. Earlier Classic blue and dark images remain compatibility references, not the current default. See the [main specification](../../../OpenBEXI_Timeline_Rebuild_Prompt.md), [scale contract](../../reference/implementation/adaptive-scale-contract.md), [query contract](../../reference/implementation/adaptive-query-contract.md) and [integration plan](../../reference/implementation/integration-test-plan.md).
 
 ## V09: Uniform Scale
 

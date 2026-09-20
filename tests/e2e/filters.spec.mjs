@@ -1,14 +1,15 @@
 import { test, expect } from '@playwright/test';
+import { openContractFixture } from './contract-fixture.mjs';
 import { readFile } from 'node:fs/promises';
 import { startServer } from '../integration/server-fixture.mjs';
 
 const fixture = JSON.parse(await readFile('shared/fixtures/initial-snapshot.json', 'utf8'));
 let server;
-test.beforeEach(async () => { server = await startServer(); });
+test.beforeEach(async () => { server = await startServer({ seedPath: 'shared/fixtures/initial-snapshot.json' }); });
 test.afterEach(async () => { await server?.stop(); });
 async function open(page, mode) {
   const errors = []; page.on('pageerror', error => errors.push(error.message)); page.on('dialog', dialog => dialog.accept());
-  await page.goto(server.baseUrl); await expect(page.locator('.record-label').first()).toBeVisible();
+  await openContractFixture(page, server.baseUrl); await expect(page.locator('.record-label').first()).toBeVisible();
   if (mode === 'server') {
     await page.locator('[data-action=sources]').first().click();
     await page.locator('#server-form [name=baseUrl]').fill(server.baseUrl); await page.locator('#server-form [name=token]').fill(server.token);

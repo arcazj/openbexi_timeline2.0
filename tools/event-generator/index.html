@@ -9,12 +9,15 @@
 </head>
 <body>
   <header class="page-header">
-    <div><p class="eyebrow">OPENBEXI / TOOLS</p><h1>Timeline generator</h1><p>Configure events, explore the result, and export timeline data.</p></div>
+    <div><p class="eyebrow">OPENBEXI / TOOLS</p><h1>Timeline generator</h1><p>Create an environment, preview its data, and save a runnable timeline.</p></div>
     <a href="./README.md">Documentation</a>
   </header>
   <main class="workspace">
     <section class="settings panel" aria-labelledby="settings-title">
-      <div class="section-heading"><div><h2 id="settings-title">Generation settings</h2><p>Expand each branch to tune your timeline. All calendar controls use UTC.</p></div></div>
+      <div class="section-heading"><div><h2 id="settings-title">Timeline environment</h2><p>Choose data, appearance and an opening filter. Dates use UTC.</p></div></div>
+      <nav class="workflow" aria-label="Environment steps">
+        <button type="button" data-step="environment" aria-pressed="true">Environment</button><button type="button" data-step="data" aria-pressed="false">Data</button><button type="button" data-step="model" aria-pressed="false">Model</button><button type="button" data-step="filter" aria-pressed="false">Filter</button><button type="button" data-step="review" aria-pressed="false">Review / save</button>
+      </nav>
       <div class="toolbar">
         <button type="button" id="load-config">Import configuration</button>
         <button type="button" id="save-config">Save configuration</button>
@@ -22,7 +25,25 @@
         <input id="config-file" type="file" accept="application/json,.json" hidden>
       </div>
       <form id="generator-form" novalidate>
-        <div id="config-tree" aria-label="Generation settings tree"></div>
+        <div class="workflow-panel" data-panel="environment"><div class="field"><label for="environment-name">Environment name</label><input id="environment-name" value="timeline" maxlength="64" pattern="[A-Za-z0-9_-]+"><small>Used for the YAML, model and filter filenames. Export to a new folder.</small></div><p class="workflow-help">The YAML file connects your data sources, model and filter. The generated environment keeps these in yaml/, models/, filters/ and data/.</p></div>
+        <div class="workflow-panel" data-panel="data" hidden>
+          <div class="field"><label for="quick-namespace">Source namespace</label><input id="quick-namespace"></div>
+          <div class="quick-counts"><div class="field"><label for="quick-past">Past events</label><input id="quick-past" type="number" min="0" max="30000"></div><div class="field"><label for="quick-future">Future events</label><input id="quick-future" type="number" min="0" max="30000"></div></div>
+          <details id="advanced-generation"><summary>Advanced data settings and calendar</summary><div id="config-tree" aria-label="Generation settings tree"></div></details>
+        </div>
+        <div class="workflow-panel" data-panel="model" hidden>
+          <div class="field"><label for="environment-theme">Appearance</label><select id="environment-theme"><option value="dark">Legacy black background</option><option value="light">Light background</option></select></div>
+          <div class="field"><label for="environment-camera">Camera</label><select id="environment-camera"><option value="Orthographic">2D</option><option value="Perspective">3D</option></select></div>
+          <div class="field field-boolean"><label for="environment-compact">Compact parent / activity display</label><input id="environment-compact" type="checkbox" checked></div>
+          <div class="field field-boolean"><label for="environment-overview">Show overview on opening</label><input id="environment-overview" type="checkbox"></div>
+        </div>
+        <div class="workflow-panel" data-panel="filter" hidden>
+          <div class="field"><label for="environment-grouping">Sort by</label><select id="environment-grouping"><option value="none">NONE</option></select><small>Available fields are discovered from the generated data.</small></div>
+          <div class="field"><label for="environment-search">Title search</label><input id="environment-search" maxlength="512" placeholder="All titles"></div>
+          <div class="field"><label for="environment-initial">Initial range</label><select id="environment-initial"><option value="current_time">Current time (default)</option><option value="generated">Generated data interval</option><option value="fixed">Fixed interval</option></select><small>The opening range does not restrict later past / future navigation.</small></div>
+          <div id="environment-fixed" hidden><div class="field"><label for="environment-from">From (offset ISO)</label><input id="environment-from" placeholder="2026-01-15T00:00:00Z"></div><div class="field"><label for="environment-to">To (offset ISO)</label><input id="environment-to" placeholder="2026-01-16T00:00:00Z"></div></div>
+        </div>
+        <div class="workflow-panel" data-panel="review" hidden><p class="workflow-help">Generate data, then review the files that will open your timeline. Extract ZIP exports into a new folder.</p><button type="button" id="review-environment">Validate and review environment</button><pre id="environment-review">Generate a dataset to review its environment.</pre><button type="button" id="save-environment" disabled>Download environment (ZIP)</button></div>
         <div class="generate-bar"><button id="generate" class="primary" type="submit">Generate timeline</button><button id="cancel" type="button" hidden>Cancel</button><span id="generation-status" role="status" aria-live="polite">Ready to generate</span></div>
       </form>
     </section>
@@ -34,7 +55,7 @@
       <div id="preview-content" hidden>
         <div id="stats" class="stats" aria-label="Generated timeline statistics"></div>
         <div class="mini-timeline"><svg id="timeline-chart" viewBox="0 0 760 210" role="img" aria-label="Timeline overview of the first 120 events"></svg><p id="chart-caption"></p></div>
-        <div class="toolbar exports"><button type="button" id="download-timeline" class="primary">Download events JSON</button><button type="button" id="download-all">Download all files (ZIP)</button><button type="button" id="download-used-config">Download used configuration</button></div>
+        <div class="toolbar exports"><button type="button" id="download-environment" class="primary">Download environment (ZIP)</button><button type="button" id="download-timeline">Download events JSON</button><button type="button" id="download-all">Download data files (ZIP)</button><button type="button" id="download-used-config">Download used configuration</button></div>
         <p class="preview-note">Preview shows the first 150 events. Downloads contain the complete output, including nested activities. The ZIP also contains daily partitions and descriptors.</p>
         <div class="table-scroll"><table><caption class="visually-hidden">Generated events</caption><thead><tr><th scope="col">Title</th><th scope="col">Start (UTC)</th><th scope="col">End (UTC)</th><th scope="col">Type</th><th scope="col">Resource</th><th scope="col">Priority</th></tr></thead><tbody id="event-rows"></tbody></table></div>
         <details class="json-preview"><summary>Inspect generated JSON (first three events)</summary><pre id="json-output"></pre></details>

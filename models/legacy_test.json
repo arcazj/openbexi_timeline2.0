@@ -1,0 +1,7 @@
+{
+  "params": [{"name": "legacy_test", "title": "SOURCE1 / SOURCE2 timeline", "date": "current_time", "timeZone": "UTC", "fontSize": 12, "camera": "Orthographic", "compact": true, "overviewVisible": false}],
+  "bands": [
+    {"name": "primary", "height": "75%", "color": "#000000", "textColor": "#ffffff", "dateColor": "#ffffff", "SessionColor": "#0099ff", "eventColor": "#0099ff", "intervalPixels": 1000, "intervalUnit": "HOUR", "intervalUnitPos": "TOP", "subIntervalPixels": "AUTO", "defaultEventSize": 5, "model": [{"sortBy": "NONE"}]},
+    {"name": "overview", "height": "25%", "color": "#101010", "textColor": "#ffffff", "dateColor": "#ffffff", "SessionColor": "#0099ff", "eventColor": "#0099ff", "intervalPixels": 1000, "intervalUnit": "DAY"}
+  ]
+}

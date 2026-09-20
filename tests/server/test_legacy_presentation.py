@@ -55,6 +55,19 @@ def test_javascript_python_adapters_have_exact_output_parity():
     assert json.loads(result.stdout) == {name: adapt(fixture) for name, fixture in FIXTURES.items()}
 
 
+def test_compact_test_model_has_exact_adapter_parity():
+    model = copy.deepcopy(FIXTURES["namespace"]["model"])
+    model["params"][0]["compact"] = True
+    adapted = adapt_legacy_presentation(model)
+    assert adapted["definition"]["presentation"]["nesting"]["layout"] == "overlay"
+    code = "import fs from 'node:fs'; import {adaptLegacyPresentation} from './client/src/data/legacy-presentation.js'; process.stdout.write(JSON.stringify(adaptLegacyPresentation(JSON.parse(fs.readFileSync(0, 'utf8')))));"
+    result = subprocess.run([shutil.which("node"), "--input-type=module", "-e", code], cwd=ROOT, input=json.dumps(model), capture_output=True, text=True, timeout=30, check=True)
+    assert json.loads(result.stdout) == adapted
+    model["params"][0]["compact"] = "true"
+    with pytest.raises(DomainError, match="compact must be boolean"):
+        adapt_legacy_presentation(model)
+
+
 def test_apply_presentation_preserves_source_data_history_and_declared_range():
     snapshot = json.loads((ROOT / "data/default-dataset.json").read_text())
     snapshot["manifest"]["legacy"] = {"readOnly": True, "declaredRange": copy.deepcopy(snapshot["settings"]["range"])}

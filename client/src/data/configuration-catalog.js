@@ -377,12 +377,16 @@ function mergeSettings(target, source, origins, origin) {
 }
 export function effectiveSettings(snapshot, { viewId, viewVersion, principalId, transient = {} } = {}) {
   const values = {}, origins = {};
-  const personal = snapshot.preferences?.find(item => item.principalId === principalId)?.values ?? {};
+  let personal = snapshot.preferences?.find(item => item.principalId === principalId)?.values ?? {};
+  const launch = snapshot.manifest.legacy?.launch;
+  const launchValues = launch?.version === 2 && viewId === undefined && viewVersion === undefined && !transient.viewId ? (launch.settings ?? {}) : {};
+  if (Object.keys(launchValues).length) personal = Object.fromEntries(Object.entries(personal).filter(([key]) => !own(launchValues, key)));
   validateSettings(transient, { snapshot, visibility: 'personal', ownerId: principalId });
   const selector = {}, selectorOrigins = {};
   mergeSettings(selector, snapshot.settings, selectorOrigins, 'workspace-active');
   mergeSettings(selector, snapshot.defaults?.values ?? {}, selectorOrigins, 'workspace-defaults');
   mergeSettings(selector, personal, selectorOrigins, `personal:${principalId}`);
+  mergeSettings(selector, launchValues, selectorOrigins, 'launch-profile');
   mergeSettings(selector, transient, selectorOrigins, 'transient');
   if (viewId !== undefined || viewVersion !== undefined) {
     if (viewId === undefined || viewVersion === undefined) bad('Explicit view selection requires paired identity and version');
@@ -399,6 +403,7 @@ export function effectiveSettings(snapshot, { viewId, viewVersion, principalId, 
   mergeSettings(values, snapshot.settings, origins, 'workspace-active');
   mergeSettings(values, snapshot.defaults?.values ?? {}, origins, 'workspace-defaults');
   mergeSettings(values, model, origins, `model:${modelPin.id}@${modelPin.version}`);
+  mergeSettings(values, launchValues, origins, 'launch-profile');
   if (selectedFilter) mergeSettings(values, { ...(selectedFilter.definitionVersion === 2 ? { definitionVersion: 2, relationshipMode: selectedFilter.relationshipMode ?? 'independent' } : {}), search: selectedFilter.search }, origins, `filter:${filterPin.id}@${filterPin.version}`);
   if (view) {
     if ((view.definitionVersion ?? 1) === 1 && selectedFilter?.definitionVersion === 2) bad('A version 1 view cannot pin a version 2 filter; explicitly upgrade the view');
@@ -513,7 +518,8 @@ export function applyConfigurationCommand(input, inputCommand, { actor, now = ne
   delete snapshot.manifest.contentSha256;
   const result = { snapshot, resource };
   if (command.type === 'apply') {
-    result.effectiveSettings = effectiveSettings(snapshot, { principalId: actor.id });
+    result.effectiveSettings = effectiveSettings(snapshot, { principalId: actor.id,
+      ...(snapshot.manifest.legacy?.launch?.version === 2 ? { transient: snapshot.preferences.find(item => item.principalId === actor.id).values } : {}) });
     const definition = resource.versions.find(version => version.version === payload.version).definition;
     result.resetTransientKeys = family === 'filters' ? ['filterId', 'filterVersion', 'viewId', 'viewVersion', 'search', ...(definition.definitionVersion === 2 ? ['definitionVersion', 'relationshipMode'] : [])] : [...new Set(['modelId', 'modelVersion', 'filterId', 'filterVersion', 'viewId', 'viewVersion', ...(definition.filter ? ['search'] : []), ...Object.keys(definition.settings)])];
   }

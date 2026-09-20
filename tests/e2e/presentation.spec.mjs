@@ -212,18 +212,45 @@ test('point-only multiline labels reserve their complete vertical text boxes acr
   await page.screenshot({ path: info.outputPath('presentation-point-label-clearance.png') }); expect(errors).toEqual([]);
 });
 
+test('compact legacy session overlays paint one selectable activity per matching pair', async ({ page }, info) => {
+  const errors = await boot(page), snapshot = fixture();
+  snapshot.records = snapshot.records.slice(0, 4);
+  for (let index = 0; index < 2; index++) {
+    const parent = snapshot.records[index * 2], child = snapshot.records[index * 2 + 1];
+    for (const record of [parent, child]) Object.assign(record, { title: `Compact session ${index}`, kind: 'session',
+      start: `2026-09-12T${10 + index * 2}:00:00.000Z`, end: `2026-09-12T${10 + index * 2}:10:00.000Z`,
+      originalStart: null, originalEnd: null, parentSessionId: null, render: { color: '#ff0000' } });
+    child.parentSessionId = parent.id; child.render = { color: '#777777', icon: 'legacy-check-failed' };
+  }
+  const presentation = { version: 1, compact: true, durationLabels: 'after', labels: { fields: ['/title'], fontSize: 11 },
+    nesting: { enabled: true, layout: 'overlay' } };
+  snapshot.settings.presentation = presentation; snapshot.models[0].versions[0].definition.presentation = structuredClone(presentation);
+  snapshot.manifest.recordCount = snapshot.records.length;
+  await importFixture(page, snapshot);
+  await expect(page.locator('.plot-wrap .record-label')).toHaveCount(2);
+  expect(await page.evaluate(() => window.__timelineDebug.loadedCount)).toBe(4);
+  expect(await page.evaluate(() => window.__timelineDebug.totalRows)).toBe(1);
+  await expect(page.locator('.plot-wrap [data-hazard-icon=legacy-check-failed]')).toHaveCount(2);
+  await page.locator(`.plot-wrap .record-label[data-record-id="${snapshot.records[1].id}"]`).click();
+  await expect(page.locator('.descriptor')).toContainText('Compact session 0');
+  await expect(page.locator('.descriptor')).toContainText('Parent session');
+  await canvasCheck(page, '.plot-wrap canvas');
+  await page.screenshot({ path: info.outputPath('compact-legacy-sessions.png') });
+  expect(errors).toEqual([]);
+});
+
 for (const width of [1600, 390]) test(`offline legacy hazard icons, quarter-hour grid and search remain readable at ${width}px`, async ({ page }, info) => {
   await page.setViewportSize({ width, height: width === 390 ? 844 : 1000 });
   const requests = []; page.on('request', request => { if (request.url().startsWith('http')) requests.push(request.url()); });
   const errors = await boot(page), snapshot = fixture(), base = snapshot.records[0];
-  snapshot.records = Object.values(hazardIcons).map((icon, index) => ({ ...structuredClone(base), id: randomUUID(), title: `Hazard ${index + 1}`, start: new Date(Date.parse('2026-09-12T12:05:00Z') + index * 25 * 60000).toISOString(), end: null, kind: 'event', parentSessionId: null, originalStart: null, originalEnd: null, render: { color: '#731616', icon } }));
+  snapshot.records = Object.values(hazardIcons).map((icon, index) => ({ ...structuredClone(base), id: randomUUID(), title: `Hazard ${index + 1}`, start: new Date(Date.parse('2026-09-12T12:05:00Z') + index * 20 * 60000).toISOString(), end: null, kind: 'event', parentSessionId: null, originalStart: null, originalEnd: null, render: { color: '#731616', icon } }));
   const presentation = { version: 1, bands: { primary: { backgroundColor: '#BBEDF0', axisPosition: 'top', intervalUnit: 'HOUR', minorDivisions: 4, dateFormat: 'MM/dd-hh:mm' }, overview: { backgroundColor: '#BCD9DB', intervalUnit: 'DAY' } }, labels: { fields: ['/title'], fontSize: 12 }, nesting: { enabled: true } };
   snapshot.records[0].title = 'P\u0101hala';
   snapshot.settings.presentation = presentation; snapshot.models[0].versions[0].definition.presentation = structuredClone(presentation); snapshot.manifest.recordCount = snapshot.records.length;
   await importFixture(page, snapshot);
   await page.locator('.range-button').click(); await page.locator('#range-form [name=from]').fill('2026-09-12T12:00'); await page.locator('#range-form [name=to]').fill('2026-09-12T16:00'); await page.locator('#range-form [type=submit]').click();
   await expect(page.locator('.busy-indicator')).toHaveCount(0);
-  const icons = page.locator('.plot-wrap [data-hazard-icon]'); await expect(icons).toHaveCount(8);
+  const icons = page.locator('.plot-wrap [data-hazard-icon]'); await expect(icons).toHaveCount(Object.keys(hazardIcons).length);
   await expect.poll(() => icons.evaluateAll(nodes => nodes.every(node => node.complete && node.naturalWidth > 0))).toBe(true);
   const images = await icons.evaluateAll(nodes => nodes.map(node => ({ id: node.dataset.hazardIcon, embedded: node.src.startsWith('data:image/png'), width: node.getBoundingClientRect().width, height: node.getBoundingClientRect().height })));
   expect(images.map(image => image.id).sort()).toEqual(Object.values(hazardIcons).sort());
@@ -240,7 +267,7 @@ for (const width of [1600, 390]) test(`offline legacy hazard icons, quarter-hour
   await page.locator('#settings-form [name=search]').fill('Hazard 3'); await page.locator('#settings-form [name=searchMode]').selectOption('phrase'); await page.locator('#settings-form [type=submit]').click();
   await expect(page.locator('.record-label.search-match')).toHaveCount(1);
   await expect.poll(() => page.evaluate(() => window.__timelineDebug.overviewMatched)).toBe(1);
-  await expect(page.locator('.record-label')).toHaveCount(8);
+  await expect(page.locator('.record-label')).toHaveCount(Object.keys(hazardIcons).length);
   await page.mouse.move(0, 0); await expect(page.locator('.toast')).toHaveCount(0);
   await page.screenshot({ path: info.outputPath(`hazards-${width}.png`), fullPage: true }); expect(requests).toEqual([]); expect(errors).toEqual([]);
 });

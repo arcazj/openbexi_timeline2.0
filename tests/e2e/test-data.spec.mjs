@@ -6,7 +6,7 @@ import { createHash } from 'node:crypto';
 import { startSnapshotServer } from '../integration/snapshot-server-fixture.mjs';
 import { canvasMetrics } from '../helpers/canvas-metrics.mjs';
 
-const datasets = [['default-dataset',48,2],['ephemeris',127,2],['jfk',130,2],['monet',27,1],['religions',730,4],['space_exploration',1287,2]];
+const datasets = [['default-dataset',1008,2],['ephemeris',127,2],['jfk',130,2],['monet',27,1],['religions',730,4],['space_exploration',1287,2]];
 const file = pathToFileURL(path.resolve('dist/index.html')).href;
 const captures = process.env.OPENBEXI_UPDATE_SCREENSHOTS === '1' ? 'docs/ui/test-data' : 'artifacts/browser/test-data';
 async function choose(page, id) {
@@ -54,11 +54,17 @@ for (const [id, count, bands] of datasets) test(`complete ${id} fixture works di
 test('source switching resets leaked search, preserves complete datasets and restores reference view', async ({page}) => {
   page.on('dialog',dialog=>dialog.accept());
   await page.goto(file); await choose(page,'monet');
+  await expect(page.locator('.overview-section')).toBeHidden();
+  await page.getByRole('button', { name: 'Show overview', exact: true }).click();
+  await expect(page.locator('.overview-section')).toBeVisible();
+  await page.getByRole('button', { name: 'Hide overview', exact: true }).click();
   const original = await page.evaluate(() => window.__timelineDebug);
   await page.locator('#search').fill('Birth');
   await expect.poll(() => page.evaluate(() => window.__timelineDebug.ready && window.__timelineDebug.search === 'Birth')).toBe(true);
   await choose(page,'jfk'); await expect(page.locator('#search')).toHaveValue('');
+  await expect(page.locator('.overview-section')).toBeVisible();
   await choose(page,'monet');
+  await expect(page.locator('.overview-section')).toBeHidden();
   await page.locator('[data-action=help]').click(); await page.locator('[data-help=reset-test-data]').click();
   await expect.poll(() => page.evaluate(() => window.__timelineDebug.ready)).toBe(true);
   expect((await page.evaluate(() => window.__timelineDebug)).fromMs).toBe(original.fromMs);

@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test';
+import { openContractFixture } from './contract-fixture.mjs';
 import { readFile } from 'node:fs/promises';
 import { startServer } from '../integration/server-fixture.mjs';
 import { snapshotContent } from '../../client/src/data/snapshot-content.js';
@@ -6,7 +7,7 @@ import { sha256 } from '../../client/src/data/data-provider.js';
 import { LocalProvider } from '../../client/src/data/local-provider.js';
 const fixture = JSON.parse(await readFile('shared/fixtures/initial-snapshot.json', 'utf8'));
 let server;
-test.beforeEach(async () => { server = await startServer(); });
+test.beforeEach(async () => { server = await startServer({ seedPath: 'shared/fixtures/initial-snapshot.json' }); });
 test.afterEach(async () => { await server?.stop(); });
 async function ready(page) { await expect.poll(() => page.evaluate(() => Boolean(window.__timelineDebug?.queryId))).toBe(true); await expect(page.locator('.busy-indicator')).toHaveCount(0); }
 async function open(page, mode) {
@@ -33,7 +34,7 @@ async function open(page, mode) {
       } catch (error) { return failed(error); }
     };
   });
-  await page.goto(server.baseUrl);
+  await openContractFixture(page, server.baseUrl);
   try { await ready(page); }
   catch (error) {
     await test.info().attach('bootstrap-diagnostic', {

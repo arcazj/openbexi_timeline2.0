@@ -23,6 +23,25 @@ function snapshot(records) {
   return value;
 }
 
+test('compact overlays retain matching parent and activity identities while packing independent sessions', () => {
+  const parents = [0, 1, 2].map(index => record(index * 2 + 1, {
+    title: `Session ${index}`, start: toIso(start + index * 1200000), end: toIso(start + index * 1200000 + 60000), render: { color: '#ff0000' },
+  }));
+  const records = parents.flatMap((parent, index) => [parent, record(index * 2 + 2, {
+    title: parent.title, start: parent.start, end: parent.end, parentSessionId: parent.id, render: { color: '#777777', icon: 'check' },
+  })]);
+  const before = structuredClone(records);
+  const request = { ...input, presentation: { version: 1, compact: true, durationLabels: 'after', labels: { fontSize: 11 }, nesting: { enabled: true, layout: 'overlay' } } };
+  const result = buildLayout(records, map, request);
+  assert.equal(result.totalRows, 1); assert.equal(result.rowHeight, 19); assert.equal(result.items.length, 6);
+  assert.deepEqual(result.enclosures, []); assert.deepEqual(records, before);
+  for (const item of result.items) { assert.equal(item.row, 0); assert.ok(item.labelX >= item.xEnd + 5); }
+  records[1].title = 'Distinct activity';
+  const distinct = buildLayout(records, map, request);
+  assert.equal(distinct.totalRows, 2);
+  assert.notEqual(distinct.items.find(item => item.record.id === records[0].id).row, distinct.items.find(item => item.record.id === records[1].id).row);
+});
+
 test('presentation is an optional strict model extension with safe pointers and exact style inheritance', () => {
   assert.equal(validateDefinition(DEFAULT_DEFINITION).valid, true);
   const presentation = { version: 1, bands: { primary: { backgroundColor: '#ffffff', textColor: '#222222', eventColor: '#334455' } }, sourceStyles: [{ sourceId: 'SOURCE1', textColor: '#ffffff', backgroundColor: '#000000', eventColor: '#445566' }], labels: { fontWeight: 700, fontStyle: 'italic', maxLines: 4, fields: ['/title', '/data/a~1b/~0'] }, grouping: { field: '/data/status', direction: 'desc' } };

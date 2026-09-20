@@ -1,8 +1,21 @@
 import importlib.util
+import subprocess
 import sys
 from pathlib import Path
 
 import pytest
+
+
+def test_direct_launch_with_missing_dependencies_reports_selected_interpreter():
+    path = Path(__file__).resolve().parents[2] / "scripts" / "serve-legacy.py"
+    # -S reproduces an interpreter without installed third-party packages.
+    result = subprocess.run([sys.executable, "-S", str(path), "--help"], capture_output=True, text=True)
+    assert result.returncode == 1
+    assert "Missing Python dependency: uvicorn" in result.stderr
+    assert sys.executable in result.stderr
+    assert "scripts/start.py --setup-only" in result.stderr
+    assert "'venv' and '.venv' are different" in result.stderr
+    assert "Traceback" not in result.stderr
 
 
 @pytest.mark.parametrize("version", [(3, 7, 17), (3, 8, 20)])
@@ -20,7 +33,7 @@ def test_cli_rejects_unsupported_python_before_dependency_imports(monkeypatch, v
 
     message = str(raised.value)
     assert "Python >=3.9." in message
-    assert "uv sync --locked --python 3.14" in message
+    assert "scripts/start.py --setup-only" in message
     assert "wrong-python.exe" in message
     assert ".venv" in message
     assert "Use specified interpreter" in message

@@ -7,7 +7,7 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
-export async function startServer() {
+export async function startServer({ seedPath = 'shared/fixtures/initial-snapshot.json' } = {}) {
   const directory = await mkdtemp(path.join(tmpdir(), 'openbexi-test-'));
   const listener = net.createServer();
   listener.listen(0, '127.0.0.1'); await once(listener, 'listening');
@@ -17,7 +17,9 @@ export async function startServer() {
   const executable = path.join(root, '.venv', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python');
   let child, exit, output = '';
   function launch() {
-    child = spawn(executable, ['-m', 'uvicorn', 'server.app.main:app', '--host', '127.0.0.1', '--port', String(port)], {
+    const args = seedPath ? ['-c', 'import sys, uvicorn; from server.app.main import create_app; uvicorn.run(create_app(seed_path=sys.argv[1]), host="127.0.0.1", port=int(sys.argv[2]))', seedPath, String(port)]
+      : ['-m', 'uvicorn', 'server.app.main:app', '--host', '127.0.0.1', '--port', String(port)];
+    child = spawn(executable, args, {
       cwd: root, windowsHide: true,
       env: { ...process.env, OPENBEXI_DATA_ROOT: directory, OPENBEXI_API_TOKEN: token },
       stdio: ['ignore', 'pipe', 'pipe'],

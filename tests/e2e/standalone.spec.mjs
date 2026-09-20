@@ -167,8 +167,8 @@ test('local create/export/reimport preserves a complete source and truthful unsa
   await page.locator('#export-json').click();
   const download = await downloadEvent;
   const exported = JSON.parse(await readFile(await download.path(), 'utf8'));
-  expect(exported.records).toHaveLength(49);
-  expect(exported.manifest.recordCount).toBe(49);
+  expect(exported.records).toHaveLength(1009);
+  expect(exported.manifest.recordCount).toBe(1009);
   expect(exported.records.some(record => record.title === 'Test checkpoint')).toBe(true);
   expect(await page.evaluate(() => window.__timelineDebug.dirty)).toBe(true);
   page.on('dialog', dialog => dialog.accept());
@@ -216,7 +216,7 @@ test('local edit, duplicate and delete preserve the original identity and a tomb
   const result = JSON.parse(await readFile(await (await event).path(), 'utf8'));
   expect(result.records.find(record => record.id === originalId).title).toBe('Edited coverage checkpoint');
   expect(result.records.find(record => record.id === duplicateId).deletedAt).toBeTruthy();
-  expect(result.records.filter(record => !record.deletedAt)).toHaveLength(48);
+  expect(result.records.filter(record => !record.deletedAt)).toHaveLength(1008);
   expect(observed.errors).toEqual([]);
 });
 

@@ -19,11 +19,9 @@
     "yaml/sources_default_test.yml": "83d3efcafddaee7b865f4ab038dbe41af2b0962a81ee99d0c346e75a8f447a56",
     "yaml/sources_earthquake.yml": "e7d20d740f3e395bb77ec32c0b991d658fa74099fa8390cc0f2d86510ccec47f",
     "filters/test_ob_timeline_2_filter_setting.json": "a44b63bcda8ba31a9b9c59370c4f0cba4f31bfcf234942d422b8980797c2e71e",
-    "models/MCC_timeline.json": "7bef6d54ae2f8215c0690419edc285f6b930b373c135557922ea19be73e88674",
     "models/regular_timeline.json": "78d6615b85ac69adee0ee27b5e79bc34f085d0b2476d37b384379ec40a389862",
     "models/regular_timeline_earthquake.json": "157640266c98cb76c19b1b5f99c9b631099f60c7ed7efa0ee4c1f90d82d0e872",
     "models/regular_timeline_esoc.json": "57695d8194c5860e0846695210c57afe49baa50b229de78eaf713bfdcc002fd6",
-    "models/regular_timeline_mcc.json": "99453c81683697110776f432d9c8b31638d53445b667c34074f1c64fc48c157f",
     "models/regular_timeline_pov.json": "de3d92b2c4708a4a85733b79838c37ecde316bbbe7f0611696ee02f5047ae541",
     "models/SOC_timeline.json": "80aa6cfc8d8511c172e485b4982c503e1bb7e59ddb26f54798e771ae259283d5",
     "tests/models/regular_timeline.json": "8abd39f44bc38ba9a14cfd9914d87eb7e764a2c5d35a964e6a1c1f2c54377322"
@@ -204,5 +202,6 @@
     "No production data copied or modified",
     "No pathological regex execution",
     "Future regex and UX requirements are not implemented"
-  ]
+  ],
+  "curation": "2026-09-20: retired production-specific entries removed at user request. Remaining historical results/hashes retained; this is not a rerun or two-source validation evidence."
 }

@@ -33,18 +33,11 @@ local-browser-key.json
 *.pfx
 /yaml/local/
 /config/local/
+/[yY][aA][mM][lL]/[lL][oO][cC][aA][lL]/
+/[cC][oO][nN][fF][iI][gG]/[lL][oO][cC][aA][lL]/
 
-# Keep reviewed, linked documentation PDFs, not raw source exports/test dumps.
-/output/*
-!/output/pdf/
-/output/pdf/*
-!/output/pdf/OpenBEXI_Timeline_Implementation_Preview.pdf
-!/output/pdf/OpenBEXI_Local_Source_Paths.pdf
-!/output/pdf/OpenBEXI_Legacy_JSON_Preview.pdf
-!/output/pdf/OpenBEXI_Hazard_Comparison.pdf
-!/output/pdf/local-test-data.pdf
-!/output/pdf/OpenBEXI_Timeline_Sorting_Filtering_Prompt.pdf
-!/output/pdf/sorting-filtering-candidate.pdf
+# Generated reports and exports remain local; publish their source documentation.
+/output/
 
 # Machine-specific editor/OS state. Shared .run templates remain versioned.
 .idea/

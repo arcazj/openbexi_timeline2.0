@@ -24,6 +24,7 @@ from .query_relationships import resolve_relationships, scoped_query_counts
 from .filters import compile_expression, compile_search, create_regex_budget
 from .legacy_filter_migration import migrate_legacy_filter
 from .presentation_layout import build_styled_layout
+from .grouping_fields import discover_grouping_fields
 from .query_access import current_query_access
 from .query_resources import QueryResourceLedger
 from .preparation_control import checked, checkpoint
@@ -364,6 +365,7 @@ class QueryEngine:
             if resolved['definitionVersion'] == 2:
                 overview_records.sort(key=lambda record: (cached_bounds[record["id"]][0], record["id"]))
             overview_matches = [record for record in overview_records if record["id"] in match_ids]
+            grouping_fields = discover_grouping_fields(overview_records, complete=density["complete"])
             def selected_zone(zone):
                 source = zone.get("legacy", {}).get("sourceId")
                 return (not source or ((allowed_sources is None or source in allowed_sources)
@@ -371,7 +373,7 @@ class QueryEngine:
             manifest = {"queryId": query_id, "snapshotId": snapshot_id, "mapId": map_id,
                         "generation": bundle["manifest"]["generation"], "revision": bundle["manifest"]["revision"],
                         "baseTotal": len(eligible_records), "matchTotal": len(match_ids), "overviewTotal": len(overview_records),
-                        "overviewMatchTotal": len(overview_matches), "fieldTypes": resolved["fieldTypes"], "state": "ready"}
+                        "overviewMatchTotal": len(overview_matches), "fieldTypes": resolved["fieldTypes"], "groupingFields": grouping_fields, "state": "ready"}
             if coverage is not None:
                 manifest["coverage"] = copy.deepcopy(coverage)
             if 'preferencesRevision' in bundle['manifest']:
@@ -531,7 +533,8 @@ class QueryEngine:
                     return float(Decimal(str(width)) * (mapped(knots, clipped) - a) / (b - a))
 
                 resolved = build_styled_layout(selected, request, width, row_height, font_size, group_by,
-                                               project, knots[-1]["timeMs"], self._variant_metrics)
+                                               project, knots[-1]["timeMs"], self._variant_metrics,
+                                               grouping_context=[*query["records"], *query.get("contextRecords", [])])
                 canonical = {record["id"]: record for record in selected}
                 for item in resolved["items"]:
                     item["record"] = canonical[item["record"]["id"]]

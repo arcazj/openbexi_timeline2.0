@@ -10,7 +10,7 @@ Version 1.0.0 is published without fresh release qualification and is not a qual
 - Treat a standalone HTML file as a data export: every embedded record is readable by anyone receiving it. A static demo has no server authorization boundary.
 - Local edits remain in browser memory until explicitly exported. A snapshot is not an operational backup.
 
-Read the [identity guide](docs/identity.md), [backup/restore guide](docs/backup-restore.md), and [implementation limitations](docs/implementation-status.md) before deployment.
+Read the [identity guide](docs/reference/implementation/identity.md), [backup/restore guide](docs/reference/implementation/backup-restore.md), and [implementation limitations](docs/reference/implementation/implementation-status.md) before deployment.
 
 ## Reporting a Vulnerability
 

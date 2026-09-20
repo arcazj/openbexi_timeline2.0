@@ -1,6 +1,6 @@
 # Legacy Hazard Assets
 
-These eight PNG files are byte-for-byte copies of the named files under
+These ten PNG files (hazard markers and legacy failed/aborted check marks) are byte-for-byte copies of the named files under
 `C:/projects/openbexi_timeline/icon`. The repository's supplied license is retained
 in `LEGACY-LICENSE.txt` and embedded in the standalone notices. No external image
 URLs are loaded. The source repository does not provide separate per-image

@@ -8,7 +8,7 @@ from server.app.models.domain import DomainError
 from server.app.repositories import storage_migration as migration
 from server.app.repositories.json_repository import JsonRepository, atomic_json
 
-SEED = ROOT / "data/default-dataset.json"
+SEED = ROOT / "shared/fixtures/initial-snapshot.json"
 
 
 @pytest.fixture

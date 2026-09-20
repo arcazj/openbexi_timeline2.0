@@ -1,7 +1,7 @@
 # ADR 0004: Complete JSON Root Backup and Inactive Restore
 
 Status: implemented; focused verification evidence is recorded in
-[`../backup-restore.md`](../backup-restore.md). This is not full-release or
+[`../backup-restore.md`](../reference/implementation/backup-restore.md). This is not full-release or
 power-loss certification.
 
 ## Scope and Authority

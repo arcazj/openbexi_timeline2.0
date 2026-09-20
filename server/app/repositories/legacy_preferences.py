@@ -37,9 +37,9 @@ class LegacyPreferencesRepository:
         self._owner = None
         self._recovery = False
         self._cached_base_key = self._cached_base = None
-        self.authorities = hashlib.sha256(json_bytes([
-            [source.id, str(source.root), source.data_model] for source in base.configuration.sources
-        ])).hexdigest()
+        authority_sources = [[source.id, str(source.root), source.data_model] for source in base.configuration.sources]
+        self._ordered_authorities = hashlib.sha256(json_bytes(authority_sources)).hexdigest()
+        self.authorities = hashlib.sha256(json_bytes(sorted(authority_sources))).hexdigest()
         try:
             self._owner = self._lock.acquire()
             if self.path.exists():
@@ -77,13 +77,16 @@ class LegacyPreferencesRepository:
         if checksum != hashlib.sha256(json_bytes(value)).hexdigest():
             raise DomainError("preferences_integrity", "Preferences checksum does not match.", 503)
         self._validate(value)
+        if value["authorities"] != self.authorities:
+            value["authorities"] = self.authorities
+            atomic_json(self.path, self._sealed(value))
         return value
 
     def _validate(self, document):
         required = {"format", "version", "workspaceId", "authorities", "revision", "catalogs", "defaults", "preferences", "outcomes"}
         if (set(document) != required or document["format"] != "openbexi-legacy-preferences" or type(document["version"]) is not int or document["version"] != 1
                 or type(document["revision"]) is not int or not 0 <= document["revision"] < MAX_SAFE_INT
-                or document["workspaceId"] != self.base.meta["manifest"]["workspaceId"] or document["authorities"] != self.authorities
+                or document["workspaceId"] != self.base.meta["manifest"]["workspaceId"] or document["authorities"] not in (self.authorities, self._ordered_authorities)
                 or not isinstance(document["catalogs"], dict) or set(document["catalogs"]) != {"filters", "views"}
                 or not isinstance(document["outcomes"], dict) or len(document["outcomes"]) > _OUTCOMES):
             raise DomainError("preferences_integrity", "Preferences have an invalid shape or belong to other legacy authorities.", 503)

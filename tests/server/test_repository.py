@@ -7,7 +7,7 @@ from conftest import ROOT
 from server.app.models.domain import DomainError, MAX_SAFE_INT, content_checksum, read_json, validate_snapshot
 from server.app.repositories.json_repository import JsonRepository, atomic_json
 
-SEED = ROOT / "data" / "default-dataset.json"
+SEED = ROOT / "shared/fixtures/initial-snapshot.json"
 
 
 def repository(tmp_path):
@@ -22,7 +22,7 @@ def test_exclusive_writer_lock_and_reacquisition(tmp_path):
     finally:
         first.close()
     second = repository(tmp_path)
-    assert second.metadata()["recordCount"] == 48
+    assert second.metadata()["recordCount"] == len(read_json(SEED)["records"])
     second.close()
 
 
@@ -146,7 +146,7 @@ def test_committed_journal_redoes_record_revision_and_outcome(tmp_path, monkeypa
     try:
         outcome = second.command_outcome("principal", "recover-me")
         assert outcome["revision"] == 2
-        assert second.metadata()["recordCount"] == 49
+        assert second.metadata()["recordCount"] == len(read_json(SEED)["records"]) + 1
         assert second.get_record(outcome["record"]["id"])["title"] == "Recover this committed record"
         assert not (second.root / "transaction.json").exists()
         replay = second.mutate("create", None, {"title": "Recover this committed record"}, generation, None, "recover-me", "principal")
@@ -199,7 +199,7 @@ def test_concurrent_edits_have_exactly_one_winner(tmp_path):
 def test_data_root_contains_json_records_and_no_database(tmp_path):
     repo = repository(tmp_path)
     try:
-        assert len(list((repo.root / "records").glob("*.json"))) == 48
+        assert len(list((repo.root / "records").glob("*.json"))) == len(read_json(SEED)["records"])
         assert all(path.suffix == ".json" or path.name == ".writer.lock" for path in repo.root.rglob("*") if path.is_file())
     finally:
         repo.close()

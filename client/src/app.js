@@ -13,6 +13,7 @@ import './styles/help.css';
 import './styles/calendar.css';
 import './styles/test-data.css';
 import './styles/descriptor.css';
+import './styles/toolbar.css';
 import { createIcons, icons } from 'lucide';
 import Decimal from 'decimal.js';
 import { createLocalProvider } from './data/worker-provider.js';
@@ -37,7 +38,7 @@ import { previewProjector, extendPreviewSessions, reprojectPreviewRows } from '.
 import { navigatePan, navigateZoom, followingOverview, rangeInside, createPanProjector, navigationMap, navigationQueryDomain } from './timeline/navigation-domain.js';
 import { openTimelineCalendar } from './ui/timeline-calendar.js';
 import { calendarRange, centerCalendarRange } from './ui/calendar-time.js';
-import { loadPathPreferences, savePathPreferences, groupingMode, groupedPresentation } from './ui/source-paths.js';
+import { loadPathPreferences, savePathPreferences } from './ui/source-paths.js';
 import { openModelManager } from './ui/model-manager.js';
 import { createModelPreview } from './ui/model-preview.js';
 import { RecordTableView } from './ui/record-table-view.js';
@@ -108,6 +109,7 @@ let bootPending = true;
 let pathCatalog = null, pathPreferences = null;
 let startupDiscovery;
 let configuredServer = false, windowLoader, loadingTimer, overviewRequest, overviewTimer, overviewWork = null;
+let cameraMode = 'Orthographic', overviewVisible = true, workspaceGeometry = null, workspaceToolsOpen = false;
 const preparationAdmission = createPreparationAdmission();
 const bootControls = new Map();
 const legacyControls = new Map();
@@ -178,7 +180,9 @@ function adoptSettings(settings, { preserveRange = false, preserveOverview = fal
     fontSize: settings.fontSize || 13, groupBy: settings.groupBy || 'none', timeZone: settings.timeZone || 'UTC',
     scaleMode: settings.scaleMode || 'uniform', ratio: settings.ratio ?? 4, bins: settings.bins ?? 128 });
   state.presentation = structuredClone(settings.presentation);
+  if (!preserveOverview) overviewVisible = !state.presentation?.bandLayout || state.presentation.bandLayout.some(band => band.role === 'overview');
   bandStack?.configure(state.presentation);
+  bandStack?.setOverviewVisible(overviewVisible);
   $('.timeline-view').style.setProperty('--reference-guide-height', `${settings.scaleMode === 'adaptive' || referenceScale().fixedScale?.length ? 65 : 38}px`);
   if (!preserveOverview || !state.domain) state.domain = structuredClone(settings.overview || initialSnapshot.settings.overview);
   if (!preserveRange || state.fromMs === null) { const range = settings.range || initialSnapshot.settings.range; state.fromMs = String(toMs(range.from)); state.toMs = String(toMs(range.to)); }
@@ -197,20 +201,26 @@ function adoptLegacyView({ focus = true } = {}) {
   view.classList.remove('legacy-proportions');
   view.style.removeProperty('--legacy-overview-height');
   if (!hints) return;
+  setCamera(hints.camera || 'Orthographic', { repaint: false });
+  if (typeof hints.overviewVisible === 'boolean') { overviewVisible = hints.overviewVisible; bandStack?.setOverviewVisible(overviewVisible); }
   try {
     const fraction = hints.bands.overview.heightFraction;
     if (!Number.isFinite(fraction) || fraction <= 0 || fraction >= 1) throw new Error('Invalid legacy band proportions');
     const width = Math.max(64, Math.min(8192, $('.plot-wrap').clientWidth));
-    let ranges = legacyViewport(hints, width, Date.now(), state.timeZone);
-    if (state.provider?.localBrowser && legacy.domain && (toMs(ranges.primary.to) <= toMs(legacy.domain.from) || toMs(ranges.primary.from) >= toMs(legacy.domain.to))) {
+    const initial = legacy.loading?.initialRange;
+    const viewportHints = initial ? { ...hints, focus: { mode: 'fixed', timestamp: toIso((toMs(initial.from) + toMs(initial.to)) / 2) } } : hints;
+    let ranges = legacyViewport(viewportHints, width, Date.now(), state.timeZone);
+    if (legacy.launch?.version !== 2 && state.provider?.localBrowser && legacy.domain && (toMs(ranges.primary.to) <= toMs(legacy.domain.from) || toMs(ranges.primary.from) >= toMs(legacy.domain.to))) {
       const center = toMs(ranges.primary.to) <= toMs(legacy.domain.from) ? legacy.domain.from : legacy.domain.to;
       ranges = legacyViewport({ ...hints, focus: { mode: 'fixed', timestamp: center } }, width, Date.now(), state.timeZone);
     }
     view.style.setProperty('--legacy-overview-height', `${fraction * 100}%`);
     view.classList.add('legacy-proportions');
-    if (focus && !legacy.declaredRange && !legacy.loading?.initialRange) {
+    if (focus && !legacy.declaredRange) {
       state.domain = ranges.overview;
-      state.fromMs = String(toMs(ranges.primary.from)); state.toMs = String(toMs(ranges.primary.to));
+      if (!legacy.loading?.initialRange) {
+        state.fromMs = String(toMs(ranges.primary.from)); state.toMs = String(toMs(ranges.primary.to));
+      }
     }
   } catch (error) { toast(`Legacy view settings were not applied: ${error.message}`); }
 }
@@ -334,7 +344,7 @@ function updateTimeControls() {
   const allowed = state.info?.capabilities?.recordCrud && ((editActor || state.info.actor)?.capabilities || []).some(value => value === '*' || value === 'records.edit');
   for (const node of document.querySelectorAll('[data-time-mode]')) {
     node.setAttribute('aria-pressed', node.dataset.timeMode === recordGestures.mode);
-    node.disabled = !state.info || state.authRequired || state.localUnavailable || node.dataset.timeMode === 'edit' && (!allowed || !!recordRecovery?.pending().length);
+    node.disabled = !state.info || state.authRequired || state.localUnavailable || node.dataset.timeMode === 'edit' && (!allowed || cameraMode === 'Perspective' || !!recordRecovery?.pending().length);
   }
   for (const node of document.querySelectorAll('[data-action=time-edit],[data-action=close-session]')) node.disabled = !state.selected || !canEditTime(state.selected);
   recordGestures.render();
@@ -355,6 +365,7 @@ async function refreshTimePermissions(force = false) {
   } catch (error) { if (currentTimeSource(context) && intent === editMetadataIntent) { editMetadataKey = ''; toast(error.message); if ([401, 403].includes(error.status)) clearUnauthorized(); } }
 }
 async function setTimeMode(mode) {
+  if (mode === 'edit' && cameraMode === 'Perspective') { toast('Switch to 2D to drag record times. Precise editing remains available in the record panel.'); return; }
   const intent = ++timeModeIntent;
   if (mode === 'edit') { await refreshTimePermissions(true); if (intent !== timeModeIntent) return; if (!editSources.size || !editActor || ![...editSources.values()].some(source => sourceCanEdit(editActor, source))) { toast('No authorized writable sources are available for time editing.'); return; } }
   $('.plot-wrap').dispatchEvent(new Event('pointercancel')); recordGestures.setMode(mode); updateTimeControls();
@@ -395,7 +406,7 @@ function finishBoot() {
   $('.provider-status')?.removeAttribute('role');
 }
 function shell() {
-  app.innerHTML = `<header class="app-header"><div class="header-tools">${button('sources', 'power', 'Sources and connection')}${button('range', 'calendar-days', 'Date and time range')}${button('refresh', 'rotate-cw', 'Refresh source')}${button('filters', 'filter', 'Filters')}<input id="search" type="search" aria-label="Search events and sessions" placeholder="Search events and sessions"></div><h1 class="brand">${TITLE}</h1><div class="header-right"><div class="view-tabs" aria-label="Views">${['timeline', 'table', 'split'].map(v => `<button data-view="${v}" aria-pressed="${v === state.view}">${v[0].toUpperCase() + v.slice(1)}</button>`).join('')}</div>${button('models', 'panels-top-left', 'Model library', false, 'class="desktop-tool"')}${button('create', 'plus', 'Create record', false, 'class="desktop-tool"')}${button('sources', 'database', 'Sources', false, 'class="desktop-tool"')}${button('settings', 'settings', 'Settings', false, 'class="mobile-settings"')}</div></header>
+  app.innerHTML = `<header class="app-header"><div class="header-tools">${button('profile', 'power', 'User preferences and connection', false, 'class="power-tool"')}${button('range', 'calendar-days', 'Date and time range')}${button('resync', 'refresh-cw', 'Resynchronize reference time')}${button('filters', 'filter', 'Filters')}${button('search', 'search', 'Run search')}<input id="search" type="search" aria-label="Search events and sessions" placeholder="Search">${button('clear-search', 'x', 'Clear search')}</div><div class="timeline-heading"><h1 class="brand">${TITLE}</h1><output class="timeline-center" aria-label="Inspected timeline time"></output></div><div class="header-right"><div class="view-tabs" aria-label="Views">${['timeline', 'table', 'split'].map(v => `<button data-view="${v}" aria-pressed="${v === state.view}">${v[0].toUpperCase() + v.slice(1)}</button>`).join('')}</div>${button('overview', 'eye', 'Show overview', false, 'aria-pressed="true"')}${button('camera', 'box', 'Switch to 3D', false, 'class="camera-tool" aria-pressed="false"')} ${button('settings', 'settings', 'Settings', false, 'class="mobile-settings"')}</div></header>
   <div class="filter-strip"><select class="source-filter" id="source-filter" aria-label="Source filter"><option value="all">All sources</option></select><select class="kind-filter" id="kind-filter" aria-label="Record type"><option value="all">All types</option><option value="event">Events</option><option value="session">Sessions</option></select><button class="range-button" data-action="range"></button><div class="tools">${button('zoom-out', 'minus', 'Zoom out')}${button('zoom-in', 'plus', 'Zoom in')}${button('fit', 'scan', 'Fit', true)}${button('now', 'clock-3', 'Now', true)}</div><label class="auto-label"><input id="auto-scale" type="checkbox" checked>Auto scale</label><span class="provider-status"></span></div>
   <div class="notice" hidden><span></span>${button('refresh', 'rotate-cw', 'Retry', true)}</div>
   <div class="server-startup" hidden><span role="status"></span><button type="button" title="Retry server connection" aria-label="Retry server connection">${icon('rotate-cw')}</button></div>
@@ -408,11 +419,13 @@ function shell() {
   const calendarButton = $('.header-tools [data-action="range"]');
   $('#search').insertAdjacentHTML('afterend', `${button('find-previous', 'chevron-up', 'Previous finding')}${button('find-next', 'chevron-down', 'Next finding')}<output class="finding-position" aria-live="polite"></output>`);
   calendarButton.dataset.action = 'calendar'; calendarButton.title = 'Calendar'; calendarButton.setAttribute('aria-label', 'Calendar');
-  $('.view-tabs').insertAdjacentHTML('beforebegin', button('calendar', 'calendar-days', 'Calendar', false, 'class="mobile-calendar"'));
   $('.range-button').title = 'Date and time range'; $('.range-button').setAttribute('aria-label', 'Date and time range');
   $('[data-action="settings"]').insertAdjacentHTML('afterend', button('help', 'circle-help', 'Help and sharing', false, 'class="help-tool"'));
+  $('[data-action="settings"]').insertAdjacentHTML('beforebegin', button('workspace-tools', 'ellipsis', 'Workspace tools', false, 'class="workspace-tools-toggle" aria-expanded="false" aria-controls="workspace-tools" hidden'));
+  $('.filter-strip').id = 'workspace-tools';
   $('.auto-label').insertAdjacentHTML('afterend', '<div class="local-scale-controls"><select id="scale-strategy" aria-label="Local scale adjustment" title="Automatic minimizes complete-layout rows; manual applies the selected density ratio"><option value="automatic">Optimize rows</option><option value="manual">Manual scale</option></select><label for="local-scale" title="Maximum local magnification relative to the coarsest time segments">Local scale</label><input id="local-scale" type="range" min="1" max="32" step="0.5" value="4" aria-label="Local scale ratio" title="Local scale ratio: 1x to 32x"><output id="local-scale-value" for="local-scale">4x</output></div>');
-  $('#kind-filter').insertAdjacentHTML('afterend', '<select id="grouping-mode" aria-label="Sorting and filtering" title="Sorting and filtering"><option value="all">ALL</option><option value="namespace">NAMESPACE</option><option value="custom" disabled>Custom grouping</option></select><select id="path-shortcut" aria-label="Favorite source paths" title="Favorite source paths" hidden></select>');
+  $('#kind-filter').insertAdjacentHTML('afterend', '<label class="sort-field-label">Sort by<select id="grouping-mode" aria-label="Sort by" title="Group timeline by a field found in the loaded data"><option value="all">NONE</option></select></label><select id="path-shortcut" aria-label="Favorite source paths" title="Favorite source paths" hidden></select>');
+  $('.provider-status').insertAdjacentHTML('beforebegin', `<div class="secondary-tools" aria-label="Workspace tools">${button('models', 'panels-top-left', 'Model library')}${button('create', 'plus', 'Create record')}${button('sources', 'database', 'Sources')}${button('refresh', 'rotate-cw', 'Refresh source')}</div>`);
   activeConditions = mountActiveConditions($('.filter-strip'), { updateIcons, onRemove: async expression => {
     if (state.queryLoading || state.authRequired || state.localUnavailable) return;
     const provider = state.provider, generation = state.info.generation, previousQuery = state.query, value = captureQueryState();
@@ -512,7 +525,9 @@ async function initialize(provider, snapshot = null, { preserveView = true } = {
   state.query = null; state.map = null; state.layout = null;
   adoptSettings(info.settings || {});
   adoptLegacyView();
-  if (provider.localBrowser && pathPreferences && !info.settings?.presentation?.bandLayout) {
+  // Version 2 profiles select their model, filter and initial range through YAML.
+  // The original path-browser defaults must not replace that authored time scale.
+  if (provider.localBrowser && pathPreferences && !info.settings?.presentation?.bandLayout && (info.legacy || info.origin?.legacy)?.launch?.version !== 2) {
     state.filter.sourceIds = [...pathPreferences.selected];
     state.scaleMode = 'adaptive';
     state.ratio = 32;
@@ -766,6 +781,7 @@ function toast(message) {
 }
 function setBusy(value) {
   state.loading = value; $('.busy-indicator')?.remove();
+  updateToolbarStatus();
   if (!value) { queueMicrotask(() => document.dispatchEvent(new Event('timeline-ready'))); navigation?.warm(); }
   if (value) { const node = document.createElement('div'); node.className = 'busy-indicator'; node.setAttribute('role', 'status'); node.textContent = 'Updating timeline...'; $('.workspace').append(node); }
   updateTimeControls();
@@ -1000,7 +1016,7 @@ function render() {
   $('#local-scale').value = state.ratio;
   $('#local-scale-value').textContent = `${state.ratio}x`;
   $('#scale-strategy').value = state.scaleStrategy;
-  $('#grouping-mode').value = state.presentation?.grouping ? groupingMode(state.presentation) : state.groupBy === 'none' ? 'all' : 'custom';
+  updateGroupingChoices();
   updateIcons();
   updateTimeControls();
   calendar?.update(timelineCenter(), calendarUnit());
@@ -1069,6 +1085,7 @@ function updateOverviewWindow(range = { fromMs: state.fromMs, toMs: state.toMs }
   selected.setAttribute('aria-label', `Selected range ${toIso(range.fromMs)} to ${toIso(range.toMs)}`);
 }
 function updateStatus() {
+  updateToolbarStatus();
   activeConditions?.render({ expression: state.authRequired ? null : state.filter.expression });
   for (const button of document.querySelectorAll('[data-action="find-next"],[data-action="find-previous"]')) button.disabled = !state.search || !state.query?.matchTotal || state.queryLoading || state.searchPending || state.authRequired || state.localUnavailable;
   updatePathShortcut();
@@ -1236,16 +1253,9 @@ function bindShell() {
   $('#search').addEventListener('input', event => {
     clearTimeout(searchTimer); state.searchPending = true; updateStatus();
     const control = event.target, value = control.value;
-    searchTimer = setTimeout(() => {
-      const draft = { ...searchOptions(), search: value };
-      if (!value && draft.searchMode === 'regex') { draft.searchMode = 'any'; delete draft.searchFlags; delete draft.searchMatchMode; delete draft.searchDialect; }
-      try { compileSearch(draft, { fieldTypes: state.fieldTypes }); }
-      catch (error) { control.setAttribute('aria-invalid', 'true'); control.title = error.message; $('.finding-position').textContent = error.message; return; }
-      control.removeAttribute('aria-invalid'); control.removeAttribute('title'); $('.finding-position').textContent = '';
-      state.search = value; state.searchMode = draft.searchMode; rememberSetting('search', searchSettings());
-      state.searchPending = false; refreshQuery();
-    }, 250);
+    searchTimer = setTimeout(() => submitSearch(value), 250);
   });
+  $('#search').addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); submitSearch(); } });
   $('#source-filter').addEventListener('change', e => { state.filter.sourceId = e.target.value; refreshQuery(); });
   $('#kind-filter').addEventListener('change', e => { state.filter.kind = e.target.value; refreshQuery(); });
   $('#auto-scale').addEventListener('change', e => { state.scaleMode = e.target.checked ? 'adaptive' : 'uniform'; rememberSetting('scaleMode', state.scaleMode); refreshQuery(); });
@@ -1274,6 +1284,7 @@ function setView(view, { transient = true, refresh = true } = {}) {
 }
 async function handleAction(action) {
   if (!state.info) return;
+  if (action === 'profile') return openUserPreferences();
   if (action === 'help') return openHelp();
   if (action === 'reconnect-server') return reconnectServer();
   if (action === 'reload-changes') return changeMonitor.reload();
@@ -1288,6 +1299,12 @@ async function handleAction(action) {
   if (action === 'previous' || action === 'next') return state.view === 'table' ? tableView.page(action) : refreshLayout(action === 'previous' ? state.rows.previousCursor : state.rows.nextCursor);
   if (action === 'zoom-in' || action === 'zoom-out') return changeRange(navigateZoom(state.map, state.fromMs, state.toMs, action === 'zoom-in' ? 1.5 : 0.65, 0.5));
   if (action === 'fit') return changeRange({ fromMs: String(toMs(state.domain.from)), toMs: String(toMs(state.domain.to)) });
+  if (action === 'search') return submitSearch();
+  if (action === 'clear-search') { $('#search').value = ''; return submitSearch(''); }
+  if (action === 'resync') return resynchronizeReference();
+  if (action === 'overview') { navigation?.cancel(); overviewVisible = !overviewVisible; bandStack.setOverviewVisible(overviewVisible); updateToolbarStatus(); return refreshLayout(); }
+  if (action === 'workspace-tools') { navigation?.cancel(); workspaceToolsOpen = !workspaceToolsOpen; updateToolbarStatus(); return refreshLayout(); }
+  if (action === 'camera') return setCamera(cameraMode === 'Perspective' ? 'Orthographic' : 'Perspective');
   if (action === 'now') {
     const now = new Date(), day = new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
     state.domain = { from: day.toISOString(), to: new Date(day.getTime() + 86400000).toISOString() };
@@ -1356,6 +1373,7 @@ function openHelp(link = '', tab = 'help') {
   return openHelpPanel({
     openDialog, closeDialog, updateIcons, toast, serverReady, generation: state.info.generation,
     testDatasets, testDatasetId: state.info.origin?.testDataset?.id || state.info.testDataset?.id,
+    demoDatasetId: !configuredServer && isLocal() ? testDatasets.find(entry => entry.id === (state.info.origin?.testDataset?.id || state.info.testDataset?.id))?.id : undefined,
     openTestDataset, resetTestDataset,
     reopenShare: () => { closeDialog(); openHelp('', 'share'); },
     get shareReady() { return !!state.query && !state.queryLoading && !state.loading && !state.searchPending && !navigation?.active && !state.authRequired && !state.localUnavailable && !state.generationRequired; },
@@ -1759,13 +1777,16 @@ function bindNavigation() {
     ++layoutIntent; setBusy(false); baseContext = context;
     motion.begin(context, createPanProjector(context.map, context.fromMs, context.toMs, context.width), initialOffset);
     state.fromMs = context.fromMs; state.toMs = context.toMs;
-    drag = { x: e.clientX, y: e.clientY, initialOffset, id: e.target.closest('[data-record-id]')?.dataset.recordId, moved: !!initialOffset, pointer: e.pointerId };
+    drag = { x: e.clientX, y: e.clientY, planeY: e.clientY - plot.getBoundingClientRect().top, initialOffset, id: e.target.closest('[data-record-id]')?.dataset.recordId, moved: !!initialOffset, pointer: e.pointerId };
     plot.setPointerCapture(e.pointerId); e.preventDefault();
   });
   plot.addEventListener('pointermove', e => {
     if (!drag || drag.pointer !== e.pointerId) return; const dx = e.clientX - drag.x;
     if (Math.hypot(dx, e.clientY - drag.y) >= (e.pointerType === 'touch' ? 8 : 4)) drag.moved = true;
-    if (drag.moved) { suppressClickUntil = performance.now() + 500; motion.move(drag.initialOffset + dx); plot.style.cursor = 'grabbing'; e.preventDefault(); }
+    if (drag.moved) {
+      const logicalDelta = cameraMode === 'Perspective' ? timeline.planePoint(dx, drag.planeY).x - timeline.planePoint(0, drag.planeY).x : dx;
+      suppressClickUntil = performance.now() + 500; motion.move(drag.initialOffset + logicalDelta); plot.style.cursor = 'grabbing'; e.preventDefault();
+    }
   });
   plot.addEventListener('pointerup', e => {
     if (!drag || drag.pointer !== e.pointerId) return; const completed = drag; drag = null; plot.style.cursor = ''; releasePointer(completed);
@@ -1795,9 +1816,11 @@ function bindNavigation() {
   }, { capture: true });
   plot.addEventListener('wheel', e => {
     if (!state.map || state.authRequired) return; navigation.cancel(); e.preventDefault();
-    const x = Math.max(0, Math.min(1, (e.clientX - plot.getBoundingClientRect().left) / plot.clientWidth));
+    const bounds = plot.getBoundingClientRect(), plane = timeline.planePoint(e.clientX - bounds.left, e.clientY - bounds.top);
+    const x = Math.max(0, Math.min(1, plane.x / plot.clientWidth));
     const horizontal = Math.abs(e.deltaX) > Math.abs(e.deltaY) || e.shiftKey;
-    changeRange(horizontal ? navigatePan(state.map, state.fromMs, state.toMs, -(e.deltaX || e.deltaY), state.layout.width).range : navigateZoom(state.map, state.fromMs, state.toMs, e.deltaY > 0 ? 0.87 : 1.15, x));
+    const rawDelta = -(e.deltaX || e.deltaY), delta = cameraMode === 'Perspective' ? timeline.planePoint(rawDelta, e.clientY - bounds.top).x - timeline.planePoint(0, e.clientY - bounds.top).x : rawDelta;
+    changeRange(horizontal ? navigatePan(state.map, state.fromMs, state.toMs, delta, state.layout.width).range : navigateZoom(state.map, state.fromMs, state.toMs, e.deltaY > 0 ? 0.87 : 1.15, x));
   }, { passive: false });
   plot.addEventListener('keydown', e => {
     if (!state.map || state.authRequired || state.generationRequired || state.localUnavailable) return;
@@ -1861,15 +1884,104 @@ function openDialog(title, content, { wide = false } = {}) {
 function closeDialog(restore = true) { const dialog = $('.modal-backdrop'); dialog?.dispatchEvent(new Event('dialog-close')); dialog?.remove(); if (restore) dialogOpener?.focus?.(); }
 function formError(form, error) { form.querySelector('.form-error')?.remove(); const node = document.createElement('div'); node.className = 'form-error'; node.setAttribute('role', 'alert'); node.textContent = error.message || String(error); form.append(node); }
 
-function openEditor(record = null, duplicate = false) {
+function submitSearch(value = $('#search').value) {
+  clearTimeout(searchTimer);
+  const control = $('#search'), draft = { ...searchOptions(), search: value };
+  if (!value && draft.searchMode === 'regex') { draft.searchMode = 'any'; delete draft.searchFlags; delete draft.searchMatchMode; delete draft.searchDialect; }
+  try { compileSearch(draft, { fieldTypes: state.fieldTypes }); }
+  catch (error) { control.setAttribute('aria-invalid', 'true'); control.title = error.message; $('.finding-position').textContent = error.message; state.searchPending = false; return; }
+  control.removeAttribute('aria-invalid'); control.removeAttribute('title'); $('.finding-position').textContent = '';
+  state.search = value; state.searchMode = draft.searchMode; rememberSetting('search', searchSettings());
+  state.searchPending = false; return refreshQuery();
+}
+function updateGroupingChoices() {
+  const select = $('#grouping-mode'); if (!select) return;
+  const inventory = state.query?.groupingFields, selected = state.presentation?.grouping?.field || (state.groupBy === 'none' ? 'all' : `/${state.groupBy}`);
+  const fields = inventory?.fields || [], signature = JSON.stringify([fields, selected]);
+  if (select.dataset.inventory !== signature) {
+    select.replaceChildren(new Option('NONE', 'all'));
+    for (const field of fields) select.add(new Option(field.label, field.path));
+    if (selected !== 'all' && !fields.some(field => field.path === selected)) select.add(new Option(`${selected.split('/').at(-1)} (not in loaded data)`, selected));
+    select.dataset.inventory = signature;
+  }
+  select.value = selected;
+  select.title = inventory?.complete === false ? 'Fields found in the loaded query; archive coverage is provisional' : 'Group timeline by a field found in the loaded query';
+  select.disabled = !!state.queryLoading || !state.query;
+}
+function updateToolbarStatus() {
+  const legacy = state.info?.legacy || state.info?.origin?.legacy;
+  const heading = $('.timeline-heading .brand'); if (!heading) return;
+  const compact = legacy?.launch?.version === 2 && !!state.presentation?.compact;
+  app.classList.toggle('compact-shell', compact); app.classList.toggle('workspace-tools-open', workspaceToolsOpen);
+  const tools = $('[data-action="workspace-tools"]'); if (tools) { tools.hidden = !compact; tools.setAttribute('aria-expanded', String(workspaceToolsOpen)); }
+  heading.textContent = legacy?.viewHints?.title || state.info?.sourceName || TITLE;
+  const center = $('.timeline-center');
+  if (state.fromMs !== null && state.map) center.textContent = `${dateLabel(toIso(timelineCenter()), true)} / ${state.timeZone || 'UTC'}`;
+  const power = $('.power-tool'); power.dataset.connected = String(!!state.info && !state.authRequired && !state.localUnavailable && !state.generationRequired);
+  power.title = `User preferences and connection / ${state.authRequired ? 'Authorization required' : state.localUnavailable ? 'Unavailable' : state.info ? isLocal() ? 'Local ready' : 'Server connected' : 'Connecting'}`;
+  const overview = $('[data-action="overview"]'); overview.setAttribute('aria-pressed', String(overviewVisible)); overview.title = overviewVisible ? 'Hide overview' : 'Show overview'; overview.setAttribute('aria-label', overview.title);
+  const camera = $('[data-action="camera"]'); camera.setAttribute('aria-pressed', String(cameraMode === 'Perspective')); camera.title = cameraMode === 'Perspective' ? 'Switch to 2D' : 'Switch to 3D'; camera.setAttribute('aria-label', camera.title);
+  let label = camera.querySelector('span'); if (!label) { label = document.createElement('span'); camera.append(label); } label.textContent = cameraMode === 'Perspective' ? '2D' : '3D';
+  updateGroupingChoices();
+}
+function setCamera(mode, { repaint = true } = {}) {
+  cameraMode = mode === 'Perspective' ? 'Perspective' : 'Orthographic';
+  navigation?.cancel(); timeline?.setCameraMode(cameraMode); bandStack?.setCameraMode(cameraMode);
+  // Precise record edits use the unprojected 2D coordinate system.
+  if (cameraMode === 'Perspective') resetTimeMode();
+  updateToolbarStatus(); if (repaint && state.rows && state.map) render();
+}
+async function resynchronizeReference() {
+  navigation?.cancel();
+  const legacy = state.info?.legacy || state.info?.origin?.legacy, launch = legacy?.launch;
+  const initial = launch?.initialRange || legacy?.loading?.initialRange;
+  if (initial && initial !== 'current_time') {
+    const range = { fromMs: String(toMs(initial.from)), toMs: String(toMs(initial.to)) };
+    Object.assign(state, range); followRange(range); rememberSetting('range', rangeIso()); return refreshQuery({ navigationOnly: true });
+  }
+  const focus = legacy?.viewHints?.focus;
+  const target = launch?.version === 2 || focus?.mode === 'current' ? Date.now() : focus?.timestamp ? toMs(focus.timestamp) : state.info.settings?.referenceTime ? toMs(state.info.settings.referenceTime) : Date.now();
+  const range = calendarRange(target, timeDecimal(state.toMs).minus(state.fromMs));
+  Object.assign(state, range); followRange(range); rememberSetting('range', rangeIso()); return refreshQuery({ focusTime: target, navigationOnly: true });
+}
+function openUserPreferences() {
+  let profile = {}; try { profile = JSON.parse(preferenceStorage()?.getItem('openbexi.display-profile.v1') || '{}'); } catch { /* Invalid browser preference is ignored. */ }
+  const dialog = openDialog('User preferences and connection', `<form id="user-profile"><div class="form-grid"><label class="full">Display name<input name="displayName" maxlength="128" value="${esc(profile.displayName || '')}" autocomplete="name"></label><label class="full">Email<input name="email" type="email" maxlength="254" value="${esc(profile.email || '')}" autocomplete="email"></label></div><p class="subtle">Display details stay in this browser. Active workspace identity: ${esc(state.info.actor?.id || 'Local')}. Saved filters and permissions belong to that identity.</p><div class="modal-actions"><button type="button" id="profile-filters">Saved filters and views</button><button type="button" id="profile-sources">Sources and connection</button><button type="submit" class="primary-button">Save preferences</button></div></form>`);
+  dialog.querySelector('#profile-sources').onclick = () => openSources();
+  dialog.querySelector('#profile-filters').onclick = () => openSettings(true);
+  dialog.querySelector('form').onsubmit = event => { event.preventDefault(); try { const storage = preferenceStorage(); if (!storage) throw new Error('Browser storage is unavailable.'); storage.setItem('openbexi.display-profile.v1', JSON.stringify({ displayName: event.target.elements.displayName.value.trim(), email: event.target.elements.email.value.trim() })); closeDialog(); toast('Display preferences saved.'); } catch (error) { formError(event.target, error); } };
+}
+function applyWorkspaceGeometry(value) {
+  workspaceGeometry = value;
+  if (!value) { for (const property of ['marginTop', 'marginLeft', 'width', 'height', 'minHeight']) app.style[property] = ''; return; }
+  const top = Math.max(0, Math.min(value.top, innerHeight - 360)), left = Math.max(0, Math.min(value.left, innerWidth - 320));
+  Object.assign(app.style, { marginTop: `${top}px`, marginLeft: `${left}px`, width: `${Math.min(Math.max(320, value.width), innerWidth - left)}px`, height: `${Math.min(Math.max(360, value.height), innerHeight - top)}px`, minHeight: '360px' });
+}
+function mountGeometrySettings(form) {
+  const geometry = workspaceGeometry || { top: 0, left: 0, width: innerWidth, height: innerHeight };
+  const fieldset = document.createElement('fieldset'); fieldset.className = 'geometry-fields';
+  fieldset.innerHTML = `<legend>Timeline geometry and camera</legend><div class="form-grid">${['top', 'left', 'width', 'height'].map(key => `<label>${key[0].toUpperCase() + key.slice(1)} / pixels<input name="geometry-${key}" type="number" min="${key === 'width' ? 320 : key === 'height' ? 360 : 0}" max="32768" step="1" value="${geometry[key]}"></label>`).join('')}<label>Camera<select name="camera"><option value="Orthographic" ${cameraMode === 'Orthographic' ? 'selected' : ''}>2D / Orthographic</option><option value="Perspective" ${cameraMode === 'Perspective' ? 'selected' : ''}>3D / Perspective</option></select></label><button type="button" id="reset-geometry">Fit window</button></div>`;
+  fieldset.querySelector('[name="camera"]').setAttribute('aria-label', 'Camera');
+  form.querySelector('.form-grid').after(fieldset);
+  fieldset.querySelector('#reset-geometry').onclick = () => { for (const [key, value] of Object.entries({ top: 0, left: 0, width: innerWidth, height: innerHeight })) form.elements[`geometry-${key}`].value = value; };
+}
+window.addEventListener('resize', () => { if (workspaceGeometry) applyWorkspaceGeometry(workspaceGeometry); });
+
+function openEditor(record = null, duplicate = false, initialStart = null) {
   if (legacyReadOnly()) { toast('Legacy JSON records are read-only.'); return; }
   if (recordRecovery?.pending().length) { recordRecovery.open(); return; }
   const originProvider = state.provider, originGeneration = state.info.generation;
   const originRecovery = recordRecovery;
   let uncertainCommand = null, writeConfirmed = false;
-  const creating = !record || duplicate; const start = record?.start || toIso(state.fromMs);
+  const creating = !record || duplicate; const start = record?.start || initialStart || toIso(state.fromMs);
   const dialog = openDialog(creating ? 'Create record' : 'Edit record', `<form id="record-form"><div class="form-grid"><label class="full">Title<input name="title" required maxlength="500" value="${esc(record?.title || '')}"></label><label>Type<select name="kind"><option value="event" ${record?.kind === 'session' ? '' : 'selected'}>Event</option><option value="session" ${record?.kind === 'session' ? 'selected' : ''}>Session</option></select></label><label>Source<input name="sourceId" required value="${esc(record?.sourceId || state.info.sourceIds?.[0] || 'default')}"></label><label>Start / UTC<input type="datetime-local" name="start" step="0.001" required value="${dateInput(start)}"></label><label class="end-field">End / UTC<input type="datetime-local" name="end" step="0.001" value="${dateInput(record?.end)}"></label><label class="check-label full"><input name="ongoing" type="checkbox" ${record?.kind === 'session' && !record.end ? 'checked' : ''}>Ongoing session</label><label>Color<input name="color" type="color" value="${esc(record?.render?.color || '#397aa6')}"></label><label>Parent session ID<input name="parentSessionId" value="${esc(record?.parentSessionId || '')}" placeholder="Optional UUID"></label><label class="full">Notes<textarea name="notes">${esc(record?.data?.description || '')}</textarea></label></div><div class="modal-actions"><button type="button" id="cancel-edit">Cancel</button><button type="submit" class="primary-button">${icon('check')}${creating ? 'Create' : 'Save changes'}</button></div><p class="subtle">${isLocal() ? 'Local changes stay in memory until JSON is exported.' : 'Changes are saved through the JSON-backed server.'}</p></form>`);
   const form = dialog.querySelector('form'); const fields = form.elements;
+  const iconField = document.createElement('label'); iconField.append(document.createTextNode('Icon'));
+  const iconSelect = document.createElement('select'); iconSelect.name = 'recordIcon'; iconSelect.setAttribute('aria-label', 'Record icon');
+  iconSelect.add(new Option('Model default', ''));
+  const recordIconChoices = ['circle', 'check', 'alert-triangle', 'info', 'flag', 'radio', 'clock', 'file-text', 'star', 'legacy-check-failed', 'legacy-check-aborted', 'legacy-green-flag', 'legacy-yellow-flag', 'legacy-red-flag', 'legacy-orange-flag', 'legacy-volcano', 'legacy-volcano-active', 'legacy-volcano-inactive', 'legacy-volcano-very-active'];
+  for (const value of recordIconChoices) iconSelect.add(new Option(value.replaceAll('-', ' '), value));
+  iconSelect.value = record?.render?.icon || ''; iconField.append(iconSelect); form.querySelector('[name="color"]').closest('label').after(iconField);
   setDateInput(fields.start, start); setDateInput(fields.end, record?.end, record?.end || start);
   originRecovery.warning(form);
   const updateEnd = () => { const session = fields.kind.value === 'session'; fields.ongoing.disabled = !session; fields.end.disabled = !session || fields.ongoing.checked; fields.end.required = session && !fields.ongoing.checked; };
@@ -1882,6 +1994,7 @@ function openEditor(record = null, duplicate = false) {
       if (state.authRequired) throw new Error('Server authorization is required before this draft can be saved.');
       if (state.localUnavailable) throw new Error('The Local source is unavailable. Keep this draft open until its contents are recovered.');
       const payload = { kind: fields.kind.value, title: fields.title.value.trim(), start: inputIso(fields.start.value), end: fields.kind.value === 'event' || fields.ongoing.checked ? null : inputIso(fields.end.value), sourceId: fields.sourceId.value.trim(), parentSessionId: fields.parentSessionId.value.trim() || null, order: record?.order || 0, groupIds: record?.groupIds || [], tags: record?.tags || [], extensions: record?.extensions || {}, schemaId: record?.schemaId || null, schemaVersion: record?.schemaVersion || null, originalStart: record?.originalStart || null, originalEnd: record?.originalEnd || null, render: { ...record?.render, color: fields.color.value }, data: { ...record?.data, description: fields.notes.value } };
+      if (fields.recordIcon.value) payload.render.icon = fields.recordIcon.value; else delete payload.render.icon;
       if (creating) { delete payload.id; delete payload.version; delete payload.createdAt; delete payload.updatedAt; delete payload.deletedAt; }
       if (payload.end && toMs(payload.end) < toMs(payload.start)) throw new Error('End must be at or after start.');
       const command = { generation: originGeneration, type: creating ? 'create' : 'update', recordId: creating ? undefined : record.id, expectedVersion: creating ? undefined : record.version, payload, clientCommandId: crypto.randomUUID() };
@@ -1946,6 +2059,8 @@ function toggleCalendar() {
   state.selected = null; renderDescriptor();
   calendar = openTimelineCalendar({ host: $('.workspace'), center: timelineCenter(), unit: calendarUnit(), updateIcons,
     onClose: closeCalendar, openRange: () => { closeCalendar(false); openRange(); },
+    canCreate: !legacyReadOnly() && !!state.info.capabilities?.recordCrud,
+    onCreate: target => { closeCalendar(false); openEditor(null, false, toIso(target)); },
     onSelect: async target => {
       if (state.authRequired || state.localUnavailable || state.generationRequired) throw new Error('Reconnect the active source before navigating.');
       navigation?.cancel();
@@ -1979,14 +2094,17 @@ function openSettings(filtersOnly = false) {
     command.onclick = () => openConfigurations().catch(showError); dialog.querySelector('.modal-actions').prepend(command); updateIcons();
   }
   const form = dialog.querySelector('form');
+  if (!filtersOnly) mountGeometrySettings(form);
   const filterElement = document.createElement('div'); filterElement.className = 'structured-filters';
   form.querySelector('.form-grid').after(filterElement);
   const initialDraft = { expression: state.filter.expression, definitionVersion: state.definitionVersion, relationshipMode: state.relationshipMode, ...searchOptions() };
   const filterEditor = new FilterEditor(filterElement, { ...initialDraft, fieldTypes: state.fieldTypes, updateIcons });
   let draftFieldTypes = structuredClone(state.fieldTypes), schemaScope, scopeBusy = false;
   const initialGrouping = { grouping: state.presentation?.grouping ?? (state.groupBy === 'none' ? null : { field: `/${state.groupBy}`, direction: 'asc' }), groupOrder: state.groupOrder };
+  const observedGroupingFields = new Set((state.query?.groupingFields?.fields || []).map(field => field.path));
+  const scalarGroupingField = (registry, path) => observedGroupingFields.has(path) || Object.hasOwn(registry, path) && registry[path] !== 'strings';
   const groupingElement = document.createElement('div'); filterElement.after(groupingElement);
-  const groupingEditor = mountFilterGrouping(groupingElement, { ...initialGrouping, definitionVersion: state.definitionVersion, fieldTypes: state.fieldTypes, onChange: () => validateDraft() });
+  const groupingEditor = mountFilterGrouping(groupingElement, { ...initialGrouping, definitionVersion: state.definitionVersion, fieldTypes: state.fieldTypes, groupingFields: state.query?.groupingFields, onChange: () => validateDraft() });
   const actions = form.querySelector('.modal-actions');
   actions.insertAdjacentHTML('afterbegin', '<button type="button" id="filter-preview">Preview</button><button type="button" id="filter-reset">Reset draft</button><button type="button" id="filter-undo">Undo last query change</button><button type="button" id="filter-cancel">Cancel</button>');
   const preview = document.createElement('section'); preview.className = 'filter-preview'; preview.setAttribute('aria-label', 'Filter preview'); preview.hidden = true;
@@ -2003,7 +2121,7 @@ function openSettings(filtersOnly = false) {
       schemaScope?.value();
       const draft = filterEditor.value(form.elements.search.value); groupingEditor.setVersion(draft.definitionVersion);
       const grouping = groupingEditor.value().grouping;
-      if (draft.definitionVersion === 2 && grouping && (!Object.hasOwn(draftFieldTypes, grouping.field) || draftFieldTypes[grouping.field] === 'strings')) throw new Error('Choose a declared scalar grouping field or select its data schema scope.');
+      if (draft.definitionVersion === 2 && grouping && !scalarGroupingField(draftFieldTypes, grouping.field)) throw new Error('Choose a scalar field observed in the loaded data or select its data schema scope.');
       form.querySelector('.form-error')?.remove(); submit.disabled = false; previewButton.disabled = false;
     }
     catch (error) { filterEditor.error(error); submit.disabled = true; previewButton.disabled = true; }
@@ -2082,7 +2200,7 @@ function openSettings(filtersOnly = false) {
           const draft = filterEditor.value(form.elements.search.value);
           compileExpression(draft.expression, { fieldTypes: registry }); compileSearch(draft, { fieldTypes: registry });
           const grouping = groupingEditor.value().grouping;
-          if (draft.definitionVersion === 2 && grouping && (!Object.hasOwn(registry, grouping.field) || registry[grouping.field] === 'strings')) throw new Error('This schema scope excludes the current grouping field. Choose All records before changing scope.');
+          if (draft.definitionVersion === 2 && grouping && !scalarGroupingField(registry, grouping.field)) throw new Error('This schema scope excludes the current grouping field, and it is absent from the loaded data. Choose All records before changing scope.');
         }
         for (const key of Object.keys(draftFieldTypes)) delete draftFieldTypes[key]; Object.assign(draftFieldTypes, registry);
         groupingEditor.setFieldTypes(registry); filterEditor.setFieldTypes(registry, { readDraft: !reset });
@@ -2103,6 +2221,8 @@ function openSettings(filtersOnly = false) {
       lastAppliedQueryState = { provider, generation, value: captureQueryState() };
       const previous = currentDefinition(), previousSearch = JSON.stringify(searchSettings());
       if (!filtersOnly) {
+        applyWorkspaceGeometry(Object.fromEntries(['top', 'left', 'width', 'height'].map(key => [key, Number(form.elements[`geometry-${key}`].value)])));
+        setCamera(form.elements.camera.value, { repaint: false });
         for (const key of ['theme', 'scaleMode', 'unit', 'groupBy']) state[key] = form.elements[key].value;
         for (const key of ['ratio', 'bins', 'rowHeight']) state[key] = Number(form.elements[key].value);
         const next = currentDefinition(); for (const key of Object.keys(next)) if (JSON.stringify(previous[key]) !== JSON.stringify(next[key])) rememberSetting(key, next[key]);
@@ -2254,11 +2374,15 @@ async function applyPaths(selected) {
   }
 }
 function setGrouping(mode) {
-  if (!['all', 'namespace'].includes(mode) || !state.info || state.authRequired || state.localUnavailable) return;
-  navigation?.cancel(); state.groupBy = 'none'; state.presentation = groupedPresentation(state.presentation, mode);
+  if (!state.info || state.authRequired || state.localUnavailable || state.queryLoading) return;
+  const field = state.query?.groupingFields?.fields?.find(item => item.path === mode);
+  if (mode !== 'all' && !field) return;
+  navigation?.cancel(); state.groupBy = 'none'; state.presentation = { version: 1, ...state.presentation };
+  if (mode === 'all') delete state.presentation.grouping;
+  else state.presentation.grouping = { field: mode, direction: 'asc', recordPolicy: 'parent-family', order: 'encounter' };
   rememberSetting('groupBy', state.groupBy); rememberSetting('presentation', state.presentation);
   $('#grouping-mode').value = mode;
-  refreshLayout();
+  return refreshLayout();
 }
 function addPathChooser(dialog) {
   const server = dialog.querySelector('#server-form').closest('section');
@@ -2287,7 +2411,7 @@ function showLegacyCoverage(status = state.info?.legacy?.coverage) {
   if (band.hidden) return;
   band.querySelector('span').textContent = status.complete
     ? 'Archive index ready. Refresh this view to include verified earlier sessions and automatic scaling.'
-    : `Real source / ${status.indexedFiles ?? 0} files indexed. ${status.state === 'failed' || status.rejectedFiles ? 'Some archive data could not be verified.' : 'Checking older sessions in the background.'} Coverage and counts are provisional; automatic scaling is pending.`;
+    : `Real source / ${status.indexedFiles ?? 0} files indexed. ${status.state === 'failed' || status.rejectedFiles ? 'Some archive data could not be verified.' : 'Checking older sessions in the background.'} Coverage and counts are provisional${state.scaleMode === 'adaptive' ? '; automatic scaling is pending' : ''}.`;
   const retry = band.querySelector('button'); retry.hidden = !status.complete; retry.disabled = false;
   retry.title = 'Refresh verified view'; retry.setAttribute('aria-label', 'Refresh verified view');
   retry.onclick = () => { void refreshQuery(); };
@@ -2451,6 +2575,7 @@ Object.defineProperty(window, '__timelineDebug', { get: () => Object.freeze({
   loadedCount: state.rows?.loadedCount, detailTotal: state.layout?.detailTotal, overviewTotal: state.overview?.total,
   pageCapacity: state.layout?.pageCapacity, layoutWidth: state.layout?.width, overviewMatched: state.overview?.matched,
   selectedId: state.selected?.id, search: state.search, scaleMode: state.scaleMode, dirty: state.dirty, view: state.view,
+  cameraMode, cameraType: timeline?.camera?.type, overviewVisible,
   scaleRatio: state.map?.ratio, scaleLimit: state.ratio, scaleStrategy: state.scaleStrategy,
   modelId: state.info?.settings?.modelId, modelVersion: state.info?.settings?.modelVersion,
   theme: state.theme, rowHeight: state.rowHeight, effectiveRowHeight: state.rows?.rowHeight || state.layout?.rowHeight,
@@ -2470,7 +2595,14 @@ Object.defineProperty(window, '__timelineDebug', { get: () => Object.freeze({
     shell();
     const target = await startupTarget();
     if (target.mode !== 'standalone') await startConfiguredServer(target);
-    else { await initialize(createLocalProvider(initialSnapshot), initialSnapshot); await discoverLocalPaths(); }
+    else {
+      const requested = new URLSearchParams(location.search).getAll('dataset');
+      const entry = requested.length === 1 ? testDatasets.find(dataset => dataset.id === requested[0]) : undefined;
+      const snapshot = entry?.snapshot ?? initialSnapshot;
+      await initialize(createLocalProvider(snapshot), snapshot);
+      if (requested.length && !entry) toast('Unknown or ambiguous demo dataset. Opening the default dataset.');
+      await discoverLocalPaths();
+    }
     if (state.info && location.hash.startsWith('#view=')) openHelp(location.hash);
   }
   catch (error) { console.error(error); finishBoot(); app.innerHTML = `<section class="boot-status"><h1>${TITLE}</h1><p role="alert">${esc(error.message)}</p></section>`; }

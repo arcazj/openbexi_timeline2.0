@@ -51,7 +51,7 @@ test('worker wrapper uses the same complete source core, metadata, models, CRUD 
   const { provider, worker } = fixture();
   try {
     const status = await provider.initialize();
-    assert.equal(status.execution.mode, 'worker'); assert.equal(status.recordCount, 48);
+    assert.equal(status.execution.mode, 'worker'); assert.equal(status.recordCount, snapshot.records.length);
     assert.equal(provider.identity, status.identity);
     const models = await provider.listModels();
     assert.equal(models.items.length, snapshot.models.length);
@@ -64,7 +64,7 @@ test('worker wrapper uses the same complete source core, metadata, models, CRUD 
     assert.equal((await provider.getModel(createdModel.model.id)).model.name, 'Worker model');
     assert.equal((await provider.validateModel(models.items[0].versions[0].definition)).valid, true);
     const exported = await provider.exportSnapshot();
-    assert.equal(exported.records.length, 49); assert.equal(exported.models.length, models.items.length + 1);
+    assert.equal(exported.records.length, snapshot.records.length + 1); assert.equal(exported.models.length, models.items.length + 1);
     assert.equal(exported.manifest.revision, 3);
     assert.equal(typeof worker().sent.find(message => message.method === 'initialize').args[0], 'string');
   } finally { provider.dispose(); }
@@ -135,7 +135,7 @@ test('a timed-out dispatched write stays unknown, original outcome remains query
     await assert.rejects(provider.executeCommand({ type: 'create', generation: status.generation, clientCommandId: 'uncertain', payload: { title: 'Exactly once' } }, { timeout: 10 }), { code: 'write_outcome_unknown' });
     assert.equal((await provider.getCommandOutcome('uncertain')).state, 'committed');
     worker().flush();
-    assert.equal((await provider.getStatus()).recordCount, 49);
+    assert.equal((await provider.getStatus()).recordCount, snapshot.records.length + 1);
     assert.equal(worker().sent.filter(message => message.method === 'executeCommand').length, 1);
   } finally { provider.dispose(); }
 });
@@ -148,7 +148,10 @@ test('late successful aborted query allocation is released instead of leaking qu
     const controller = new AbortController();
     const operation = provider.createQuery({ domain: snapshot.settings.overview }, { signal: controller.signal });
     const rejection = assert.rejects(operation, { name: 'AbortError' });
-    await tick(); controller.abort();
+    // Wait for allocation, not one timer turn: larger snapshots yield during preparation.
+    for (let i = 0; i < 500 && !worker().held.length; i++) await tick();
+    assert.equal(worker().held.length, 1);
+    controller.abort();
     assert.equal(worker().core.queries.size, 1);
     worker().flush(); await tick();
     await rejection;
@@ -198,7 +201,7 @@ test('allocation cleanup waits are bounded by the RPC deadline without reopening
     await tick(); controller.abort();
     assert.equal((await result).code, 'local_allocation_pending');
     await assert.rejects(provider.createQuery({ domain: snapshot.settings.overview }), { code: 'local_allocation_pending' });
-    assert.equal((await provider.getStatus()).recordCount, 48, 'ordinary reads remain available');
+    assert.equal((await provider.getStatus()).recordCount, snapshot.records.length, 'ordinary reads remain available');
     worker().hold.delete('createQuery'); worker().flush(); await tick();
     await assert.rejects(provider.createQuery({ domain: snapshot.settings.overview }), { code: 'local_allocation_pending' });
     worker().hold.delete('releaseQuery'); worker().flush(); await tick();
@@ -245,7 +248,7 @@ test('negative cleanup acknowledgement reports a terminal failure instead of pro
     assert.match(error.message, /Export unsaved changes/);
     await assert.rejects(provider.createQuery({ domain: snapshot.settings.overview }), { code: 'local_allocation_cleanup_failed' });
     assert.equal((await provider.getStatus()).execution.allocationCleanup, 'failed');
-    assert.equal((await provider.exportSnapshot()).records.length, 48, 'unsaved source remains accessible for explicit export');
+    assert.equal((await provider.exportSnapshot()).records.length, snapshot.records.length, 'unsaved source remains accessible for explicit export');
   } finally { provider.dispose(); }
 });
 
@@ -323,6 +326,6 @@ test('aborted pending work consumes a bounded slot until its worker response is 
     assert.equal(provider.pending.size, 64);
     worker().hold.clear(); worker().flush(); await tick();
     assert.equal(provider.pending.size, 0);
-    assert.equal((await provider.getStatus()).recordCount, 48);
+    assert.equal((await provider.getStatus()).recordCount, snapshot.records.length);
   } finally { provider.dispose(); }
 });

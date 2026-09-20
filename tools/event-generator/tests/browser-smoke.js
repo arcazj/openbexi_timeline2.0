@@ -121,6 +121,40 @@ try {
   assert.equal(await evaluate('document.querySelector("#errors").hidden'), true, 'Archive download succeeds');
   assert.deepEqual(await evaluate('window.__smokeBlobs.at(-1).arrayBuffer().then(buffer => [...new Uint8Array(buffer).slice(0,4)])'), [80, 75, 3, 4], 'Archive contains a ZIP local-file header');
 
+  assert.deepEqual(await evaluate('[...document.querySelectorAll("[data-step]")].map(button => button.textContent)'), ['Environment', 'Data', 'Model', 'Filter', 'Review / save']);
+  assert.equal(await evaluate('document.querySelector("#advanced-generation").open'), false, 'Advanced generation starts collapsed');
+  await evaluate(`(() => {
+    document.querySelector('[data-step="filter"]').click();
+    document.querySelector('#environment-grouping').value = 'status';
+    document.querySelector('#environment-initial').value = 'generated';
+    document.querySelector('[data-step="review"]').click();
+    document.querySelector('#review-environment').click();
+  })()`);
+  await waitFor('document.querySelector("#environment-review").textContent.includes("yaml/timeline.yml")');
+  assert.match(await evaluate('document.querySelector("#environment-review").textContent'), /"group_by": "status"/);
+  await evaluate('document.querySelector("#save-environment").click()');
+  await waitFor('!document.querySelector("#save-environment").disabled');
+  assert.equal(await evaluate('document.querySelector("#errors").hidden'), true, 'Complete environment export succeeds');
+  const environmentPaths = await evaluate(`window.__smokeBlobs.at(-1).arrayBuffer().then(buffer => {
+    const bytes = new Uint8Array(buffer), view = new DataView(buffer), paths = [];
+    let offset = 0;
+    while (view.getUint32(offset, true) === 0x04034b50) {
+      const size = view.getUint32(offset + 18, true), nameSize = view.getUint16(offset + 26, true);
+      paths.push(new TextDecoder().decode(bytes.slice(offset + 30, offset + 30 + nameSize)));
+      offset += 30 + nameSize + size;
+    }
+    return paths;
+  })`);
+  for (const directory of ['yaml/', 'models/', 'filters/', 'data/']) assert.ok(environmentPaths.some(path => path.startsWith(directory)), `Environment ZIP contains ${directory}`);
+  await evaluate(`(() => {
+    document.querySelector('#environment-initial').value = 'fixed';
+    document.querySelector('#environment-from').value = 'bad';
+    document.querySelector('#review-environment').click();
+  })()`);
+  await waitFor('!document.querySelector("#errors").hidden');
+  assert.match(await evaluate('document.querySelector("#errors").textContent'), /bounds/);
+  await evaluate('document.querySelector("#environment-initial").value = "current_time"');
+
   await evaluate(`(() => {
     document.querySelector('#config-pastCount').value = '-1';
     document.querySelector('#generate').click();
@@ -257,7 +291,7 @@ try {
   await evaluate('document.querySelector("#reset-config").click()');
   assert.deepEqual(await downloadJSON('#save-config'), reset, 'Reset restores the complete original configuration after date edits');
   assert.deepEqual(exceptions, [], 'No unhandled browser exceptions');
-  console.log('Browser smoke passed: tree controls, worker generation, repeatability, validation, legacy mode, downloads, calendar day toggles, reference selection, disconnected dates, full-day boundaries, empty selection, Shift ranges and reset.');
+  console.log('Browser smoke passed: environment workflow and linked ZIP, model/filter review and validation, tree controls, worker generation, repeatability, legacy mode, downloads, calendar day toggles, reference selection, disconnected dates, full-day boundaries, empty selection, Shift ranges and reset.');
 } finally {
   socket?.close();
   if (browser.exitCode === null) {

@@ -3,6 +3,7 @@ import { measureText, wrapLabel } from './text-metrics.js';
 import { compareGroups, groupStyle, groupValue, recordLabel, resolvePresentation, resolveRecordStyle, isHazardIcon } from './presentation.js';
 import { normalizeStringOrder } from '../data/string-order.js';
 import { collapsedGroupKeys, paginateGroupRows } from './group-pagination.js';
+import { encounterComparator, familyRoots } from '../data/grouping-fields.js';
 
 const failure = (code, message) => Object.assign(new Error(message), { code, status: 422 });
 const compareRecords = (a, b) => toMs(a.start) - toMs(b.start) || ((a.end === null ? Infinity : toMs(a.end)) - (b.end === null ? Infinity : toMs(b.end))) || (a.id < b.id ? -1 : a.id > b.id ? 1 : 0);
@@ -21,12 +22,16 @@ export function buildPresentationLayout(records, rawMap, input, matches, overlap
   if (!right.gt(left) || left.lt(domainStart) || right.gt(domainEnd)) throw failure('invalid_layout', 'Detail range must be inside the map');
   const presentation = resolvePresentation(input);
   const bandSources = presentation.bandLayout?.find(band => band.role === 'primary')?.sourceIds;
-  const eligible = records.filter(record => (!bandSources || bandSources.includes(record.sourceId)) && overlaps(record, from, to)).sort(compareRecords);
+  const admitted = records.filter(record => !bandSources || bandSources.includes(record.sourceId));
+  const roots = presentation.grouping.recordPolicy === 'parent-family' ? familyRoots(admitted) : null;
+  const encounter = encounterComparator(presentation.sourceStyles.map(source => source.sourceId));
+  const eligible = admitted.filter(record => overlaps(record, from, to)).sort(presentation.grouping.order === 'encounter'
+    ? (a, b) => encounter(roots?.get(a.id) ?? a, roots?.get(b.id) ?? b) || compareRecords(a, b) : compareRecords);
   const groups = new Map(), items = [], rows = [], enclosures = [];
-  let rowHeight = presentation.compact ? 21 : requestedHeight;
+  let rowHeight = presentation.compact ? presentation.durationLabels === 'after' ? 16 : 21 : requestedHeight;
   const project = value => projectTime(map, timeDecimal(value).clamp(domainStart, domainEnd), from, to, width);
   for (const record of eligible) {
-    const group = groupValue(record, presentation);
+    const group = groupValue(roots?.get(record.id) ?? record, presentation);
     if (!groups.has(group.key)) groups.set(group.key, { ...group, items: [], recordCount: 0, matchCount: 0, collapsed: collapsed.has(group.key) });
     groups.get(group.key).recordCount++;
     if (matches.has(record.id)) groups.get(group.key).matchCount++;
@@ -53,6 +58,10 @@ export function buildPresentationLayout(records, rawMap, input, matches, overlap
     }
     const labelLineHeight = Math.ceil(style.fontSize * 1.35), labelOffsetY = presentation.compact ? 2 : 6;
     let geometryOffsetY = presentation.compact ? point ? 2 + label.labelLines.length * labelLineHeight / 2 : 2 + label.labelLines.length * labelLineHeight + style.barHeight / 2 : point ? 6 + Math.max(16, label.labelLines.length * labelLineHeight) / 2 : 8 + label.labelLines.length * labelLineHeight + style.barHeight / 2;
+    if (!point && presentation.durationLabels === 'after') {
+      labelX = Math.max(6, xEnd + 5);
+      geometryOffsetY = labelOffsetY + Math.max(label.labelLines.length * labelLineHeight, style.barHeight, 16) / 2;
+    }
     const inside = !point && !style.icon && presentation.durationLabels === 'inside-when-fitting' && labelX >= xStart && labelX + label.labelWidth + 4 <= Math.min(width, xEnd);
     if (inside) { style.barHeight = Math.max(style.barHeight, label.labelLines.length * labelLineHeight + 2); labelX += 2; geometryOffsetY = labelOffsetY + label.labelLines.length * labelLineHeight / 2; }
     let neededHeight = Math.max(labelOffsetY + label.labelLines.length * labelLineHeight + 6, geometryOffsetY + (point ? Math.max(style.pointRadius, 8) : Math.max(style.barHeight / 2, style.icon ? 8 : 0)) + 6);
@@ -78,13 +87,16 @@ export function buildPresentationLayout(records, rawMap, input, matches, overlap
   }
   if (rowHeight > 192 || rowHeight > availableHeight) throw failure('row_height_limit', 'Resolved labels and graphics do not fit the available row height');
   let offset = 0;
-  for (const group of [...groups.values()].sort((a, b) => compareGroups(a, b, presentation.grouping.direction, groupOrder))) {
+  const orderedGroups = [...groups.values()];
+  if (presentation.grouping.order !== 'encounter') orderedGroups.sort((a, b) => compareGroups(a, b, presentation.grouping.direction, groupOrder));
+  for (const group of orderedGroups) {
     if (presentation.grouping.field) {
       rows.push({ row: offset++, type: 'group', name: group.name, key: group.key, style: groupStyle(group, presentation), ...(input.definitionVersion === 2 ? { collapsed: group.collapsed, recordCount: group.recordCount, matchCount: group.matchCount } : {}) });
     }
     if (group.collapsed) continue;
     const groupIds = new Set(group.items.map(item => item.record.id));
     if (presentation.nesting.enabled && group.items.some(item => groupIds.has(item.parentId))) {
+      const overlay = presentation.nesting.layout === 'overlay', groupOffset = offset, firstItem = items.length;
       const byId = new Map(group.items.map(item => [item.record.id, item]));
       const children = new Map(group.items.map(item => [item.record.id, []]));
       const roots = [];
@@ -102,12 +114,35 @@ export function buildPresentationLayout(records, rawMap, input, matches, overlap
           const extent = visit(child, [...ancestors, item.record.id]);
           xMin = Math.min(xMin, extent.xMin); xMax = Math.max(xMax, extent.xMax);
         }
-        if (children.get(item.record.id).length) enclosures.push({ parentId: item.record.id, title: item.record.title, startRow, endRow: offset, xStart: Math.max(0, xMin - 4), xEnd: Math.min(width, xMax + 4), color: presentation.nesting.color, opacity: presentation.nesting.opacity, depth: ancestors.length });
+        if (!overlay && children.get(item.record.id).length) enclosures.push({ parentId: item.record.id, title: item.record.title, startRow, endRow: offset, xStart: Math.max(0, xMin - 4), xEnd: Math.min(width, xMax + 4), color: presentation.nesting.color, opacity: presentation.nesting.opacity, depth: ancestors.length });
         return { xMin, xMax };
       };
       roots.sort((a, b) => compareRecords(a.record, b.record)).forEach(root => visit(root, []));
       if (visited !== group.items.length) throw failure('invalid_parent', 'Parent nesting contains a cycle');
+      if (overlay) {
+        const representatives = new Map(), units = [], unitById = new Map(), ordered = items.slice(firstItem);
+        for (const item of ordered) {
+          const parent = byId.get(item.parentId), record = item.record;
+          const same = parent && children.get(parent.record.id).length === 1
+            && ['start', 'end', 'kind', 'title', 'sourceId'].every(field => record[field] === parent.record[field])
+            && ['fontSize', 'fontWeight', 'fontStyle'].every(field => record.render?.[field] === parent.record.render?.[field]);
+          const representative = same ? representatives.get(parent.record.id) : record.id;
+          representatives.set(record.id, representative);
+          if (!unitById.has(representative)) {
+            unitById.set(representative, units.length);
+            units.push({ footprintStart: item.footprintStart, footprintEnd: item.footprintEnd });
+          }
+          const unit = units[unitById.get(representative)];
+          unit.footprintStart = Math.min(unit.footprintStart, item.footprintStart);
+          unit.footprintEnd = Math.max(unit.footprintEnd, item.footprintEnd);
+        }
+        const packed = packFootprints(units);
+        for (const item of ordered) item.row = groupOffset + packed.rows[unitById.get(representatives.get(item.record.id))];
+        offset = groupOffset + packed.count;
+      }
     } else {
+      // Encounter order selects group headers; row packing remains chronological.
+      group.items.sort((a, b) => compareRecords(a.record, b.record));
       const packed = packFootprints(group.items);
       group.items.forEach((item, index) => { item.row = offset + packed.rows[index]; items.push(item); });
       offset += packed.count;

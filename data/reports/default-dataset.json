@@ -3,8 +3,8 @@
   "dateReview": [],
   "diagnostics": [],
   "domain": {
-    "from": "2026-09-12T07:00:00.000Z",
-    "to": "2026-09-12T18:00:00.000Z"
+    "from": "2026-08-13T06:00:00.000Z",
+    "to": "2026-10-12T20:10:00.000Z"
   },
   "droppedRecords": 0,
   "generatedTitles": [],
@@ -12,9 +12,17 @@
   "inputFormat": "json",
   "inputRecords": 48,
   "inputSha256": "66ea0b2767bc34753cc39258398e434a4802a67105167cd23d69598215011ab2",
-  "outputRecords": 48,
+  "outputRecords": 1008,
   "referenceStatus": "unapproved-baseline",
   "sourceAssignment": "default-dataset",
+  "syntheticExpansion": {
+    "addedRecords": 960,
+    "daysAfter": 30,
+    "daysBefore": 30,
+    "originalRecordsUnchanged": true,
+    "recipe": "operations-expansion-v1",
+    "recordsPerDay": 16
+  },
   "unbundledOriginalAssets": [],
   "uncertainRecords": 0
 }

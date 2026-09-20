@@ -6,6 +6,59 @@ const editor = new TreeSJEditor($('#config-tree'), DEFAULT_CONFIG);
 let worker;
 let generated;
 
+function syncQuickData() {
+  const config = editor.getValue();
+  $('#quick-namespace').value = config.namespace;
+  $('#quick-past').value = config.pastCount;
+  $('#quick-future').value = config.futureCount;
+}
+syncQuickData();
+for (const [id, key] of [['quick-namespace', 'namespace'], ['quick-past', 'pastCount'], ['quick-future', 'futureCount']]) {
+  $(`#${id}`).addEventListener('change', () => {
+    try { editor.setValue({ ...editor.getValue(), [key]: key === 'namespace' ? $(`#${id}`).value : Number($(`#${id}`).value) }); clearError(); }
+    catch (error) { showError(error); }
+  });
+}
+$('#config-tree').addEventListener('change', () => { try { syncQuickData(); } catch { /* authored validation is shown on generate */ } });
+for (const button of document.querySelectorAll('[data-step]')) button.addEventListener('click', () => {
+  for (const control of document.querySelectorAll('[data-step]')) control.setAttribute('aria-pressed', String(control === button));
+  for (const panel of document.querySelectorAll('[data-panel]')) panel.hidden = panel.dataset.panel !== button.dataset.step;
+});
+$('#environment-initial').addEventListener('change', () => { $('#environment-fixed').hidden = $('#environment-initial').value !== 'fixed'; });
+
+function environmentOptions() {
+  return { name: $('#environment-name').value.trim(), theme: $('#environment-theme').value, camera: $('#environment-camera').value,
+    compact: $('#environment-compact').checked, overviewVisible: $('#environment-overview').checked,
+    groupBy: $('#environment-grouping').value, search: $('#environment-search').value,
+    initialRange: $('#environment-initial').value === 'fixed' ? { from: $('#environment-from').value.trim(), to: $('#environment-to').value.trim() } : $('#environment-initial').value };
+}
+
+function updateGroupingOptions(events) {
+  const selected = $('#environment-grouping').value, fields = new Set();
+  const inspect = (data, prefix = '', depth = 0) => {
+    if (!data || typeof data !== 'object' || Array.isArray(data) || depth > 7 || fields.size >= 128) return;
+    for (const [key, value] of Object.entries(data)) {
+      if (!/^[A-Za-z_$][\w$]*$/.test(key) || ['title', 'description', 'text', 'analyze', 'sortByValue'].includes(key)) continue;
+      const path = prefix ? `${prefix}.${key}` : key;
+      if (value !== null && typeof value === 'object') inspect(value, path, depth + 1);
+      else if (path.length <= 128) fields.add(path);
+      if (fields.size >= 128) break;
+    }
+  };
+  for (const event of events) inspect(event.data);
+  const select = $('#environment-grouping');
+  select.replaceChildren(new Option('NONE', 'none'));
+  for (const field of [...fields].sort()) select.add(new Option(field, field));
+  if (selected !== 'none' && !fields.has(selected)) select.add(new Option(`${selected} (unavailable)`, selected));
+  select.value = selected;
+}
+
+async function environmentBundle() {
+  if (!generated) throw new Error('Generate data before reviewing or saving an environment');
+  const {createEnvironment} = await import('../environment.js');
+  return createEnvironment(generated, environmentOptions());
+}
+
 function showError(error) {
   const errors = error.errors?.length ? error.errors : [error.message || String(error)];
   const box = $('#errors');
@@ -50,6 +103,10 @@ const utc = value => {
 function render(result) {
   generated = result;
   const events = result.timeline.events;
+  syncQuickData();
+  updateGroupingOptions(events);
+  $('#save-environment').disabled = false;
+  $('#environment-review').textContent = 'Data generated. Select Validate and review environment to inspect the linked files.';
   $('#empty-preview').hidden = true;
   $('#preview-content').hidden = false;
   $('#result-summary').textContent = `${events.length.toLocaleString()} events generated · ${result.config.mode} · namespace ${result.config.namespace}`;
@@ -142,7 +199,7 @@ $('#generator-form').addEventListener('submit', event => {
   } catch (error) { showError(error); busy(false, 'Generation failed'); }
 });
 $('#cancel').addEventListener('click', () => { worker?.terminate(); worker = undefined; busy(false, 'Generation cancelled'); });
-$('#reset-config').addEventListener('click', () => { editor.setValue(DEFAULT_CONFIG); clearError(); });
+$('#reset-config').addEventListener('click', () => { editor.setValue(DEFAULT_CONFIG); syncQuickData(); clearError(); });
 $('#save-config').addEventListener('click', () => {
   try { download('timeline-generator.config.json', json(normalizeConfig(editor.getValue()))); clearError(); } catch (error) { showError(error); }
 });
@@ -153,6 +210,7 @@ $('#config-file').addEventListener('change', async event => {
   try {
     if (file.size > 1048576) throw new Error('Configuration files must be smaller than 1 MB.');
     editor.setValue(normalizeConfig(JSON.parse(await file.text())));
+    syncQuickData();
     clearError();
     $('#generation-status').textContent = `Loaded ${file.name}`;
   } catch (error) { showError(error); }
@@ -169,4 +227,24 @@ $('#download-all').addEventListener('click', async () => {
     download('timeline-data.zip', await createZip(files), 'application/zip');
   } catch (error) { showError(error); }
   finally { button.disabled = false; }
+});
+async function downloadEnvironment(event) {
+  const button = event.currentTarget;
+  button.disabled = true;
+  try {
+    const [{createZip}, environment] = await Promise.all([import('../archive.js'), environmentBundle()]);
+    download(`${environmentOptions().name}-environment.zip`, createZip(environment.files), 'application/zip');
+    $('#generation-status').textContent = `Environment exported. Extract into a new folder, then launch its ${environment.activation.path} profile.`;
+  } catch (error) { showError(error); }
+  finally { button.disabled = false; }
+}
+$('#download-environment').addEventListener('click', downloadEnvironment);
+$('#save-environment').addEventListener('click', downloadEnvironment);
+$('#review-environment').addEventListener('click', async () => {
+  try {
+    const environment = await environmentBundle();
+    $('#environment-review').textContent = environment.files.filter(file => /^(?:yaml|models|filters)\//.test(file.path))
+      .map(file => `${file.path}\n${json(file.document)}`).join('\n');
+    clearError();
+  } catch (error) { showError(error); }
 });

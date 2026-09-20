@@ -20,22 +20,21 @@ test('seed controls dates, descriptors, colors, titles and valid version-4 UUIDs
 });
 
 test('hardcoded dates and activities match the repository Java output fixture', async () => {
-  // The historical fixture contains Java-writer trailing commas, not valid JSON.
-  const text = await readFile(new URL('../../../tests/data/SOURCES1/2024/03/18/events.json', import.meta.url), 'utf8');
-  const fixture = JSON.parse(text.replace(/,\s*([}\]])/g, '$1'));
+  // Compact expectation vectors were extracted from the real SOURCE1 archive;
+  // source path and SHA-256 are retained in this portable fixture.
+  const fixture = JSON.parse(await readFile(new URL('./fixtures/source1-legacy-layout.json', import.meta.url), 'utf8'));
   const actual = generateLegacySimple({
-    ...configuration, referenceDate: fixture.events[0].start, eventCount: fixture.events.length,
+    ...configuration, referenceDate: fixture.referenceDate, eventCount: fixture.eventCount,
   }, createRandom('fixture')).timeline;
-  const fixedIndices = [0, 1, 3, 4, 5, 6, 7, 8, 10, 12, 20, 21, 22, 23, 24,
-    25, 26, 27, 28, 30, 51, 52, 53, 54, 55, 56, 57, 58, 59, 61, 62, 63, 64, 65, 66, 67, 68, 69, 70, 71];
   assert.equal(actual.dateTimeFormat, fixture.dateTimeFormat);
-  assert.equal(actual.events.length, fixture.events.length);
-  for (const index of fixedIndices.filter(index => index < fixture.events.length)) {
+  assert.equal(actual.events.length, fixture.eventCount);
+  for (const expected of fixture.expected) {
+    const index = expected.index;
     for (const field of ['namespace', 'original_start', 'start', 'original_end', 'end']) {
-      assert.equal(actual.events[index][field], fixture.events[index][field], `event ${index}: ${field}`);
+      assert.equal(actual.events[index][field], expected.fields[field], `event ${index}: ${field}`);
     }
-    assert.equal(actual.events[index].activities.length, fixture.events[index].activities.length);
-    assert.equal(actual.events[index].data.tolerance, fixture.events[index].data.tolerance);
+    assert.equal(actual.events[index].activities.length, expected.activityCount);
+    assert.equal(actual.events[index].data.tolerance ?? null, expected.tolerance);
     assert.equal(actual.events[index].data.type, 'type1');
     assert.equal(actual.events[index].data.system, 'system1');
   }

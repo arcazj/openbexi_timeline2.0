@@ -28,7 +28,7 @@ async function open(page) {
   return page.locator('#settings-form');
 }
 
-test('explicit schema scope enables namespace grouping, rejects incompatible removal and supports undo', async ({ page }, info) => {
+test('observed namespace grouping survives schema scope removal and supports undo', async ({ page }, info) => {
   const form = await open(page);
   await expect(form.getByRole('combobox', { name: 'Group by field' })).toBeDisabled();
   await form.locator('[name=definitionVersion]').selectOption('2');
@@ -39,8 +39,9 @@ test('explicit schema scope enables namespace grouping, rejects incompatible rem
   await form.getByRole('combobox', { name: 'Group text order' }).selectOption('natural');
   await form.getByRole('checkbox', { name: 'Case-sensitive groups' }).uncheck();
   await form.getByRole('checkbox', { name: 'Namespace records / v1' }).click();
-  await expect(form.locator('.filter-schema-scope [role=status]')).toContainText('excludes the current grouping field');
-  await expect(form.getByRole('checkbox', { name: 'Namespace records / v1' })).toBeChecked();
+  await expect(form.locator('.filter-schema-scope [role=status]')).toContainText('All record schemas. Built-in fields only.');
+  await expect(form.getByRole('checkbox', { name: 'Namespace records / v1' })).not.toBeChecked();
+  await expect(form.getByRole('combobox', { name: 'Group by field' })).toHaveValue('/data/namespace');
   await form.locator('[type=submit]').click(); await expect(form).toHaveCount(0); await ready(page);
   await expect(page.locator('.group-name').first()).toHaveText('SOURCE2');
   const focus = await page.evaluate(() => ({ fromMs: window.__timelineDebug.fromMs, toMs: window.__timelineDebug.toMs }));

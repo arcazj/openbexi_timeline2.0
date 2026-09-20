@@ -16,19 +16,33 @@ if sys.version_info[:2] < (3, 9):
     raise SystemExit(
         "OpenBEXI requires Python >=3.9.\n"
         f"Current interpreter: {sys.executable} (Python {'.'.join(map(str, sys.version_info[:3]))}).\n"
-        "From the project root, run: uv sync --locked --python 3.14\n"
+        "Use an installed Python 3.9+ to run scripts/start.py --setup-only.\n"
         f"Select the project interpreter in your IDE: {interpreter}\n"
         "In IntelliJ IDEA, set Run > Edit Configurations > your OpenBEXI configuration > "
         "Use specified interpreter to this path."
     )
 
-import uvicorn  # noqa: E402
-
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
-from server.app.main import create_app  # noqa: E402
-from server.app.models.domain import DomainError  # noqa: E402
-from server.app.services.launch_configuration import load_launch_configuration  # noqa: E402
+try:
+    import uvicorn  # noqa: E402
+
+    from server.app.main import create_app  # noqa: E402
+    from server.app.models.domain import DomainError  # noqa: E402
+    from server.app.services.launch_configuration import load_launch_configuration  # noqa: E402
+except ModuleNotFoundError as error:
+    if __name__ != "__main__" or (error.name or "").split(".")[0] == "server":
+        raise
+    root = Path(__file__).resolve().parents[1]
+    interpreter = root / ".venv" / ("Scripts/python.exe" if os.name == "nt" else "bin/python")
+    raise SystemExit(
+        f"Missing Python dependency: {error.name}\n"
+        f"Current interpreter: {sys.executable}\n"
+        "Run scripts/start.py --setup-only to install the project dependencies, then select\n"
+        f"this interpreter in your IntelliJ run/debug configuration: {interpreter}\n"
+        "The folders 'venv' and '.venv' are different environments.\n"
+        "For automatic setup and startup, use scripts/start.py and put server arguments after --."
+    ) from None
 
 
 def main():
@@ -80,6 +94,8 @@ def main():
         options = {"snapshotFile": str(args.snapshot_file), "lazy": False}
     if args.model:
         options["model"] = str(args.model)
+    if getattr(args, "launch", None):
+        options.update(launch=args.launch, modelRoot=str(args.model_root))
     if args.yaml:
         options["sourceDocument"] = args.source_document
         if args.preferences_root is not None:

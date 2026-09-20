@@ -55,6 +55,8 @@
       "enum": [
         "circle",
         "check",
+        "legacy-check-failed",
+        "legacy-check-aborted",
         "alert-triangle",
         "info",
         "flag",

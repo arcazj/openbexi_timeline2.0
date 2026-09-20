@@ -15,7 +15,8 @@ from ..models.model_catalog import normalize_metadata
 from ..services.legacy_reader import _path_guard, safe_read
 from ..services.legacy_presentation import apply_legacy_presentation
 from ..services.legacy_sources import is_partition_directory, partition_date, partition_interval, partition_paths
-from ..services.preparation_control import checkpoint
+from ..services.preparation_control import checkpoint, cancellable_lock
+from ..services.file_intervals import FileIntervals
 from ..services.query_access import current_query_access
 from .json_repository import atomic_json
 from .legacy_repository import LegacyRepository
@@ -84,8 +85,13 @@ class PartitionedLegacyRepository(LegacyRepository):
         if self.presentation:
             empty = apply_legacy_presentation(empty, self.presentation)
         self.meta = normalize_metadata({key: value for key, value in empty.items() if key != "records"})
-        bounds = self._latest_range()
-        self.meta["settings"].update(range=bounds, overview=bounds, referenceTime=bounds["from"])
+        if self.launch:
+            from ..services.launch_environment import apply_environment
+            empty = apply_environment(empty, self.launch, self.root, persist=True)
+            self.meta = normalize_metadata({key: value for key, value in empty.items() if key != "records"})
+        bounds = copy.deepcopy(self.meta["settings"]["range"]) if self.launch else self._latest_range()
+        self.meta["settings"].update(range=bounds, overview=bounds,
+                                     referenceTime=self.meta["settings"]["referenceTime"] if self.launch else bounds["from"])
         self.meta["manifest"]["legacy"].update(configuration=self.configuration.metadata(), domain=bounds,
             queryScope="overlapping-query-domain", lazy=True, loading=copy.deepcopy(self.loading))
         self._load_index()
@@ -205,6 +211,7 @@ class PartitionedLegacyRepository(LegacyRepository):
         entry["signatures"].update({zone["id"]: hashlib.sha256(json_bytes(zone)).hexdigest() for zone in result.snapshot["zones"]})
         with self._index_lock:
             self._entries[key] = entry
+            self._interval_lookup = None
             self._errors.pop(key, None)
             self._metrics["indexFilesRead"] += 1
             self._metrics["bytesRead"] += result.report["bytes"]
@@ -229,7 +236,10 @@ class PartitionedLegacyRepository(LegacyRepository):
         seen = set()
         counters, report = {"files": 0, "directories": 0}, {"descriptorDirectories": 0}
         with self._index_lock:
+            previous = (dict(self._entries), dict(self._errors), self._complete)
             self._index_state = "verifying" if self._entries else "indexing"
+            # Counts remain provisional while old and newly verified entries coexist.
+            self._complete = False
 
         def check():
             if self._stop.is_set():
@@ -252,7 +262,6 @@ class PartitionedLegacyRepository(LegacyRepository):
                     with self._index_lock:
                         self._entries.pop(key, None)
                         self._errors[key] = str(error)[:256]
-                self._stop.wait(.002)
         with self._index_lock:
             self._entries = {key: entry for key, entry in self._entries.items() if key in seen}
             self._errors = {key: error for key, error in self._errors.items() if key in seen and key not in self._entries}
@@ -268,11 +277,15 @@ class PartitionedLegacyRepository(LegacyRepository):
                 raise DomainError("legacy_index_limit", "Archive interval index exceeds the record admission limit.", 413)
             self._complete = not self._errors
             self._checked_at = now_iso()
-            self._index_version += 1
+            changed = previous != (self._entries, self._errors, self._complete)
+            if changed:
+                self._index_version += 1
+                self._interval_lookup = None
             self._index_state = "ready" if self._complete else "incomplete"
         with self.mutex:
             self.meta["manifest"]["revision"] = self._index_version + 1
-        self._persist_index()
+        if changed:
+            self._persist_index()
 
     def reload(self, **kwargs):
         with self._index_lock:
@@ -297,11 +310,13 @@ class PartitionedLegacyRepository(LegacyRepository):
         return result
 
     def project_scope(self, value, source_ids):
-        settings = copy.deepcopy(value.get("settings"))
+        # Preserve the captured initial window, while retaining scoped presentation metadata.
+        settings = {key: copy.deepcopy(value["settings"][key]) for key in ("range", "overview", "referenceTime")
+                    if key in value.get("settings", {})}
         value = super().project_scope(value, source_ids)
         status = self.coverage(source_ids)
-        if settings is not None:
-            value["settings"] = settings
+        if settings:
+            value["settings"].update(settings)
         if "recordCount" in value:
             value["recordCount"] = status["recordCount"]
         if "sources" in value and "records" not in value:
@@ -311,6 +326,8 @@ class PartitionedLegacyRepository(LegacyRepository):
         return value
 
     def capture_query_domain(self, request):
+        if not isinstance(request, dict):
+            raise DomainError("invalid_query", "Query input must be an object.")
         domain = request.get("domain")
         if not isinstance(domain, dict):
             raise DomainError("invalid_query", "Query requires a finite domain.")
@@ -330,50 +347,83 @@ class PartitionedLegacyRepository(LegacyRepository):
             if filters.get("sourceId", "all") != "all":
                 allowed.intersection_update([filters["sourceId"]])
         started = time.monotonic()
-        with self._foreground_lock:
-            self._foreground += 1
-            try:
-                selected = {}
-                with self._index_lock:
-                    entries = list(self._entries.values())
-                    coverage = self.coverage(allowed)
-                for source in self.reader.sources:
-                    if source.id not in allowed:
-                        continue
-                    paths = set(self._leaf_files(source, domain))
-                    for entry in entries:
-                        if (entry["sourceId"] == source.id and entry["from"] is not None
-                                and instant_ms(entry["from"]) < high and instant_ms(entry["to"]) > low):
-                            path = source.root / entry["file"]
-                            if path.exists():
-                                paths.add(path)
-                    selected[source.id] = sorted(paths, key=lambda path: path.as_posix())
-                checkpoint()
-                result = self.reader.scan(time_range=domain, file_selection=selected, reuse_unchanged=True, cancel=self._stop)
-                if result.report["status"] != "current":
-                    raise DomainError("legacy_window_unavailable", "One or more visible legacy files cannot be read. The previous view is retained.", 409)
-                bundle = normalize_metadata(self.meta)
-                bundle["records"], bundle["zones"] = result.snapshot["records"], result.snapshot["zones"]
-                bundle["manifest"].update(recordCount=len(bundle["records"]), revision=coverage["indexVersion"] + 1)
-                bundle["manifest"]["legacy"].update(coverage=coverage, declaredRange=copy.deepcopy(domain))
-                with self._index_lock:
-                    self._metrics["windowReads"] += 1
-                    self._metrics["bytesRead"] += result.report["bytes"]
-                    self._metrics["lastWindowMs"] = round((time.monotonic() - started) * 1000, 2)
-                return bundle
-            finally:
-                self._foreground -= 1
-                self._first_query.set()
+        self._foreground += 1
+        try:
+            with cancellable_lock(self._foreground_lock, self._stop):
+                return self._capture_window(domain, allowed, low, high, started)
+        finally:
+            self._foreground -= 1
+            self._first_query.set()
+
+    def _window_files(self, domain, allowed, low, high):
+        with cancellable_lock(self._index_lock, self._stop):
+            if getattr(self, "_interval_lookup", None) is None:
+                self._interval_lookup = FileIntervals(self._entries.values())
+            lookup, coverage = self._interval_lookup, self.coverage(allowed)
+        selected = {}
+        for source in self.reader.sources:
+            checkpoint()
+            if source.id not in allowed:
+                continue
+            paths = set(self._leaf_files(source, domain))
+            for relative in lookup.overlapping(source.id, low, high):
+                path = source.root / relative
+                if path.exists():
+                    paths.add(path)
+            selected[source.id] = sorted(paths, key=lambda path: path.as_posix())
+        return selected, coverage
+
+    def _capture_window(self, domain, allowed, low, high, started):
+        selected, coverage = self._window_files(domain, allowed, low, high)
+        checkpoint()
+        result = self.reader.scan(time_range=domain, file_selection=selected, reuse_unchanged=True, cancel=self._stop)
+        if result.report["status"] != "current":
+            raise DomainError("legacy_window_unavailable", "One or more visible legacy files cannot be read. The previous view is retained.", 409)
+        bundle = normalize_metadata(self.meta)
+        bundle["records"], bundle["zones"] = result.snapshot["records"], result.snapshot["zones"]
+        bundle["manifest"].update(recordCount=len(bundle["records"]), revision=coverage["indexVersion"] + 1)
+        bundle["manifest"]["legacy"].update(coverage=coverage, declaredRange=copy.deepcopy(domain))
+        with self._index_lock:
+            self._metrics["windowReads"] += 1
+            self._metrics["bytesRead"] += result.report["bytes"]
+            self._metrics["lastWindowMs"] = round((time.monotonic() - started) * 1000, 2)
+        return bundle
 
     def prefetch(self, request):
+        if not isinstance(request, dict) or not isinstance(request.get("domain"), dict):
+            raise DomainError("invalid_query", "Prefetch requires a finite domain.")
+        domain = request["domain"]
+        low, high = instant_ms(domain.get("from")), instant_ms(domain.get("to"))
+        if low >= high:
+            raise DomainError("invalid_query", "Query domain end must follow its start.")
+        filters = request.get("filters", {})
+        if (not isinstance(filters, dict) or not isinstance(filters.get("sourceId", "all"), str)
+                or (filters.get("sourceIds") is not None and (not isinstance(filters["sourceIds"], list)
+                    or any(not isinstance(value, str) for value in filters["sourceIds"])))):
+            raise DomainError("invalid_filter", "Source filters require string identifiers.")
         if not self._prefetch_gate.acquire(blocking=False):
             return {"status": "busy"}
         try:
             if self._foreground:
                 return {"status": "busy"}
+            # Warm one file at a time; foreground queries get priority at every
+            # boundary. Never retain a second complete prefetched query snapshot.
             from ..services.preparation_control import preparation_control
+            access = current_query_access()
+            allowed = set(access["sourceIds"]) if access else {s.id for s in self.reader.sources}
+            if filters.get("sourceIds") is not None:
+                allowed.intersection_update(filters["sourceIds"])
+            if filters.get("sourceId", "all") != "all":
+                allowed.intersection_update([filters["sourceId"]])
             with preparation_control(self._stop, time.monotonic() + 5):
-                self.capture_query_domain(request)
+                selected, _ = self._window_files(domain, allowed, low, high)
+                for source_id, paths in selected.items():
+                    for path in paths:
+                        if self._foreground:
+                            return {"status": "busy"}
+                        result = self.reader.scan(file_selection={source_id: [path]}, reuse_unchanged=True, cancel=self._stop)
+                        if result.report["status"] != "current":
+                            raise DomainError("legacy_window_unavailable", "A prefetched source file could not be read.", 409)
             with self._index_lock:
                 self._metrics["prefetches"] += 1
             return {"status": "cached"}
@@ -384,7 +434,7 @@ class PartitionedLegacyRepository(LegacyRepository):
         with self._index_lock:
             candidates = [entry for entry in self._entries.values() if record_id in entry["ids"]]
         # Records in a first cold-start page may precede their index entry.
-        with self.reader._mutex:
+        with cancellable_lock(self.reader._mutex, self._stop):
             for _, image in self.reader._cache.values():
                 for record in image["records"]:
                     if record["id"] == record_id:
@@ -400,12 +450,13 @@ class PartitionedLegacyRepository(LegacyRepository):
 
     def query_snapshot(self):
         # Full materialization remains explicit: exports never use a page cache.
-        result = self.reader.scan(cancel=self._stop)
+        result = self.reader.scan(cancel=self._stop, foreground_waiting=lambda: self._foreground > 0)
         if result.report["status"] != "current":
             raise DomainError("legacy_incomplete", "A complete export could not be verified.", 409)
-        snapshot = result.snapshot
-        if self.presentation:
-            snapshot = apply_legacy_presentation(snapshot, self.presentation)
+        snapshot = normalize_metadata(self.meta)
+        snapshot["records"], snapshot["zones"] = result.snapshot["records"], result.snapshot["zones"]
+        snapshot["manifest"].update(recordCount=len(snapshot["records"]))
+        snapshot["manifest"]["legacy"].update(result.snapshot["manifest"]["legacy"])
         return snapshot
 
     def snapshot(self):

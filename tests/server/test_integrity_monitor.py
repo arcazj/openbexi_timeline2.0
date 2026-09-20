@@ -16,7 +16,7 @@ from server.app.repositories.storage_migration import migrate_storage
 from server.app.services.backup import create_offline_backup, restore_backup
 from server.app.services.identity import IdentityStore
 
-SEED = ROOT / "data/default-dataset.json"
+SEED = ROOT / "shared/fixtures/initial-snapshot.json"
 SECRET = "integrity-monitor-test-token"
 
 

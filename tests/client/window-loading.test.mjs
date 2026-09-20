@@ -217,6 +217,43 @@ test('bootstrap accepts a cold response after two seconds without waiting the fu
   assert.equal(signal.aborted, false);
 });
 
+test('bootstrap retries transient transport failure while retaining the configured source', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  const target = { mode: 'configured-server', localBrowser: true, sourceName: 'SOURCE1' };
+  let attempts = 0;
+  const pending = startupTarget({ protocol: 'http:', fetcher: async () => {
+    if (++attempts === 1) throw new TypeError('Failed to fetch');
+    return { ok: true, json: async () => target };
+  } });
+  await flush();
+  assert.equal(attempts, 1);
+  t.mock.timers.tick(150);
+  assert.deepEqual(await pending, target);
+  assert.equal(attempts, 2);
+});
+
+test('bootstrap bounds transport retries and never retries authoritative HTTP failures', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  let attempts = 0;
+  const pending = startupTarget({ protocol: 'http:', fetcher: async () => { attempts++; throw new TypeError('Failed to fetch'); } });
+  await flush(); t.mock.timers.tick(150); await flush(); t.mock.timers.tick(300);
+  assert.equal((await pending).mode, 'unavailable');
+  assert.equal(attempts, 3);
+  attempts = 0;
+  assert.equal((await startupTarget({ protocol: 'http:', fetcher: async () => { attempts++; return { status: 403, ok: false }; } })).mode, 'unavailable');
+  assert.equal(attempts, 1);
+});
+
+test('bootstrap deadline cancels backoff without admitting another transport attempt', async t => {
+  t.mock.timers.enable({ apis: ['setTimeout'] });
+  let attempts = 0;
+  const pending = startupTarget({ protocol: 'http:', timeoutMs: 100, fetcher: async () => { attempts++; throw new TypeError('Failed to fetch'); } });
+  await flush(); t.mock.timers.tick(100);
+  assert.equal((await pending).mode, 'unavailable');
+  t.mock.timers.tick(1000); await flush();
+  assert.equal(attempts, 1);
+});
+
 test('bootstrap still aborts a stalled request at its five-second deadline', async t => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
   let signal;

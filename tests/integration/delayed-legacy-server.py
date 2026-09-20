@@ -6,8 +6,8 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT))
-from server.app.repositories.partitioned_legacy_repository import PartitionedLegacyRepository
-from server.app.models.domain import DomainError
+from server.app.repositories.partitioned_legacy_repository import PartitionedLegacyRepository  # noqa: E402
+from server.app.models.domain import DomainError  # noqa: E402
 
 gate = Path(sys.argv.pop(1))
 original = PartitionedLegacyRepository.open

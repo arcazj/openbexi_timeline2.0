@@ -1,6 +1,6 @@
 [project]
 name = "openbexi-timeline"
-version = "1.0.0"
+version = "2.0.0"
 description = "Single-writer JSON timeline service"
 license = "PolyForm-Noncommercial-1.0.0"
 license-files = ["LICENSE", "NOTICE"]

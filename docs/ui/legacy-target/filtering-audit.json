@@ -1,0 +1,204 @@
+{
+  "date": "2026-09-20",
+  "scope": "Two unchanged legacy methods executed on six synthetic metadata cases. Group layout and Java filter behavior were source-inspected, not runtime-qualified. Earthquake screenshot vocabulary is not a loaded earthquake archive.",
+  "source": "src/openbexi_timeline.js",
+  "sourceSha256": "d3d1450ef3ba10dc7aac321e28a1135a312d78f15b2998a8bbabc1da9f850503",
+  "methods": {
+    "build_model": {
+      "line": 4171,
+      "sha256": "00c9a36ec45b9ae5ca47fb3c0637c36ec88d9e95cd5827cd1c673b29aedbf5d1"
+    },
+    "ob_get_all_sorting_options": {
+      "line": 473,
+      "sha256": "bef912329e084f84fd864dcc7100870012d1f3162f7c6111710f87a072a36587"
+    }
+  },
+  "results": [
+    {
+      "name": "status and namespace are discovered from data",
+      "inputMetadata": [
+        {
+          "status": "FINISHED",
+          "namespace": "SOURCE1",
+          "title": "one"
+        },
+        {
+          "status": "STARTED",
+          "namespace": "SOURCE2",
+          "title": "two"
+        },
+        {
+          "status": "RUNNING",
+          "namespace": "SOURCE1",
+          "title": "three"
+        }
+      ],
+      "observed": [
+        "NONE",
+        "status",
+        "namespace"
+      ],
+      "expected": [
+        "NONE",
+        "status",
+        "namespace"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "earthquake magnitude types are data-driven (synthetic screenshot vocabulary)",
+      "inputMetadata": [
+        {
+          "magType": "ml"
+        },
+        {
+          "magType": "md"
+        },
+        {
+          "magType": "mb"
+        },
+        {
+          "magType": "mww"
+        },
+        {
+          "magType": "mwr"
+        },
+        {
+          "magType": "mh"
+        },
+        {
+          "magType": "mb_lg"
+        },
+        {
+          "magType": "mw"
+        }
+      ],
+      "observed": [
+        "NONE",
+        "magType"
+      ],
+      "expected": [
+        "NONE",
+        "magType"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "legacy omits a constant field",
+      "inputMetadata": [
+        {
+          "status": "RUNNING"
+        },
+        {
+          "status": "RUNNING"
+        }
+      ],
+      "observed": [
+        "NONE"
+      ],
+      "expected": [
+        "NONE"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "legacy misses keys absent from the first metadata object",
+      "inputMetadata": [
+        {
+          "namespace": "SOURCE1"
+        },
+        {
+          "namespace": "SOURCE2",
+          "status": "RUNNING"
+        },
+        {
+          "namespace": "SOURCE1",
+          "status": "FINISHED"
+        }
+      ],
+      "observed": [
+        "NONE",
+        "namespace"
+      ],
+      "expected": [
+        "NONE",
+        "namespace"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "legacy omits 15 token values",
+      "inputMetadata": [
+        {
+          "category": "v0"
+        },
+        {
+          "category": "v1"
+        },
+        {
+          "category": "v2"
+        },
+        {
+          "category": "v3"
+        },
+        {
+          "category": "v4"
+        },
+        {
+          "category": "v5"
+        },
+        {
+          "category": "v6"
+        },
+        {
+          "category": "v7"
+        },
+        {
+          "category": "v8"
+        },
+        {
+          "category": "v9"
+        },
+        {
+          "category": "v10"
+        },
+        {
+          "category": "v11"
+        },
+        {
+          "category": "v12"
+        },
+        {
+          "category": "v13"
+        },
+        {
+          "category": "v14"
+        }
+      ],
+      "observed": [
+        "NONE"
+      ],
+      "expected": [
+        "NONE"
+      ],
+      "status": "passed"
+    },
+    {
+      "name": "legacy splits a single comma-containing value",
+      "inputMetadata": [
+        {
+          "category": "alpha,beta"
+        }
+      ],
+      "observed": [
+        "NONE",
+        "category"
+      ],
+      "expected": [
+        "NONE",
+        "category"
+      ],
+      "status": "passed"
+    }
+  ]
+}

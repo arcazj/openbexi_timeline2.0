@@ -1,0 +1,9 @@
+data_sources:
+  - namespace: SOURCE1
+    type: json_file
+    enable: true
+    data_model: data/SOURCES1/yyyy/mm/dd
+  - namespace: SOURCE2
+    type: json_file
+    enable: false
+    data_model: data/SOURCES2/yyyy/mm/dd

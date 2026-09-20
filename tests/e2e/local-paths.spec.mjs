@@ -47,7 +47,7 @@ test('approved paths auto-connect without tokens, multi-select, favorite and com
   await expect.poll(async () => (await debug(page)).detailTotal).toBe(6);
   await expect(page.locator('#grouping-mode')).toHaveValue('all');
   await expect(page.locator('.group-label')).toHaveCount(0);
-  await page.locator('#grouping-mode').selectOption('namespace');
+  await page.locator('#grouping-mode').selectOption('/data/namespace');
   await expect(page.locator('.group-label')).toHaveCount(3);
   expect(await page.locator('.group-label').allTextContents()).toEqual(['SOURCE1', 'SOURCE2', 'SOURCE3']);
   await assertRendering(page);

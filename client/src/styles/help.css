@@ -29,6 +29,8 @@
 .help-document table { border-collapse: collapse; width: 100%; table-layout: fixed; }
 .help-document th, .help-document td { padding: 6px; border: 1px solid var(--border); text-align: left; vertical-align: top; }
 .help-document a { color: var(--accent); text-decoration: underline; }
+.help-document figure { margin: 16px 0; }
+.help-document figure img { display: block; max-width: 100%; height: auto; }
 .help-license-list details { padding: 10px 0; border-top: 1px solid var(--border); font-size: 13px; }
 .help-license-list summary { cursor: pointer; overflow-wrap: anywhere; }
 .help-swagger { width: 100%; height: min(64dvh, 640px); min-height: 240px; border: 1px solid var(--border); background: white; }

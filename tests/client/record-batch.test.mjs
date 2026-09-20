@@ -14,10 +14,10 @@ test('Local atomic mixed batch captures intent, increments once and replays with
   command.operations[0].payload.title = 'Caller changed after dispatch';
   const result = await promise;
   assert.equal(result.revision, 2); assert.equal(result.affectedCount, 3); assert.equal(result.items[0].record.title, 'First edit');
-  assert.equal((await provider.getStatus()).recordCount, 49);
+  assert.equal((await provider.getStatus()).recordCount, bundle.records.length + 1);
   assert.deepEqual(await provider.executeBatch(original), result);
   assert.deepEqual((await provider.getCommandOutcome(original.clientCommandId)).result, result);
-  assert.equal((await provider.exportSnapshot()).records.length, 49);
+  assert.equal((await provider.exportSnapshot()).records.length, bundle.records.length + 1);
   provider.dispose();
 });
 

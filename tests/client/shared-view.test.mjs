@@ -18,6 +18,14 @@ test('links strip credentials, query secrets and local filesystem locations', ()
   assert.match(sharedViewLink('file:///C:/private/data/index.html', view()), /^#view=/);
   assert.throws(() => sharedViewLink('javascript:alert(1)', view()));
 });
+
+test('demo sharing retains only the explicitly selected dataset and still requires view decoding', () => {
+  const link = sharedViewLink('https://example.org/?dataset=jfk&token=private', view(), { datasetId: 'monet' });
+  assert.equal(new URL(link).search, '?dataset=monet');
+  assert.deepEqual(structuredClone(decodeSharedView(link)), view());
+  assert.equal(new URL(sharedViewLink('https://example.org/?dataset=jfk', view())).search, '');
+  assert.throws(() => sharedViewLink('https://example.org/', view(), { datasetId: '../private' }), /Invalid demo dataset/);
+});
 test('v2 shared views retain regex, family context and typed group collapse without changing v1', () => {
   const input = { ...view(), version: 2, relationshipMode: 'family', groupOrder: { order: 'natural', caseSensitive: true }, collapsedGroups: ['string:SOURCE1'],
     search: { definitionVersion: 2, search: '^Task_[0-9]+$', searchMode: 'regex', searchFlags: ['i'], searchMatchMode: 'full', searchDialect: 're2-common-v1', searchFields: ['/title'] },

@@ -29,7 +29,8 @@ def fixture(root):
         "htmlSha256": hashlib.sha256(html).hexdigest(), "externalRuntimeImports": [],
     }))
     (root / "dist/THIRD-PARTY-NOTICES.json").write_text('{}')
-    for name in ("standalone-download.md", "data-licensing.md", "releases/v0.1.0-preview.1.md"):
+    (root / "docs/reference/implementation").mkdir(parents=True)
+    for name in ("reference/implementation/standalone-download.md", "data-licensing.md", "releases/v0.1.0-preview.1.md"):
         (root / "docs" / name).write_text('# Fixture\n')
 
 
@@ -77,6 +78,23 @@ def test_docker_build_context_and_both_build_stages_include_project_license():
     client, python = docker.split(' AS python-base', 1)
     assert 'COPY README.md LICENSE NOTICE ./' in client
     assert 'COPY pyproject.toml uv.lock LICENSE NOTICE ./' in python
+
+
+def test_docker_verification_and_runtime_include_version_two_profile_inputs():
+    patterns = (ROOT / '.dockerignore').read_text().splitlines()
+    for directory in ('yaml', 'models', 'filters', 'tools/event-generator'):
+        assert f'!{directory}/**' in patterns
+    assert patterns.index('yaml/local/**') > patterns.index('!yaml/**')
+    assert patterns.index('**/node_modules/**') > patterns.index('!tools/event-generator/**')
+    docker = (ROOT / 'Dockerfile').read_text()
+    verification, runtime = docker.split(' AS verification', 1)[1].split(' AS runtime', 1)
+    for directory in ('yaml', 'models', 'filters'):
+        assert f'COPY {directory}/ {directory}/' in verification
+        assert f'COPY {directory}/ {directory}/' in runtime
+        assert (ROOT / directory).is_dir()
+    assert 'COPY tools/event-generator/ tools/event-generator/' in verification
+    assert 'COPY scripts/ scripts/' in runtime
+    assert (ROOT / 'scripts/migrate-launch.py').is_file()
 
 
 @pytest.mark.parametrize("tag", ["v0.1.0", "v0.2.0-preview.1", "../private", "v0.1.0-preview.0", "v0.1.0-preview.1/extra"])

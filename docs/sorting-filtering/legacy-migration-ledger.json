@@ -46,18 +46,12 @@
       "unchanged": true
     },
     {
-      "path": "yaml/GNS_MCC_sources_startup.yml",
-      "sha256": "9c551c442dabc781e8b5d528152112771eb7788349d0dc84a49160f018836874",
-      "entries": 1,
-      "status": "inspected",
-      "unchanged": true
-    },
-    {
       "path": "yaml/GNS_POV_sources_startup.yml",
       "sha256": "a2471bdaef03c80847458dcdb31396e78c395636a30fb7156c8c66056285523f",
-      "entries": 1,
+      "entries": 0,
       "status": "inspected",
-      "unchanged": true
+      "unchanged": true,
+      "originalAuditedEntryCount": 1
     },
     {
       "path": "yaml/GNS_SOC_sources_startup.yml",
@@ -116,13 +110,6 @@
       "unchanged": true
     },
     {
-      "path": "yaml/sources_MCC.yml",
-      "sha256": "37eb6d21147b83db81e78834153ec9ed908e62219b6442421dfa8c26e8a7fc6a",
-      "entries": 2,
-      "status": "inspected",
-      "unchanged": true
-    },
-    {
       "path": "yaml/sources_SOC.yml",
       "sha256": "702dfa41ccdc80a51d638ac39bf0337fccee743c02671fdaf4ed1f722488d7ac",
       "entries": 5,
@@ -173,12 +160,6 @@
   },
   "modelRegistries": [
     {
-      "path": "models/MCC_timeline.json",
-      "sha256": "7bef6d54ae2f8215c0690419edc285f6b930b373c135557922ea19be73e88674",
-      "fieldRegistry": "legacy-metadata-v1",
-      "rule": "Rendering models do not declare additional filter field types; require published schema pins for custom fields."
-    },
-    {
       "path": "models/regular_timeline.json",
       "sha256": "78d6615b85ac69adee0ee27b5e79bc34f085d0b2476d37b384379ec40a389862",
       "fieldRegistry": "legacy-metadata-v1",
@@ -193,12 +174,6 @@
     {
       "path": "models/regular_timeline_esoc.json",
       "sha256": "57695d8194c5860e0846695210c57afe49baa50b229de78eaf713bfdcc002fd6",
-      "fieldRegistry": "legacy-metadata-v1",
-      "rule": "Rendering models do not declare additional filter field types; require published schema pins for custom fields."
-    },
-    {
-      "path": "models/regular_timeline_mcc.json",
-      "sha256": "99453c81683697110776f432d9c8b31638d53445b667c34074f1c64fc48c157f",
       "fieldRegistry": "legacy-metadata-v1",
       "rule": "Rendering models do not declare additional filter field types; require published schema pins for custom fields."
     },
@@ -964,88 +939,6 @@
       "name": "SOURCE2",
       "legacyShape": "source-include-exclude",
       "originalSha256": "a162bfa22768fecf733524873ef55eb69d04b46c4108b591cc50f3f31deb33cb",
-      "original": {
-        "include": "",
-        "exclude": "",
-        "sortBy": "NONE"
-      },
-      "fieldRegistry": "legacy-metadata-v1",
-      "result": {
-        "format": "legacy-filter-migration",
-        "version": 1,
-        "classification": "exact",
-        "publishable": true,
-        "diagnostics": [],
-        "requiredAcknowledgements": [],
-        "draft": {
-          "definitionVersion": 2,
-          "relationshipMode": "independent",
-          "expression": null,
-          "grouping": null,
-          "groupOrder": {
-            "order": "codepoint",
-            "caseSensitive": true
-          },
-          "migration": {
-            "format": "legacy-filter-migration",
-            "version": 1,
-            "original": {
-              "include": "",
-              "exclude": "",
-              "sortBy": "NONE"
-            },
-            "acknowledged": []
-          }
-        }
-      }
-    },
-    {
-      "file": "yaml/GNS_MCC_sources_startup.yml",
-      "pointer": "/data_sources/0/filter",
-      "name": "MCC",
-      "legacyShape": "source-include-exclude",
-      "originalSha256": "9c551c442dabc781e8b5d528152112771eb7788349d0dc84a49160f018836874",
-      "original": {
-        "include": "",
-        "exclude": "",
-        "sortBy": "NONE"
-      },
-      "fieldRegistry": "legacy-metadata-v1",
-      "result": {
-        "format": "legacy-filter-migration",
-        "version": 1,
-        "classification": "exact",
-        "publishable": true,
-        "diagnostics": [],
-        "requiredAcknowledgements": [],
-        "draft": {
-          "definitionVersion": 2,
-          "relationshipMode": "independent",
-          "expression": null,
-          "grouping": null,
-          "groupOrder": {
-            "order": "codepoint",
-            "caseSensitive": true
-          },
-          "migration": {
-            "format": "legacy-filter-migration",
-            "version": 1,
-            "original": {
-              "include": "",
-              "exclude": "",
-              "sortBy": "NONE"
-            },
-            "acknowledged": []
-          }
-        }
-      }
-    },
-    {
-      "file": "yaml/GNS_POV_sources_startup.yml",
-      "pointer": "/data_sources/0/filter",
-      "name": "MCC",
-      "legacyShape": "source-include-exclude",
-      "originalSha256": "a2471bdaef03c80847458dcdb31396e78c395636a30fb7156c8c66056285523f",
       "original": {
         "include": "",
         "exclude": "",
@@ -2107,88 +2000,6 @@
       }
     },
     {
-      "file": "yaml/sources_MCC.yml",
-      "pointer": "/data_sources/0/filter",
-      "name": "MCC",
-      "legacyShape": "source-include-exclude",
-      "originalSha256": "37eb6d21147b83db81e78834153ec9ed908e62219b6442421dfa8c26e8a7fc6a",
-      "original": {
-        "include": "",
-        "exclude": "",
-        "sortBy": "NONE"
-      },
-      "fieldRegistry": "legacy-metadata-v1",
-      "result": {
-        "format": "legacy-filter-migration",
-        "version": 1,
-        "classification": "exact",
-        "publishable": true,
-        "diagnostics": [],
-        "requiredAcknowledgements": [],
-        "draft": {
-          "definitionVersion": 2,
-          "relationshipMode": "independent",
-          "expression": null,
-          "grouping": null,
-          "groupOrder": {
-            "order": "codepoint",
-            "caseSensitive": true
-          },
-          "migration": {
-            "format": "legacy-filter-migration",
-            "version": 1,
-            "original": {
-              "include": "",
-              "exclude": "",
-              "sortBy": "NONE"
-            },
-            "acknowledged": []
-          }
-        }
-      }
-    },
-    {
-      "file": "yaml/sources_MCC.yml",
-      "pointer": "/data_sources/1/filter",
-      "name": "POV",
-      "legacyShape": "source-include-exclude",
-      "originalSha256": "37eb6d21147b83db81e78834153ec9ed908e62219b6442421dfa8c26e8a7fc6a",
-      "original": {
-        "include": "",
-        "exclude": "",
-        "sortBy": "NONE"
-      },
-      "fieldRegistry": "legacy-metadata-v1",
-      "result": {
-        "format": "legacy-filter-migration",
-        "version": 1,
-        "classification": "exact",
-        "publishable": true,
-        "diagnostics": [],
-        "requiredAcknowledgements": [],
-        "draft": {
-          "definitionVersion": 2,
-          "relationshipMode": "independent",
-          "expression": null,
-          "grouping": null,
-          "groupOrder": {
-            "order": "codepoint",
-            "caseSensitive": true
-          },
-          "migration": {
-            "format": "legacy-filter-migration",
-            "version": 1,
-            "original": {
-              "include": "",
-              "exclude": "",
-              "sortBy": "NONE"
-            },
-            "acknowledged": []
-          }
-        }
-      }
-    },
-    {
       "file": "yaml/sources_SOC.yml",
       "pointer": "/data_sources/0/filter",
       "name": "ESOC",
@@ -2436,10 +2247,10 @@
     }
   ],
   "summary": {
-    "files": 20,
-    "entries": 52,
+    "files": 18,
+    "entries": 48,
     "classifications": {
-      "exact": 48,
+      "exact": 44,
       "intent-repair": 4
     },
     "diagnostics": {
@@ -2454,5 +2265,6 @@
     "Grouping encounter-order changes require acknowledgement; naming a preset BY_NAMESPACE does not override its actual sortBy value.",
     "Custom model fields are not inferred from labels or sample data.",
     "No user approval, saved preset publication, full source equivalence test or performance claim is implied."
-  ]
+  ],
+  "curation": "2026-09-20: retired production-specific entries removed at user request. Remaining historical results/hashes retained; this is not a rerun or two-source validation evidence."
 }
