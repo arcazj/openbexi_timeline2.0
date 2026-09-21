@@ -39,10 +39,18 @@ jobs:
         if: runner.os == 'Linux'
         run: |
           npx playwright install --with-deps chromium firefox
-          sudo apt-get install -y --no-install-recommends libegl1 libgl1 xauth xvfb
+          sudo apt-get install -y --no-install-recommends libegl1 libgl1 libegl-mesa0 libgl1-mesa-dri libglx-mesa0 xauth xvfb
       - name: Install Windows test browsers
         if: runner.os == 'Windows'
         run: npx playwright install chromium firefox
+      - name: Check Firefox WebGL2 rendering before candidate tests
+        shell: bash
+        run: |
+          if [ "$RUNNER_OS" = "Linux" ]; then
+            xvfb-run -a node scripts/check-browser-graphics.mjs --output artifacts/browser/firefox-graphics.json
+          else
+            node scripts/check-browser-graphics.mjs --output artifacts/browser/firefox-graphics.json
+          fi
       - name: Check repository publication boundaries
         run: npm run check:repo
       - name: Verify unchanged candidate

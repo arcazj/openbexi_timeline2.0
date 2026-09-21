@@ -116,9 +116,10 @@ test('slow server layout is shown as partial coverage and a new drag supersedes 
       // Delay preparation only after ownership is known, so cancellation can release it.
       const response = await route.fetch({ headers: { ...route.request().headers(), 'x-openbexi-local': '1', 'sec-fetch-site': 'same-origin' } });
       const manifest = await response.json();
-      expect(response.status()).toBe(202); expect(manifest.layoutId).toEqual(expect.any(String));
+      // A fast worker may finish before the allocation reply, even with respond-async.
+      expect([200, 202]).toContain(response.status()); expect(manifest.layoutId).toEqual(expect.any(String));
       delayedLayouts.add(`${route.request().url()}/${encodeURIComponent(manifest.layoutId)}`);
-      await route.fulfill({ response, json: { ...manifest, state: 'preparing' } });
+      await route.fulfill({ response, status: 202, json: { ...manifest, state: 'preparing' } });
     });
     await page.locator('.range-button').click();
     await page.locator('#range-form [name=from]').fill('2024-03-18T19:50');

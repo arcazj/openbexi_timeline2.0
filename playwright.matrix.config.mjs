@@ -1,5 +1,6 @@
 import { defineConfig } from '@playwright/test';
 import base from './playwright.config.mjs';
+import { firefoxTestOptions } from './scripts/firefox-test-options.mjs';
 
 export default defineConfig({
   ...base,
@@ -11,9 +12,7 @@ export default defineConfig({
   projects: [
     { name: 'chromium', use: { browserName: 'chromium' } },
     { name: 'firefox', use: {
-      browserName: 'firefox', headless: process.platform !== 'linux',
-      // Hosted Windows runners need Firefox's software WebGL path without a GPU.
-      launchOptions: { firefoxUserPrefs: process.platform === 'win32' && process.env.CI ? { 'webgl.force-enabled': true } : {} },
+      browserName: 'firefox', ...firefoxTestOptions(),
     } },
     ...(process.platform === 'win32' ? [{ name: 'edge', use: { browserName: 'chromium', launchOptions: base.use.launchOptions } }] : []),
   ],
