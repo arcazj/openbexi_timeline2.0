@@ -161,9 +161,12 @@ test('file URL recovery explicitly discloses browser-dependent retention', async
 test('preview resize reuses its query and map, coalesces layouts and keeps the active timeline focus unchanged', async ({ page }, info) => {
   const errors = await open(page);
   const active = await page.evaluate(() => window.__timelineDebug), allocations = [];
-  page.on('request', request => { if (request.method() === 'POST' && request.url().endsWith('/query-sessions')) allocations.push(request.url()); });
   await manager(page); await page.locator('[data-model-tab=preview]').click(); await assertPreview(page);
   const original = await page.locator('.model-preview-canvas').evaluate(node => ({ ...node.dataset }));
+  expect(original.previewQueryId).not.toBe(active.queryId);
+  // Preview admission drains startup neighbor work. Measure the resize phase,
+  // which must allocate no new queries, independently of earlier warming.
+  page.on('request', request => { if (request.method() === 'POST' && request.url().endsWith('/query-sessions')) allocations.push(request.url()); });
   let inFlight = 0, maxInFlight = 0, layouts = 0;
   const isPreviewLayout = request => request.method() === 'POST' && request.url().endsWith(`/query-sessions/${original.previewQueryId}/layouts`);
   page.on('request', request => { if (isPreviewLayout(request)) { layouts++; inFlight++; maxInFlight = Math.max(maxInFlight, inFlight); } });
@@ -178,7 +181,7 @@ test('preview resize reuses its query and map, coalesces layouts and keeps the a
   await page.setViewportSize({ width: 1600, height: 900 }); await assertPreview(page);
   const after = await page.evaluate(() => window.__timelineDebug);
   for (const field of ['queryId', 'mapId', 'fromMs', 'toMs', 'modelId', 'modelVersion']) expect(after[field]).toBe(active[field]);
-  expect(allocations).toHaveLength(1);
+  expect(allocations).toHaveLength(0);
   expect(layouts).toBeGreaterThanOrEqual(2); expect(maxInFlight).toBe(1);
   const released = page.waitForRequest(request => request.method() === 'DELETE' && request.url().endsWith(`/query-sessions/${original.previewQueryId}`));
   await page.locator('[data-action=model-close]').click(); await released;
