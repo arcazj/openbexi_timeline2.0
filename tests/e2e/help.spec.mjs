@@ -17,7 +17,12 @@ async function help(page, tab = 'help') {
   await expect(page.getByRole('dialog', { name: 'Help and sharing' })).toBeVisible();
   if (tab !== 'help') await page.locator(`[data-help-tab=${tab}]`).click();
 }
-async function captureLink(page) { await help(page, 'share'); return page.getByRole('textbox', { name: 'View link', exact: true }).inputValue(); }
+async function captureLink(page) {
+  await help(page, 'share');
+  const link = page.getByRole('textbox', { name: 'View link', exact: true });
+  await expect(link).toHaveValue(/^#view=/);
+  return link.inputValue();
+}
 
 for (const viewport of [{ width: 1600, height: 900 }, { width: 390, height: 844 }]) {
   test(`Help follows Settings and docs work fully offline at ${viewport.width}px`, async ({ page }, info) => {
