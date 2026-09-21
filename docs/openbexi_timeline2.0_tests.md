@@ -61,8 +61,12 @@ cases passed on Python 3.9 and 3.14.
 
 The delayed-drag test drains routed background requests before stopping its
 server. A controlled reproduction confirms that the earlier teardown reset a
-live allocation request after the behavior assertions had passed. Legacy test
-fixtures also clear per-test ownership before startup and cleanup. Their health
+live allocation request after the behavior assertions had passed.
+The interceptor also preserves server errors unchanged: a superseded query can
+be released while its forwarded layout allocation is still running. It holds
+only successful allocations with valid ownership; the drag, partial-coverage
+and recovery assertions remain required.
+Legacy test fixtures also clear per-test ownership before startup and cleanup. Their health
 check uses the ordinary server fixture's 30-second elapsed budget, replacing
 120 probes that could stop after roughly 12 seconds on fast connection refusals
 or take roughly 42 seconds on slow responses. Process checkpoints and exit
@@ -78,9 +82,24 @@ wait, recording only the request path, timing, status and native error. Earlier
 Windows Firefox traces showed an unavailable startup before any bootstrap
 request was recorded; those traces did not establish its native failure cause.
 All 51 configuration/scoped-descriptor cases passed locally across Chromium,
-Firefox and Edge with the owned fixtures. A failed cold-bootstrap opening also
-rejects its held-request gate directly, preserving the original failure instead
-of leaving an unhandled opening promise.
+Firefox and Edge with the owned fixtures. Request listeners now capture the
+reviewed record's identity before cleanup clears fixture data; a late request
+during context teardown cannot read the cleared record reference. The six
+shared-view cases passed across the three browsers after this correction.
+
+A subsequent Windows Firefox capture recorded a bootstrap `AbortError` after
+5,005 ms, before the test interceptor ran. It did not identify the underlying
+browser or interception delay. The cold-bootstrap case now uses a real HTTP
+server that delays its 404 response for at least 2.5 seconds and until the test
+has checked that no sample records appeared. It leaves native fetch, the
+application's five-second deadline and the test's 30-second budget unchanged.
+Independent server receipts and browser timings make any future failure
+observable. Six fixture checks cover the delay, inspection gate, disconnects,
+shutdown and occupied-port failure. Both the previous routed test and a native
+HTTP prototype passed one local Windows software-rendering comparison; those
+passes do not establish the cause of the hosted failure.
+The final six fixture checks and native cold-start case in Chromium, Firefox
+and Edge passed locally.
 
 Firefox CI also checks WebGL2 before running the application suite. Linux uses
 Mesa software rendering; the preflight compiles shaders, draws a triangle and

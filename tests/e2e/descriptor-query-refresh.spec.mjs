@@ -94,12 +94,13 @@ for (const mode of ['local', 'server']) {
     const link = await page.getByRole('textbox', { name: 'View link', exact: true }).inputValue();
     await page.keyboard.press('Escape'); await page.locator('[data-action=close-descriptor]').click();
     await change(page, () => page.locator('#search').fill(''));
-    const unscopedReads = [], scopedReads = [];
+    // Requests can arrive during context teardown after afterEach clears child.
+    const reviewedChildId = child.id, unscopedReads = [], scopedReads = [];
     page.on('request', request => {
       if (request.method() !== 'GET') return;
       const path = new URL(request.url()).pathname;
       if (/\/workspaces\/[^/]+\/records\/[^/]+$/.test(path)) unscopedReads.push(path);
-      if (path.endsWith(`/records/${child.id}`) && path.includes('/query-sessions/')) scopedReads.push(path);
+      if (path.endsWith(`/records/${reviewedChildId}`) && path.includes('/query-sessions/')) scopedReads.push(path);
     });
     await page.locator('[data-action=help]').click(); await page.locator('[data-help-tab=share]').click();
     await page.getByRole('textbox', { name: 'Shared view link', exact: true }).fill(link);

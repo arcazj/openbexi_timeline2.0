@@ -115,6 +115,9 @@ test('slow server layout is shown as partial coverage and a new drag supersedes 
       if (!targetSeen || !blockAll && canonical) return route.continue();
       // Delay preparation only after ownership is known, so cancellation can release it.
       const response = await route.fetch({ headers: { ...route.request().headers(), 'x-openbexi-local': '1', 'sec-fetch-site': 'same-origin' } });
+      // A superseded query may be released while this forwarded allocation runs.
+      // Preserve server errors for the provider's normal cancellation handling.
+      if (!response.ok()) return route.fulfill({ response });
       const manifest = await response.json();
       // A fast worker may finish before the allocation reply, even with respond-async.
       expect([200, 202]).toContain(response.status()); expect(manifest.layoutId).toEqual(expect.any(String));

@@ -3,6 +3,7 @@ import { openContractFixture } from './contract-fixture.mjs';
 import { observeBootstrap, attachBootstrapDiagnostic } from './bootstrap-diagnostic.mjs';
 import { readFile } from 'node:fs/promises';
 import { startServer } from '../integration/server-fixture.mjs';
+import { startColdBootstrapHttpFixture } from '../integration/cold-bootstrap-http-fixture.mjs';
 import { snapshotContent } from '../../client/src/data/snapshot-content.js';
 import { sha256 } from '../../client/src/data/data-provider.js';
 import { LocalProvider } from '../../client/src/data/local-provider.js';
@@ -55,29 +56,46 @@ async function exportJson(page) {
 }
 const filter = { sourceIds: ['operations'], kinds: ['session'], schemaRefs: [], expression: null, search: { text: 'gate', mode: 'any', caseSensitive: false, fields: ['/title'] } };
 
-test('cold bootstrap can take more than two seconds without premature sample data', async ({ page }) => {
-  let entered, release;
-  const requested = new Promise(resolve => { entered = resolve; });
-  const inspected = new Promise(resolve => { release = resolve; });
-  await page.route('**/api/v1/bootstrap', async route => {
-    entered();
-    await inspected;
-    const elapsed = await page.evaluate(() => performance.now() - window.__bootstrapDiagnostic[0].startedAt);
-    // Browser dispatch is part of the probe budget, not an additional delay.
-    if (elapsed < 2500) await new Promise(resolve => setTimeout(resolve, Math.ceil(2500 - elapsed)));
-    await route.continue();
-  });
-  const opening = open(page, 'local');
+// This standalone case owns only its lightweight HTTP fixture. Its body retains
+// the ordinary 30-second budget; startupTarget retains its native five seconds.
+base('cold bootstrap can take more than two seconds without premature sample data', async ({ page }, info) => {
+  const errors = [], requests = [], responses = [];
+  page.on('pageerror', error => errors.push(error.message));
+  page.on('dialog', dialog => dialog.accept());
+  page.on('request', request => { if (new URL(request.url()).pathname === '/api/v1/bootstrap') requests.push(request); });
+  page.on('response', response => { if (new URL(response.url()).pathname === '/api/v1/bootstrap') responses.push(response); });
+  const owned = await startColdBootstrapHttpFixture();
+  const opening = openContractFixture(page, owned.baseUrl);
   try {
-    // A failed bootstrap must reject the opening, not leave this gate pending.
-    expect(await Promise.race([requested.then(() => true), opening.then(() => false)])).toBe(true);
-    expect(await page.evaluate(() => Boolean(window.__timelineDebug?.queryId))).toBe(false);
-    await expect(page.locator('.record-label')).toHaveCount(0);
-  } finally { release(); }
-  expect(await opening).toEqual([]);
-  const [probe] = await page.evaluate(() => window.__bootstrapDiagnostic);
-  expect(probe.status).toBe(404);
-  expect(probe.elapsedMs).toBeGreaterThanOrEqual(2500);
+    try {
+      // A failed opening must not strand the server-side inspection gate.
+      expect(await Promise.race([owned.requested.then(() => true), opening.then(() => false)])).toBe(true);
+      expect(await page.evaluate(() => Boolean(window.__timelineDebug?.queryId))).toBe(false);
+      await expect(page.locator('.record-label')).toHaveCount(0);
+    } finally { owned.release(); }
+    await opening;
+    expect(errors).toEqual([]);
+    expect(requests).toHaveLength(1);
+    expect(requests[0].method()).toBe('GET');
+    expect(responses).toHaveLength(1);
+    expect(responses[0].status()).toBe(404);
+    const timing = requests[0].timing();
+    // Bootstrap resolves from response headers; its unused 404 body need not be consumed.
+    expect(timing.responseStart - timing.requestStart).toBeGreaterThanOrEqual(2500);
+    expect(owned.report.receipts).toHaveLength(1);
+    expect(owned.report.receipts[0].elapsedMs).toBeGreaterThanOrEqual(2500);
+    expect(await page.evaluate(() => window.__timelineDebug.providerKind)).toBe('local');
+    expect(owned.report.errors).toEqual([]);
+  } finally {
+    owned.release();
+    await opening.catch(() => {}); // Drain the opening if a pending-state assertion failed.
+    await owned.stop();
+    await info.attach('native-http-bootstrap', {
+      body: JSON.stringify({ ...owned.report, pageErrors: errors,
+        requests: requests.map(request => ({ path: new URL(request.url()).pathname, timing: request.timing() })),
+        statuses: responses.map(response => response.status()) }, null, 2), contentType: 'application/json',
+    });
+  }
 });
 
 for (const mode of ['local', 'server']) {
