@@ -89,6 +89,7 @@ const state = {
 let timeline, overviewRenderer, resizeTimer, searchTimer, toastTimer, dialogOpener, lastWidth = 0, lastHeight = 0;
 let reconcileViewport = () => {};
 let pendingViewportLayout = null;
+let pendingQueryViewport = null;
 let bandStack;
 let layoutIntent = 0, layoutQueue = Promise.resolve(), queryQueue = Promise.resolve(), sourceIntent = 0, importIntent = 0, selectionIntent = 0;
 let localBranch = null, fallbackActive = false;
@@ -466,25 +467,32 @@ function shell() {
   $('.provider-status').textContent = location.protocol === 'file:' ? 'Opening Local snapshot...' : 'Connecting configured source...';
   bindShell(); updateIcons();
   const viewportLayoutPending = () => pendingViewportLayout?.intent === layoutIntent && pendingViewportLayout.provider === state.provider && pendingViewportLayout.query === state.query && pendingViewportLayout.queryEpoch === state.epoch;
+  const currentQueryViewport = () => state.queryLoading && pendingQueryViewport?.provider === state.provider && pendingQueryViewport.epoch === state.epoch ? pendingQueryViewport : null;
   reconcileViewport = () => {
     if (state.view === 'table') return;
     if (viewportLayoutPending()) return;
     const plot = $('.plot-wrap');
     if (!plot) return;
     const box = plot.getBoundingClientRect();
-    if (Math.abs(box.width - lastWidth) < 1 && Math.abs(box.height - lastHeight) < 1) return;
+    const pending = currentQueryViewport();
+    // Height changes can use the incoming query; its width already owns scaling.
+    if (pending && Math.abs(box.width - pending.width) < 1) return;
+    if (!pending && Math.abs(box.width - lastWidth) < 1 && Math.abs(box.height - lastHeight) < 1) return;
     clearTimeout(resizeTimer); const resize = () => {
       if (reconnectRequest) { pendingReconnectResize = resize; return; }
       if (!state.query || state.view === 'table') return;
       if (viewportLayoutPending()) return;
       const current = $('.plot-wrap')?.getBoundingClientRect();
       if (!current) return;
-      if (Math.abs(current.width - lastWidth) < 1 && Math.abs(current.height - lastHeight) < 1) return;
-      if (navigation?.active && Math.abs(current.width - lastWidth) < 1) {
+      const pending = currentQueryViewport();
+      if (pending && Math.abs(current.width - pending.width) < 1) return;
+      if (!pending && Math.abs(current.width - lastWidth) < 1 && Math.abs(current.height - lastHeight) < 1) return;
+      const widthChanged = Math.abs(current.width - (pending?.width ?? lastWidth)) >= 1;
+      if (navigation?.active && !widthChanged) {
         resizeTimer = setTimeout(resize, 100); return;
       }
       navigation?.cancel(); recordGestures?.cancel();
-      if (state.scaleMode === 'adaptive' && state.scaleStrategy === 'automatic' && Math.abs(current.width - lastWidth) >= 1) refreshQuery();
+      if (state.scaleMode === 'adaptive' && state.scaleStrategy === 'automatic' && widthChanged) refreshQuery();
       else refreshLayout();
     }; resizeTimer = setTimeout(resize, 100);
   };
@@ -847,7 +855,7 @@ function descriptorSelectionScope() {
 }
 async function performQuery(epoch, provider, { focusTime, navigationOnly = false, pageIndex: requestedPageIndex } = {}) {
   setBusy(true);
-  let stagedQuery = null, releasePreparation;
+  let stagedQuery = null, releasePreparation, viewportRequest = null, completed = false;
   try {
     releasePreparation = await preparationAdmission.acquire();
     if (epoch !== state.epoch || provider !== state.provider) return;
@@ -860,6 +868,8 @@ async function performQuery(epoch, provider, { focusTime, navigationOnly = false
     const oldQuery = state.query;
     const descriptorScope = descriptorSelectionScope();
     const plot = $('.plot-wrap').getBoundingClientRect(), width = Math.max(100, Math.round(plot.width || $('.primary').clientWidth - 40)), height = Math.max(1, Math.round(plot.height || 400));
+    viewportRequest = { provider, epoch, width: plot.width, height: plot.height };
+    pendingQueryViewport = viewportRequest;
     const focusRanges = new Map(), requestedRange = { fromMs: state.fromMs, toMs: state.toMs };
     const queryDomain = state.info.legacy?.lazy ? bufferedWindow(requestedRange, state.info.legacy.loading?.bufferRatio ?? .25) : state.domain;
     const prepared = await prepareScaledQuery(provider,
@@ -919,7 +929,16 @@ async function performQuery(epoch, provider, { focusTime, navigationOnly = false
       if (epoch !== state.epoch || provider !== state.provider) return;
       await selectRecord(selectedId, null, { clearIfUnavailable: true });
     }
-  } catch (error) { if (stagedQuery && state.query?.queryId !== stagedQuery.queryId) await provider.releaseQuery(stagedQuery.queryId).catch(() => {}); if (epoch === state.epoch && provider === state.provider) showError(error); } finally { releasePreparation?.(); if (epoch === state.epoch) { state.queryLoading = false; setBusy(false); } }
+    completed = true;
+  } catch (error) { if (stagedQuery && state.query?.queryId !== stagedQuery.queryId) await provider.releaseQuery(stagedQuery.queryId).catch(() => {}); if (epoch === state.epoch && provider === state.provider) showError(error); } finally {
+    releasePreparation?.();
+    if (pendingQueryViewport === viewportRequest) pendingQueryViewport = null;
+    if (epoch === state.epoch) {
+      state.queryLoading = false; setBusy(false);
+      // Reconcile deferred geometry once after adoption, never by retrying a failure.
+      if (completed && provider === state.provider && state.query === stagedQuery) reconcileViewport();
+    }
+  }
 }
 async function visibleLayout(provider, queryId, mapId, width, height, range = { fromMs: state.fromMs, toMs: state.toMs }, options = {}) {
   await bandStack.releaseLayouts(provider, queryId);

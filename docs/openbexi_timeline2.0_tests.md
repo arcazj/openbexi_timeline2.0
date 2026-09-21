@@ -111,6 +111,16 @@ It fails against the preceding ordering, which created two contexts first.
 This separates startup work without changing the five-second deadline; the
 underlying hosted browser/network cause remains unproven.
 
+A Windows Chromium descriptor case exposed a height-only resize restarting an
+adaptive query that was already preparing the correct width. Comparing against
+the preceding painted width caused duplicate density preparation. Resize now
+uses the current query's target width, defers height changes until successful
+adoption, and then reconciles the layout. A real width change still supersedes
+preparation, including closing the descriptor to restore the preceding width.
+Held real-query regressions check query identity, adoption of the taller layout,
+and unchanged source and time range. The height case fails against the preceding
+build because it replaces the held query; no readiness budget is increased.
+
 A demo sharing failure exposed a reviewed Apply button remaining enabled during
 a background viewport relayout. The application correctly rejected the busy
 operation, but the test mistook the original view becoming ready for a successful
