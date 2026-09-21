@@ -48,9 +48,9 @@ def fixture_client(tmp_path, bundle, records):
 
 def test_table_traverses_complete_query_not_loaded_timeline_rows(client, bundle):
     query = create_query(client, bundle)
-    layout = client.post(BASE + f'/query-sessions/{query["queryId"]}/layouts', json={
+    layout = prepared(client, client.post(BASE + f'/query-sessions/{query["queryId"]}/layouts', json={
         "mapId": query["mapId"], **bundle["settings"]["range"], "width": 1200, "availableHeight": 64,
-    }).json()
+    })).json()
     row_page = client.get(BASE + f'/query-sessions/{query["queryId"]}/layouts/{layout["layoutId"]}/rows').json()
     assert row_page["loadedCount"] < 48
     cursor, found, pages = None, [], []

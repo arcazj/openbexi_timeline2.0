@@ -10,6 +10,7 @@ from server.app.models.domain import DomainError
 from server.app.services.query import QueryEngine
 from server.app.services.query_access import query_access
 from server.app.services.query_resources import QueryResourceLedger, children
+from test_api import prepared
 from test_identity_api import create_identity
 from test_presentation import SnapshotRepository
 
@@ -127,12 +128,7 @@ def test_four_queries_per_trusted_principal_not_four_globally(client, bundle, ap
     for headers in (alice, bob):
         for _ in range(4):
             result = client.post(BASE + "/query-sessions", headers=headers, json={"domain": bundle["settings"]["overview"]})
-            assert result.status_code in (200, 202), result.text
-            deadline = time.monotonic() + 5
-            while result.json()["state"] == "preparing" and time.monotonic() < deadline:
-                time.sleep(0.01)
-                result = client.get(BASE + "/query-sessions/" + result.json()["queryId"], headers=headers)
-            assert result.status_code == 200 and result.json()["state"] == "ready", result.text
+            result = prepared(client, result, headers=headers)
             handles.append((headers, result.json()))
         rejected = client.post(BASE + "/query-sessions", headers=headers, json={"domain": bundle["settings"]["overview"]})
         assert rejected.status_code == 429 and rejected.json()["code"] == "query_capacity"
@@ -146,11 +142,10 @@ def test_four_queries_per_trusted_principal_not_four_globally(client, bundle, ap
 def test_http_layout_inspection_is_immutable_owned_and_reports_expiry(client, bundle, app):
     _, _, alice = create_identity(client)
     _, _, bob = create_identity(client)
-    query = client.post(BASE + "/query-sessions", headers=alice, json={"domain": bundle["settings"]["overview"]}).json()
+    query = prepared(client, client.post(BASE + "/query-sessions", headers=alice, json={"domain": bundle["settings"]["overview"]}), headers=alice).json()
     prefix = BASE + "/query-sessions/" + query["queryId"]
     request = {**bundle["settings"]["range"], "mapId": query["mapId"], "width": 1000, "availableHeight": 480}
-    created = client.post(prefix + "/layouts", headers=alice, json=request)
-    assert created.status_code == 200, created.text
+    created = prepared(client, client.post(prefix + "/layouts", headers=alice, json=request), headers=alice)
     manifest = created.json()
     path = prefix + "/layouts/" + manifest["layoutId"]
     response = client.get(path, headers=alice)

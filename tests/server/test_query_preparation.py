@@ -281,7 +281,8 @@ def test_admitted_query_pins_data_before_queue_execution(coordinator, app, bundl
 
     def held(job, resources):
         entered.set()
-        assert finish.wait(5)
+        # The test owner releases this gate after its real record commit.
+        finish.wait()
         return original(job, resources)
 
     monkeypatch.setattr(coordinator, "_calculate", held)
@@ -354,7 +355,15 @@ def test_http_async_status_locations_and_completed_sync_failure(coordinator, cli
     assert client.get(created.headers["location"]).status_code == 200
     assert client.delete(created.headers["location"]).status_code == 204
     monkeypatch.setattr(coordinator, "_calculate", original)
-    coordinator.ready_wait_seconds = 1
+    original_submit = coordinator._submit
+
+    def completed_submit(*args, **kwargs):
+        job = original_submit(*args, **kwargs)
+        # Exercise the already-completed failure branch with the real worker result.
+        assert job.done.wait(3)
+        return job
+
+    monkeypatch.setattr(coordinator, "_submit", completed_submit)
     invalid = client.post(BASE + "/query-sessions", json={"domain": bundle["settings"]["overview"], "scaleMode": "unknown"})
     assert invalid.status_code == 422 and invalid.json()["code"] == "invalid_query"
     assert not app.state.queries.queries and not coordinator.jobs

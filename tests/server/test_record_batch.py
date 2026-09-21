@@ -6,6 +6,7 @@ import pytest
 from conftest import BASE, ROOT
 from server.app.models.domain import DomainError
 from server.app.repositories.json_repository import JsonRepository
+from test_api import prepared
 
 
 def batch(client, headers, operations, key="batch"):
@@ -18,7 +19,7 @@ def operation(record, kind="update", payload=None):
 
 def test_batch_one_revision_and_exact_retry_with_stale_versions(client, write_headers, bundle, app):
     first, second = bundle["records"][:2]
-    query = client.post(BASE + "/query-sessions", json={"domain": bundle["settings"]["overview"]}).json()
+    admitted = client.post(BASE + "/query-sessions", json={"domain": bundle["settings"]["overview"]})
     operations = [operation(first, payload={"title": "First batch edit"}), operation(second, "patch", [{"op": "replace", "path": "/title", "value": "Second batch edit"}]),
                   {"type": "create", "payload": {"title": "Batch-created event", "start": "2026-09-12T12:00:00Z"}}]
     response = batch(client, write_headers, operations)
@@ -30,6 +31,8 @@ def test_batch_one_revision_and_exact_retry_with_stale_versions(client, write_he
     assert batch(client, write_headers, operations).json() == result
     assert client.get(BASE + "/command-results/batch").json() == result
     assert client.get(BASE).json()["revision"] == 2
+    # Admission precedes the commit; only consumption waits for preparation.
+    query = prepared(client, admitted).json()
     assert client.get(BASE + f'/query-sessions/{query["queryId"]}/overview').json()["total"] == 48
     assert len(app.state.repository.records) == len(bundle["records"]) + 1
 

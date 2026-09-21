@@ -1,5 +1,6 @@
 import uuid
 import time
+import threading
 
 import pytest
 
@@ -15,6 +16,31 @@ def prepared(client, response, *, headers=None):
     assert response.status_code == 200, response.text
     assert response.json().get("state", "ready") == "ready", response.text
     return response
+
+
+def preparation_failed(client, response, *, status, code, headers=None):
+    assert 400 <= status < 500
+    if response.status_code == status:
+        assert response.json()["status"] == status, response.text
+        assert response.json()["code"] == code, response.text
+        return response
+    assert response.status_code == 202, response.text
+    location = response.headers["location"]
+    try:
+        deadline = time.monotonic() + 5
+        while response.status_code == 202 and time.monotonic() < deadline:
+            assert response.json()["state"] == "preparing", response.text
+            assert response.headers["location"] == location
+            time.sleep(0.01)
+            response = client.get(location, headers=headers)
+        assert response.status_code == 200, response.text
+        assert response.json()["state"] == "failed", response.text
+        assert response.json()["error"]["status"] == status, response.text
+        assert response.json()["error"]["code"] == code, response.text
+        return response
+    finally:
+        released = client.delete(location, headers=headers)
+        assert released.status_code == 204, released.text
 
 
 def query(client, bundle, **kwargs):
@@ -181,15 +207,48 @@ def test_handles_are_bounded_and_releasable(client, bundle, app):
     assert client.get(BASE + f'/query-sessions/{fresh["queryId"]}/density').status_code == 410
 
 
-def test_query_and_layout_validation(client, bundle):
-    assert client.post(BASE + "/query-sessions", json={"domain": bundle["settings"]["overview"], "bins": 0}).status_code == 422
-    assert client.post(BASE + "/query-sessions", json={"domain": bundle["settings"]["overview"], "search": '"bad'}).status_code == 422
+@pytest.mark.parametrize("asynchronous", [False, True])
+def test_query_and_layout_validation(client, bundle, app, monkeypatch, asynchronous):
+    def invalid(path, request, code):
+        if asynchronous:
+            coordinator, release = app.state.preparations, threading.Event()
+            calculate = coordinator._calculate
+
+            def held(job, resources):
+                release.wait()
+                return calculate(job, resources)
+
+            with monkeypatch.context() as patch:
+                patch.setattr(coordinator, "_calculate", held)
+                try:
+                    response = client.post(path, json=request, headers={"Prefer": "respond-async"})
+                    assert response.status_code == 202, response.text
+                    assert client.get(response.headers["location"]).json()["state"] == "preparing"
+                finally:
+                    release.set()
+                preparation_failed(client, response, status=422, code=code)
+                assert client.get(response.headers["location"]).status_code == 404
+        else:
+            preparation_failed(client, client.post(path, json=request), status=422, code=code)
+
+    invalid(BASE + "/query-sessions", {"domain": bundle["settings"]["overview"], "bins": 0}, "invalid_query")
+    invalid(BASE + "/query-sessions", {"domain": bundle["settings"]["overview"], "search": '"bad'}, "invalid_search")
     manifest = query(client, bundle)
     request = {"mapId": manifest["mapId"], **bundle["settings"]["range"], "width": 1200, "availableHeight": 10}
     path = BASE + f'/query-sessions/{manifest["queryId"]}/layouts'
-    assert client.post(path, json=request).status_code == 422
+    invalid(path, request, "invalid_query")
     request.update(availableHeight=64, viewFromMs="1e10")
-    assert client.post(path, json=request).status_code == 422
+    invalid(path, request, "invalid_view")
+    assert set(app.state.queries.queries) == {manifest["queryId"]}
+    assert not app.state.queries.queries[manifest["queryId"]]["layouts"]
+    assert not app.state.preparations.jobs
+
+
+def test_preparation_failure_preserves_immediate_admission_error(client, app):
+    response = client.post(BASE + "/query-sessions", json=[])
+    assert response.status_code == 400
+    assert preparation_failed(client, response, status=400, code="invalid_request") is response
+    assert not app.state.queries.queries and not app.state.preparations.jobs
 
 
 def test_parent_delete_is_not_implicit_cascade(client, write_headers):

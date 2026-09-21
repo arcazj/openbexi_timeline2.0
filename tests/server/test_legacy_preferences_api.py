@@ -48,7 +48,8 @@ def test_preferences_query_pinning_and_legacy_readonly_http(legacy, tmp_path, mo
 
         def held(job, resources):
             entered.set()
-            assert finish.wait(10)
+            # The test owner releases this gate after its real preference commit.
+            finish.wait()
             return original_calculate(job, resources)
 
         monkeypatch.setattr(app.state.preparations, '_calculate', held)
