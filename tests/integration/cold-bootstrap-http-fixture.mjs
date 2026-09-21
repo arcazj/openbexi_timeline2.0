@@ -4,8 +4,8 @@ import { readFile } from 'node:fs/promises';
 import { createHash } from 'node:crypto';
 import { setTimeout as delay } from 'node:timers/promises';
 
-// Serve the unchanged bundle and a genuinely slow HTTP response, without routing
-// interception or replacing fetch. The inspection gate cannot shorten the delay.
+// Serve the unchanged bundle and a genuinely slow HTTP response over a real socket.
+// The inspection gate cannot shorten the delay.
 export async function startColdBootstrapHttpFixture({ html, port = 0 } = {}) {
   const document = html ?? await readFile(new URL('../../dist/index.html', import.meta.url));
   const receipts = [], errors = [], sockets = new Set(), tasks = new Set(), controllers = new Set();

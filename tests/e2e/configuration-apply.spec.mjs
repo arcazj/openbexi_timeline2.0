@@ -60,10 +60,10 @@ const filter = { sourceIds: ['operations'], kinds: ['session'], schemaRefs: [], 
 // the ordinary 30-second budget; startupTarget retains its native five seconds.
 base('cold bootstrap can take more than two seconds without premature sample data', async ({ page }, info) => {
   const errors = [], requests = [], responses = [];
-  let graphicsBeforeResponse;
   await page.addInitScript(() => {
-    const getContext = HTMLCanvasElement.prototype.getContext;
+    const getContext = HTMLCanvasElement.prototype.getContext, nativeFetch = window.fetch;
     window.__coldBootstrapGraphics = [];
+    window.__coldBootstrapResponses = [];
     HTMLCanvasElement.prototype.getContext = function (...args) {
       const startedAt = performance.now(), context = Reflect.apply(getContext, this, args);
       if (context && ['webgl', 'webgl2', 'experimental-webgl'].includes(args[0])) {
@@ -71,25 +71,50 @@ base('cold bootstrap can take more than two seconds without premature sample dat
       }
       return context;
     };
+    // Observe the real response synchronously before handing it to startupTarget.
+    // The original receiver, arguments, signal, response and error are preserved.
+    window.fetch = function () {
+      'use strict';
+      if (arguments[0] !== '/api/v1/bootstrap') return Reflect.apply(nativeFetch, this, arguments);
+      const observation = { startedAt: performance.now() };
+      window.__coldBootstrapResponses.push(observation);
+      const failed = error => {
+        Object.assign(observation, { failedAt: performance.now(), error: error.name, message: error.message });
+        throw error;
+      };
+      try {
+        return Reflect.apply(nativeFetch, this, arguments).then(response => {
+          Object.assign(observation, { receivedAt: performance.now(), status: response.status,
+            graphics: window.__coldBootstrapGraphics.map(context => ({ ...context })),
+            bootText: document.querySelector('.boot-status')?.textContent,
+            hasQuery: Boolean(window.__timelineDebug?.queryId), recordLabelCount: document.querySelectorAll('.record-label').length });
+          return response;
+        }, failed);
+      } catch (error) { return failed(error); }
+    };
   });
   page.on('pageerror', error => errors.push(error.message));
   page.on('dialog', dialog => dialog.accept());
   page.on('request', request => { if (new URL(request.url()).pathname === '/api/v1/bootstrap') requests.push(request); });
   page.on('response', response => { if (new URL(response.url()).pathname === '/api/v1/bootstrap') responses.push(response); });
   const owned = await startColdBootstrapHttpFixture();
+  // Browser inspection must not hold the native response past the app deadline.
+  // The fixture still waits at least 2.5 seconds after receiving this request.
+  const requested = owned.requested.then(() => { owned.release(); return true; });
   const opening = openContractFixture(page, owned.baseUrl);
   try {
-    try {
-      // A failed opening must not strand the server-side inspection gate.
-      expect(await Promise.race([owned.requested.then(() => true), opening.then(() => false)])).toBe(true);
-      // Source discovery must precede graphics initialization, even on a cold browser.
-      graphicsBeforeResponse = await page.evaluate(() => window.__coldBootstrapGraphics);
-      expect(graphicsBeforeResponse).toHaveLength(0);
-      await expect(page.locator('.boot-status')).toHaveText('Opening timeline...');
-      expect(await page.evaluate(() => Boolean(window.__timelineDebug?.queryId))).toBe(false);
-      await expect(page.locator('.record-label')).toHaveCount(0);
-    } finally { owned.release(); }
+    expect(await Promise.race([requested, opening.then(() => false)])).toBe(true);
     await opening;
+    const browser = await page.evaluate(() => ({ responses: window.__coldBootstrapResponses, graphics: window.__coldBootstrapGraphics }));
+    expect(browser.responses).toHaveLength(1);
+    const beforeResponse = browser.responses[0];
+    expect(beforeResponse.status).toBe(404);
+    expect(beforeResponse.graphics).toHaveLength(0);
+    expect(beforeResponse.bootText).toBe('Opening timeline...');
+    expect(beforeResponse.hasQuery).toBe(false);
+    expect(beforeResponse.recordLabelCount).toBe(0);
+    expect(browser.graphics.length).toBeGreaterThanOrEqual(2);
+    for (const context of browser.graphics) expect(context.startedAt).toBeGreaterThanOrEqual(beforeResponse.receivedAt);
     expect(errors).toEqual([]);
     expect(requests).toHaveLength(1);
     expect(requests[0].method()).toBe('GET');
@@ -101,7 +126,6 @@ base('cold bootstrap can take more than two seconds without premature sample dat
     expect(owned.report.receipts).toHaveLength(1);
     expect(owned.report.receipts[0].elapsedMs).toBeGreaterThanOrEqual(2500);
     expect(await page.evaluate(() => window.__timelineDebug.providerKind)).toBe('local');
-    expect(await page.evaluate(() => window.__coldBootstrapGraphics.length)).toBeGreaterThanOrEqual(2);
     expect(await page.evaluate(() => window.__timelineDebug.recordCount)).toBe(48);
     await expect(page.locator('.plot-wrap canvas')).toBeVisible();
     await expect(page.locator('.overview-plot canvas')).toBeVisible();
@@ -113,12 +137,12 @@ base('cold bootstrap can take more than two seconds without premature sample dat
     const browser = await page.evaluate(() => {
       const timing = entry => ({ startTime: entry.startTime, duration: entry.duration, requestStart: entry.requestStart,
         responseStart: entry.responseStart, responseEnd: entry.responseEnd, transferSize: entry.transferSize });
-      return { timeOrigin: performance.timeOrigin, graphics: window.__coldBootstrapGraphics,
+      return { timeOrigin: performance.timeOrigin, graphics: window.__coldBootstrapGraphics, responses: window.__coldBootstrapResponses,
         navigation: performance.getEntriesByType('navigation').map(timing),
         bootstrapTimings: performance.getEntriesByType('resource').filter(entry => new URL(entry.name).pathname === '/api/v1/bootstrap').map(timing) };
     }).catch(error => ({ diagnosticUnavailable: error.name }));
     await info.attach('native-http-bootstrap', {
-      body: JSON.stringify({ ...owned.report, pageErrors: errors, graphicsBeforeResponse, browser,
+      body: JSON.stringify({ ...owned.report, pageErrors: errors, graphicsBeforeResponse: browser.responses?.[0]?.graphics, browser,
         requests: requests.map(request => ({ path: new URL(request.url()).pathname, timing: request.timing() })),
         statuses: responses.map(response => response.status()) }, null, 2), contentType: 'application/json',
     });

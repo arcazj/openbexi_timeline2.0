@@ -1,5 +1,5 @@
 import { spawn } from 'node:child_process';
-import { mkdtemp, mkdir, readFile, writeFile, rm } from 'node:fs/promises';
+import { mkdtemp, mkdir, readFile, writeFile, rename, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { once } from 'node:events';
 import net from 'node:net';
@@ -30,6 +30,12 @@ export async function startLocalPathsServer({ deferStartup = false, deferIndex =
   const config = path.join(directory, 'sources.yml');
   await writeFile(config, 'data_sources:\n' + ['SOURCE1', 'SOURCE2', 'SOURCE3'].map(namespace => `- namespace: ${namespace}\n  type: json_file\n  enable: true\n  data_model: /data/${namespace}/yyyy/mm/dd\n  render: {color: '${namespace === 'SOURCE1' ? '#dceef0' : '#ecedda'}', textColor: '#142c31', dateColor: '#142c31'}\n`).join(''));
   const gate = path.join(directory, 'startup-gate'), started = performance.now();
+  async function releaseGate(value) {
+    // Existence releases the Python fixture, so publish only a complete marker.
+    const staged = `${gate}.pending`;
+    await writeFile(staged, value);
+    await rename(staged, gate);
+  }
   const entry = deferStartup ? ['tests/integration/delayed-legacy-server.py', gate] : deferIndex ? ['tests/integration/lazy-legacy-server.py', gate] : ['scripts/serve-legacy.py'];
   const child = spawn(path.join(root, '.venv', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python'), [
     ...entry, '--source-yaml', config, '--legacy-root', legacy, '--allow-root', authority,
@@ -51,8 +57,8 @@ export async function startLocalPathsServer({ deferStartup = false, deferIndex =
         if (response.ok) {
           await response.arrayBuffer();
           return { baseUrl, stop, urlAvailableMs: performance.now() - started,
-            releaseIndex: () => writeFile(gate, 'ready'),
-            releaseStartup: (fail = false) => writeFile(gate, fail ? 'fail' : 'ready') };
+            releaseIndex: () => releaseGate('ready'),
+            releaseStartup: (fail = false) => releaseGate(fail ? 'fail' : 'ready') };
         }
       } catch { /* Startup is bounded. */ }
       await new Promise(resolve => setTimeout(resolve, 100));

@@ -90,9 +90,11 @@ shared-view cases passed across the three browsers after this correction.
 A subsequent Windows Firefox capture recorded a bootstrap `AbortError` after
 5,005 ms, before the test interceptor ran. It did not identify the underlying
 browser or interception delay. The cold-bootstrap case now uses a real HTTP
-server that delays its 404 response for at least 2.5 seconds and until the test
-has checked that no sample records appeared. It leaves native fetch, the
-application's five-second deadline and the test's 30-second budget unchanged.
+server that delays its 404 response for at least 2.5 seconds. A transparent
+observer forwards the native fetch call and records page state when its real
+response arrives, before passing that same response to the application.
+The application's five-second deadline and the test's 30-second budget remain
+unchanged; response delivery does not wait for browser automation inspection.
 Independent server receipts and browser timings make any future failure
 observable. Six fixture checks cover the delay, inspection gate, disconnects,
 shutdown and occupied-port failure. Both the previous routed test and a native
@@ -104,12 +106,27 @@ A later Windows Firefox native-HTTP run received no bootstrap request at either
 the server or the browser observer. The main document transferred in 4.59 seconds,
 but navigation completed after 15.90 seconds with startup already unavailable;
 the delayed response handler never ran. Source discovery now completes before
-explicit font loading and graphics construction. The regression holds the real
-bootstrap response while checking the initial loading status and zero successful
-WebGL contexts, then requires the delayed 404, query and rendered canvases.
+explicit font loading and graphics construction. The regression records the
+initial loading status, absent query and records, and zero successful WebGL
+contexts at response receipt, then requires the delayed 404, query and rendered
+canvases. Every graphics context must start after the response observation.
 It fails against the preceding ordering, which created two contexts first.
 This separates startup work without changing the five-second deadline; the
 underlying hosted browser/network cause remains unproven.
+
+Another hosted Firefox inspection took 6.32 seconds while the test held its
+response gate. The application correctly reached its five-second discovery
+deadline and showed the unavailable-server state without sample data. Recording
+the observations inside the page removes that test-created dependency; it does
+not identify the underlying browser protocol delay. The revised test rejects the
+preceding graphics ordering and passes locally in all three browsers.
+
+Deferred startup and index fixtures publish their complete control marker by
+same-directory rename. Writing directly to the visible marker could expose an
+empty file, which the startup fixture interpreted as success before its requested
+failure token arrived. A controlled probe reproduces that protocol race; startup,
+lazy-index and date-availability checks pass with atomic publication. This changes
+test coordination, not the production server or its deadlines.
 
 A Windows Chromium descriptor case exposed a height-only resize restarting an
 adaptive query that was already preparing the correct width. Comparing against
