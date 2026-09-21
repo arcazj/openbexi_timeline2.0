@@ -46,15 +46,37 @@ A second delayed-layout regression checks that reconciliation lets a newer
 pending layout finish instead of repeatedly canceling it. The archive-index test
 settles the calendar's resize before releasing its index gate, so its manual
 refresh assertion does not race an already completed automatic refresh.
+Its held-query check uses explicit refresh: a viewport resize can legitimately
+be consumed by a pending layout without creating another query. The check still
+requires date actions to remain disabled until the new query is ready, preserving
+the selected source and time range.
 
-Local Windows validation on September 20, 2026 passed 525 client tests,
+Backup integrity tests control both detection orders. An external edit detected
+during backup capture freezes the workspace and leaves an incomplete archive
+marker. An edit detected before backup admission freezes the workspace and
+rejects the backup before creating a destination. Both paths use the real
+integrity checks; neither publishes a completed backup.
+The 92 backup/integrity tests passed locally, and both final detection-order
+cases passed on Python 3.9 and 3.14.
+
+Firefox CI also checks WebGL2 before running the application suite. Linux uses
+Mesa software rendering; the preflight compiles shaders, draws a triangle and
+checks the resulting pixel. All twelve Windows/Linux interpreter jobs passed
+this graphics check. It fails explicitly when rendering is unavailable instead
+of turning an environment failure into an application-test timeout.
+
+Local Windows validation on September 20, 2026 passed 528 client tests,
 50 generator tests, 72 provider integration/parity tests and 1,253 Python 3.14
 server tests. One server test was skipped because the local account cannot
 create symbolic links. Focused Python 3.9 checks also passed. These results
 describe the local implementation checks; the full CI matrix below separately
 qualifies each operating system and interpreter combination.
-The initial committed build passed all 247 local Edge browser cases, while
-Linux Firefox CI exposed the resize regression described above.
+The final application build passed all 251 local Edge browser cases and all 16
+static-demo cases. Focused resize, date-navigation and stale-response coverage
+passed 42 cases across Chromium, Firefox and Edge. The delayed smart-drag test
+also accepts a valid immediately ready layout allocation before explicitly
+holding its owned layout response; its cancellation assertions passed in all
+three browsers. These focused checks supplement the full CI matrix below.
 
 The Windows/Linux CPython 3.9–3.14 matrix remains the qualification source for
 each commit: [Candidate Verification](https://github.com/arcazj/openbexi_timeline2.0/actions/workflows/verify.yml).

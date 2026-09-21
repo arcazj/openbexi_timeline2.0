@@ -97,22 +97,28 @@ test('indexed server dates are provisional until verified and never substitute a
     await page.getByRole('button', { name: 'Refresh available dates', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Next date with data', exact: true })).toBeEnabled();
     await expect(page.getByRole('list', { name: 'Available dates by source' }).locator('li')).toHaveCount(1);
+    const original = await page.evaluate(() => window.__timelineDebug);
     let requested = false, release;
     const held = new Promise(resolve => { release = resolve; });
     const pattern = '**/query-sessions';
     await page.route(pattern, async route => {
       if (route.request().method() !== 'POST' || route.request().postDataJSON()?.scaleMode !== 'adaptive') { await route.continue(); return; }
       requested = true; await held;
-      try { await route.continue(); } catch { /* A later query can supersede this resize. */ }
+      try { await route.continue(); } catch { /* A later query can supersede this request. */ }
     });
     try {
-      const viewport = page.viewportSize();
-      await page.setViewportSize({ width: viewport.width + 40, height: viewport.height });
+      // A resize can be absorbed by an already queued layout. Explicit refresh
+      // guarantees a new same-scope query whose pending state must disable dates.
+      await page.getByRole('button', { name: 'Refresh verified view', exact: true }).click();
       await expect.poll(() => requested).toBe(true);
       expect(await page.evaluate(() => window.__timelineDebug.queryLoading)).toBe(true);
       await expect(page.getByRole('button', { name: 'Next date with data', exact: true })).toBeDisabled();
     } finally { release(); await page.unroute(pattern); }
     await ready(page);
+    const refreshed = await page.evaluate(() => window.__timelineDebug);
+    expect(refreshed.queryId).not.toBe(original.queryId);
+    expect([refreshed.fromMs, refreshed.toMs]).toEqual([original.fromMs, original.toMs]);
+    expect(await page.locator('#source-filter').inputValue()).toBe(source);
     await page.getByRole('button', { name: 'Next date with data', exact: true }).click(); await ready(page);
     await expect(page.locator('.plot-wrap .record-label').first()).toBeVisible();
     expect(await page.locator('#source-filter').inputValue()).toBe(source);

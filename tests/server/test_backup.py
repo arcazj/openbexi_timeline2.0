@@ -10,6 +10,7 @@ import pytest
 
 from conftest import ROOT
 from server.app.models.domain import DomainError, content_checksum, read_json
+from server.app.repositories import integrity_monitor
 from server.app.repositories.audit_history import validate_audit_history
 from server.app.repositories.json_repository import JsonRepository, atomic_json
 from server.app.repositories.storage_migration import migrate_storage
@@ -272,13 +273,38 @@ def test_unrecognized_authority_or_pending_recovery_is_not_silently_omitted(tmp_
 def test_valid_out_of_band_record_edit_freezes_workspace_and_leaves_incomplete_archive(tmp_path):
     repository, identities, actor = initialized(tmp_path)
     record = next(iter(repository.records.values()))
-    atomic_json(repository.root / "records" / (record["id"] + ".json"), {**record, "title": "Unexpected external change"})
     try:
-        with pytest.raises(DomainError) as error:
-            backup.create_live_backup(repository, identities, actor, tmp_path / "backup")
+        # Preserve the backup's lock order and let capture detect the pre-existing
+        # edit. Otherwise the background monitor can reject it before staging.
+        with identities.mutex, repository.mutex:
+            atomic_json(repository.root / "records" / (record["id"] + ".json"), {**record, "title": "Unexpected external change"})
+            with pytest.raises(DomainError) as error:
+                backup.create_live_backup(repository, identities, actor, tmp_path / "backup")
         assert error.value.code == "external_change" and repository.available is False
-        assert (tmp_path / "backup" / backup.MARKER_NAME).exists()
+        assert read_json(tmp_path / "backup" / backup.MARKER_NAME)["phase"] == "backup-staging"
         assert not (tmp_path / "backup" / backup.MANIFEST_NAME).exists()
+    finally:
+        repository.close()
+        identities.close()
+
+
+def test_integrity_observation_before_backup_rejects_external_edit_without_creating_destination(tmp_path, monkeypatch):
+    # Drive the real observation without a background reader racing for its lock.
+    monkeypatch.setattr(integrity_monitor.WorkspaceIntegrity, "start", lambda self: None)
+    repository, identities, actor = initialized(tmp_path)
+    record = next(iter(repository.records.values()))
+    relative = "records/" + record["id"] + ".json"
+    destination = tmp_path / "backup"
+    try:
+        atomic_json(repository.root / relative, {**record, "title": "Unexpected external change"})
+        with pytest.raises(DomainError) as observed:
+            repository.integrity.check_file(relative)
+        assert observed.value.code == "external_change" and repository.available is False
+        assert repository.integrity.failure["path"] == relative
+        with pytest.raises(DomainError) as error:
+            backup.create_live_backup(repository, identities, actor, destination)
+        assert error.value.code == "external_change" and repository.available is False
+        assert not destination.exists()
     finally:
         repository.close()
         identities.close()
