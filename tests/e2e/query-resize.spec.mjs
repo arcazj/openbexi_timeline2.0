@@ -17,11 +17,17 @@ async function painted(page) {
 }
 
 for (const restoreWidth of [false, true]) {
-  test(`${restoreWidth ? 'width changes supersede' : 'height changes preserve'} the query being prepared for a descriptor`, async ({ page, pathsServer }) => {
-    let release, heldQueryId, intercepted = false;
+  test(`${restoreWidth ? 'width changes supersede' : 'height changes preserve'} the query being prepared for a descriptor`, async ({ page, pathsServer }, info) => {
+    let release, heldQueryId, heldQueryInput, intercepted = false;
     const gate = new Promise(resolve => { release = resolve; }), errors = [], layouts = [];
     const collectLayout = request => {
-      if (heldQueryId && request.method() === 'POST' && new URL(request.url()).pathname.endsWith(`/query-sessions/${heldQueryId}/layouts`)) layouts.push({ request, input: request.postDataJSON() });
+      if (!heldQueryId || request.method() !== 'POST' || !new URL(request.url()).pathname.endsWith(`/query-sessions/${heldQueryId}/layouts`)) return;
+      const observed = { input: request.postDataJSON() }; layouts.push(observed);
+      // Read each native response once; closing the page may reject a pending read.
+      observed.responseRead = request.response().then(async response => {
+        if (!response) throw new Error('The observed layout request received no response');
+        observed.status = response.status(); observed.body = await response.json();
+      }).catch(error => { observed.error = error.message; });
     };
     try {
       page.on('pageerror', error => errors.push(error.message));
@@ -34,9 +40,17 @@ for (const restoreWidth of [false, true]) {
       expect(before.scaleStrategy).toBe('automatic'); expect(before.scaleMode).toBe('adaptive');
       page.on('request', collectLayout);
       await page.route('**/api/v1/workspaces/default/query-sessions', async route => {
-        if (intercepted || route.request().method() !== 'POST' || !(await debug(page)).queryLoading) return route.continue();
-        intercepted = true;
-        expect(route.request().postDataJSON().ratio).toBe(1);
+        if (intercepted || route.request().method() !== 'POST') return route.continue();
+        const input = route.request().postDataJSON();
+        // The broader overview may already be in flight when queryLoading turns
+        // true. Descriptor resizing preserves the visible query's exact domain.
+        if (input.scaleMode !== before.scaleMode || input.domain?.from !== before.queryDomain.from || input.domain?.to !== before.queryDomain.to) return route.continue();
+        const current = await debug(page);
+        if (intercepted || !current.queryLoading) return route.continue();
+        intercepted = true; heldQueryInput = input;
+        expect(heldQueryInput.scaleMode).toBe(before.scaleMode);
+        expect(heldQueryInput.domain).toEqual(before.queryDomain);
+        expect(heldQueryInput.ratio).toBe(1);
         const response = await route.fetch({ headers: { ...await route.request().allHeaders(), 'sec-fetch-site': 'same-origin' } });
         expect([200, 202]).toContain(response.status());
         heldQueryId = (await response.json()).queryId; expect(heldQueryId).toEqual(expect.any(String));
@@ -62,17 +76,18 @@ for (const restoreWidth of [false, true]) {
       if (restoreWidth) expect(after.queryId).not.toBe(heldQueryId);
       else {
         expect(after.queryId).toBe(heldQueryId);
-        await expect.poll(() => layouts.length).toBeGreaterThanOrEqual(2);
-        const resized = layouts.at(-1);
-        expect(resized.input.availableHeight).toBeGreaterThan(layouts[0].input.availableHeight);
-        const response = await resized.request.response();
-        expect([200, 202]).toContain(response.status());
-        const { layoutId } = await response.json();
-        expect(layoutId).toEqual(expect.any(String));
         await expect.poll(async () => {
-          const view = await debug(page); return view.ready && view.layoutId === layoutId;
-        }).toBe(true);
-        after = await debug(page);
+          const view = await debug(page), box = await page.locator('.plot-wrap').boundingBox();
+          // More geometry can settle after a first taller allocation. Match the
+          // layout actually adopted by the ready view, not an earlier request.
+          const adopted = layouts.find(({ input, status, body, error }) => !error && [200, 202].includes(status)
+            && typeof body?.layoutId === 'string' && body.layoutId === view.layoutId
+            && input.mapId === view.mapId && input.viewFromMs === view.fromMs && input.viewToMs === view.toMs
+            && input.width === Math.round(box.width) && input.availableHeight > layouts[0].input.availableHeight);
+          const matched = view.ready && view.queryId === heldQueryId && !!adopted;
+          if (matched) after = view;
+          return matched;
+        }, { message: 'The ready view must adopt a successful taller layout for the held query and current viewport' }).toBe(true);
         expect(after.queryId).toBe(heldQueryId);
         await expect(page.locator('.descriptor')).toBeVisible();
       }
@@ -82,7 +97,13 @@ for (const restoreWidth of [false, true]) {
     } finally {
       release();
       try { await page.unrouteAll({ behavior: 'wait' }); }
-      finally { page.off('request', collectLayout); await page.close(); }
+      finally {
+        page.off('request', collectLayout); await page.close();
+        await Promise.all(layouts.map(({ responseRead }) => responseRead));
+        await info.attach('query-resize-layouts', {
+          body: JSON.stringify({ heldQueryId, heldQueryInput, layouts: layouts.map(({ input, status, body, error }) => ({ input, status, body, error })) }, null, 2), contentType: 'application/json',
+        });
+      }
     }
   });
 }
