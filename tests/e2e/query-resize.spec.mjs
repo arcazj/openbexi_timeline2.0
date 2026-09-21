@@ -33,7 +33,14 @@ for (const restoreWidth of [false, true]) {
       page.on('pageerror', error => errors.push(error.message));
       await page.goto(pathsServer.baseUrl); await ready(page);
       // One density candidate makes query reuse observable without depending on the optimizer's winner.
-      await page.locator('#local-scale').press('Home'); await page.locator('#local-scale').press('Tab');
+      // Settings retain the draft while startup layouts temporarily disable the live slider.
+      await page.getByRole('button', { name: 'Settings', exact: true }).click();
+      const settings = page.locator('#settings-form');
+      await settings.locator('[name=ratio]').fill('1');
+      // Keep room for the later viewport expansion; the initial height is viewport-clamped.
+      await settings.locator('[name=geometry-height]').fill(String(page.viewportSize().height + 80));
+      await settings.locator('[type=submit]').click();
+      await expect(page.getByRole('dialog', { name: 'Timeline settings' })).toHaveCount(0);
       await expect.poll(async () => (await debug(page)).scaleLimit).toBe(1);
       await painted(page);
       const before = await debug(page), initialBox = await page.locator('.plot-wrap').boundingBox();
