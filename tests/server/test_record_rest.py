@@ -1,9 +1,11 @@
 import copy
+import threading
 import uuid
 
 import pytest
 
 from conftest import BASE
+from test_api import prepared
 from server.app.models.domain import DomainError, MUTABLE_FIELDS
 from server.app.models.record_commands import patch_record
 
@@ -117,10 +119,29 @@ def test_health_capabilities_and_parameter_problems_are_sanitized(client, app):
     assert client.get("/api/v1/capabilities").json()["readOnly"] is True
 
 
-def test_structured_query_and_snapshot_release_use_their_actual_identities(client, bundle):
-    response = client.post(BASE + "/records/query", json={"domain": bundle["settings"]["overview"]})
-    assert response.status_code == 200
-    manifest = response.json()
+@pytest.mark.parametrize("deferred", [False, True], ids=["normal", "preparing"])
+def test_structured_query_and_snapshot_release_use_their_actual_identities(client, bundle, app, monkeypatch, deferred):
+    finish = threading.Event()
+    if deferred:
+        original = app.state.preparations._calculate
+
+        def held(job, resources):
+            assert finish.wait(5)
+            return original(job, resources)
+
+        monkeypatch.setattr(app.state.preparations, "_calculate", held)
+    try:
+        response = client.post(BASE + "/records/query", json={"domain": bundle["settings"]["overview"]},
+                               headers={"Prefer": "respond-async"} if deferred else {})
+        assert response.status_code in (200, 202), response.text
+        allocated = response.json()
+        if deferred:
+            assert response.status_code == 202
+            assert response.headers["location"] == BASE + "/query-sessions/" + allocated["queryId"]
+    finally:
+        finish.set()
+    manifest = prepared(client, response).json()
+    assert (manifest["queryId"], manifest["snapshotId"]) == (allocated["queryId"], allocated["snapshotId"])
     assert manifest["snapshotId"] != manifest["queryId"]
     assert client.delete(BASE + "/query-snapshots/" + manifest["snapshotId"]).status_code == 204
     assert client.get(BASE + "/query-sessions/" + manifest["queryId"]).status_code == 404
