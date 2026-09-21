@@ -85,19 +85,42 @@ def test_query_permission_change_invalidates_old_snapshot(client, bundle):
 
 def test_permission_revoked_during_preparation_discards_result(client, app, bundle, monkeypatch):
     principal, _, headers = create_identity(client)
-    original = app.state.queries.create_query
+    coordinator = app.state.preparations
+    original = coordinator._calculate
+    calculated, finish = threading.Event(), threading.Event()
+    jobs = []
 
-    def revoke_after_prepare(payload):
-        result = original(payload)
+    def held_after_prepare(job, resources):
+        jobs.append(job)
+        result = original(job, resources)
+        assert result["manifest"]["state"] == "ready"
+        calculated.set()
+        finish.wait()
+        return result
+
+    monkeypatch.setattr(coordinator, "_calculate", held_after_prepare)
+    try:
+        response = client.post(BASE + "/query-sessions", json={"domain": bundle["settings"]["overview"]},
+                               headers={**headers, "Prefer": "respond-async"})
+        assert response.status_code == 202, response.text
+        assert response.json()["state"] == "preparing"
+        assert calculated.wait(5)
+        assert len(jobs) == 1 and jobs[0].query_id == response.json()["queryId"]
         identities = app.state.identities
         admin = identities.authenticate(TOKEN)
         identities.update_principal(admin, principal["id"], {"enabled": False}, identities.state["generation"], 1, uuid.uuid4().hex)
-        return result
-
-    monkeypatch.setattr(app.state.queries, "create_query", revoke_after_prepare)
-    response = client.post(BASE + "/query-sessions", json={"domain": bundle["settings"]["overview"]}, headers=headers)
-    assert response.status_code == 401
+        assert client.get(response.headers["location"], headers=headers).status_code == 401
+        assert jobs[0].cancelled.is_set()
+    finally:
+        finish.set()
+        for job in jobs:
+            assert job.done.wait(5)
+    assert client.get(response.headers["location"], headers=headers).status_code == 401
     assert not app.state.queries.queries
+    assert not coordinator.jobs and not coordinator.queue
+    assert coordinator.stats()["active"] == 0
+    resources = app.state.queries.resources.stats()
+    assert resources["retainedBytes"] == resources["objects"] == resources["artifacts"] == 0
 
 
 def test_viewer_writes_denied_and_editor_cannot_move_to_hidden_source(client, bundle, write_headers):
