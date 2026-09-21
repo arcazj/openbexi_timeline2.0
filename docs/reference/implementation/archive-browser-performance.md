@@ -102,11 +102,53 @@ It identifies the timeout mechanism, but not the operation consuming its budget;
 cold-index preview preparation and incomplete edge coverage still need profiling
 before changing concurrency, cache sizes or timeout limits.
 
-Main-target JavaScript heap usage was 21.17 MiB at first ready, 22.12 MiB after
+For the original `9256389` build sample, main-target JavaScript heap usage was
+21.17 MiB at first ready, 22.12 MiB after
 the third operation round and 44.31 MiB immediately after the drag. These are
 unforced-GC samples, excluding Python, browser native/GPU memory and separate
 worker heaps; they are not total process memory or evidence of a leak. The final
 server parser cache was 66,886,769 bytes against its 67,108,864-byte limit.
+
+### Cold-index request-chain diagnostic: September 21, 2026 UTC
+
+One further sample started at `2026-09-21T02:25:34.262Z` (September 20 locally),
+on HEAD `67155e8778ca299e5e2109147e750034f4c532bd`, with exact HTML SHA-256
+`bae0bb8bc9c367ed574bff3772d85ba4a5620ec6912ce3ecb90ac45d4ce1ea71`.
+It used fresh temporary server state and Chromium without CPU/network throttling
+or user navigation. Filesystem caches remained uncontrolled. This separate
+startup diagnostic does not remeasure the earlier heap or drag results.
+
+Correlated request timings reproduced three eight-second timeouts for the
+March 25–April 2 future preview. Query preparation consumed most of the shared
+budget; each layout still reported `preparing` when cancellation began.
+
+| Speculative job | Query preparation | Map, zones and overview | Layout before timeout | Cleanup after timeout |
+| --- | ---: | ---: | ---: | ---: |
+| 1 | 5.693 s | 0.336 s | 1.990 s | 2.247 s |
+| 2 | 5.033 s | 0.106 s | 2.879 s | 1.317 s |
+| 4 | 6.165 s | 0.202 s | 1.654 s | 1.312 s |
+
+Query time includes allocation, status polling and ready-response processing.
+No failed job reached a rows request. Cleanup occurred outside the eight-second
+budget, and every failed query's deletion returned HTTP 204. One concurrent
+layout deletion returned the accepted HTTP 404 after its parent query was
+released. No uncaught page errors occurred.
+
+The first timeline was ready 2.596 seconds after navigation; indexing completed
+81.978 seconds after server launch with 149 partitions, 124,049 records and zero
+rejected files. Before/after archive receipts matched for all 120,831 files and
+97,676,740 bytes, and the bundle hash remained unchanged. The browser and server
+stopped; independent checks confirmed no remaining owned processes or listener,
+and temporary state was removed.
+
+The ignored `runtime/archive-chain-diagnostic-bae0bb8.json` retains all 138
+requests, matching browser fetch observations, buffer transitions and receipts.
+The accompanying `-correlated.json`, `-findings.md` and `-cleanup.json` files retain
+the job mapping, detailed chronology and cleanup verification; the `.log` records
+native exit code 0. This identifies where the client-visible budget was spent.
+It does not establish whether server CPU, storage, locks or another internal
+operation caused the query/layout latency. No production limits were changed,
+and no additional sample was run.
 
 ## Source preservation
 
