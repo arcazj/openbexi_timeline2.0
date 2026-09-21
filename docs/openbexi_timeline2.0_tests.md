@@ -110,6 +110,10 @@ reproduces the old enabled-button defect. The regression requires Apply to be
 disabled during the resize, restored availability afterward, explicit application, a new
 query and the exact reviewed range. The demo also requires the review dialog to
 close and the replacement query to be adopted before checking that range.
+Its Apply precondition checks that the painted canvas fits the current plot:
+the initial range label can wrap the toolbar and queue a resize after the query
+first becomes ready. This uses observed geometry, without a fixed sleep or a
+second click after a failed apply.
 
 Firefox CI also checks WebGL2 before running the application suite. Linux uses
 Mesa software rendering; the preflight compiles shaders, draws a triangle and

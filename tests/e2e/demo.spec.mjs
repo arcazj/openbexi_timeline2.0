@@ -112,6 +112,14 @@ test('demo sharing retains the dataset and waits for review before applying the 
   await expect(page.locator('.help-review')).toBeVisible();
   expect(await page.evaluate(() => window.__timelineDebug.fromMs)).not.toBe(fromMs);
   const previousQuery = await page.evaluate(() => window.__timelineDebug.queryId);
+  // The first range label can wrap the toolbar and queue a resize after query-ready.
+  await expect.poll(() => page.locator('.plot-wrap').evaluate(plot => {
+    const canvas = plot.querySelector('canvas'), box = plot.getBoundingClientRect();
+    const ratio = Math.min(devicePixelRatio, 2);
+    return window.__timelineDebug?.ready && !!canvas
+      && canvas.width === Math.floor(Math.round(box.width) * ratio)
+      && canvas.height === Math.floor(Math.round(box.height) * ratio);
+  })).toBe(true);
   await page.locator('[data-help=apply-link]').click();
   await expect(page.getByRole('dialog', { name: 'Help and sharing' })).toHaveCount(0);
   await expect.poll(() => page.evaluate(() => window.__timelineDebug.queryId)).not.toBe(previousQuery);
