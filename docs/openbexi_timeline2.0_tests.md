@@ -59,13 +59,36 @@ integrity checks; neither publishes a completed backup.
 The 92 backup/integrity tests passed locally, and both final detection-order
 cases passed on Python 3.9 and 3.14.
 
+The delayed-drag test drains routed background requests before stopping its
+server. A controlled reproduction confirms that the earlier teardown reset a
+live allocation request after the behavior assertions had passed. Legacy test
+fixtures also clear per-test ownership before startup and cleanup. Their health
+check uses the ordinary server fixture's 30-second elapsed budget, replacing
+120 probes that could stop after roughly 12 seconds on fast connection refusals
+or take roughly 42 seconds on slow responses. Process checkpoints and exit
+diagnostics make future startup failures observable; the earlier empty-output
+failure did not establish an application startup defect.
+Descriptor tests give their owned server fixture a separate 60-second allowance
+for startup and cleanup, including bounded process shutdown and file-removal
+retries. Their API setup and browser assertions keep the normal 30-second test
+budget; a failed startup cannot reuse another test's disposed server.
+Configuration and scoped-descriptor scenarios use the same separate ownership
+for their server startup. Bootstrap diagnostics now cover the initial readiness
+wait, recording only the request path, timing, status and native error. Earlier
+Windows Firefox traces showed an unavailable startup before any bootstrap
+request was recorded; those traces did not establish its native failure cause.
+All 51 configuration/scoped-descriptor cases passed locally across Chromium,
+Firefox and Edge with the owned fixtures. A failed cold-bootstrap opening also
+rejects its held-request gate directly, preserving the original failure instead
+of leaving an unhandled opening promise.
+
 Firefox CI also checks WebGL2 before running the application suite. Linux uses
 Mesa software rendering; the preflight compiles shaders, draws a triangle and
 checks the resulting pixel. All twelve Windows/Linux interpreter jobs passed
 this graphics check. It fails explicitly when rendering is unavailable instead
 of turning an environment failure into an application-test timeout.
 
-Local Windows validation on September 20, 2026 passed 528 client tests,
+Local Windows validation on September 20, 2026 passed 534 client tests,
 50 generator tests, 72 provider integration/parity tests and 1,253 Python 3.14
 server tests. One server test was skipped because the local account cannot
 create symbolic links. Focused Python 3.9 checks also passed. These results

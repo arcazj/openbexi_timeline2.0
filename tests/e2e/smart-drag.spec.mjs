@@ -141,7 +141,12 @@ test('slow server layout is shown as partial coverage and a new drag supersedes 
     const result = await debug(page);
     await info.attach('delayed-navigation.json', { body: JSON.stringify(result), contentType: 'application/json' });
     expect(result.navigationBuffer.activeRequests).toBeLessThanOrEqual(1); expect(errors).toEqual([]);
-  } finally { release(); await server.stop(); }
+  } finally {
+    release();
+    // Ready views can still warm neighboring layouts; drain their routed fetches
+    // while the server is alive so cleanup cannot reset an allocation request.
+    try { await page.unrouteAll({ behavior: 'wait' }); } finally { await server.stop(); }
+  }
 });
 
 test('simultaneous records retain the selected vertical page during drag and settling', async ({ page }) => {

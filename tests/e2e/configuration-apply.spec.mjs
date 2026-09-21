@@ -1,5 +1,6 @@
-import { test, expect } from '@playwright/test';
+import { test as base, expect } from '@playwright/test';
 import { openContractFixture } from './contract-fixture.mjs';
+import { observeBootstrap, attachBootstrapDiagnostic } from './bootstrap-diagnostic.mjs';
 import { readFile } from 'node:fs/promises';
 import { startServer } from '../integration/server-fixture.mjs';
 import { snapshotContent } from '../../client/src/data/snapshot-content.js';
@@ -7,39 +8,23 @@ import { sha256 } from '../../client/src/data/data-provider.js';
 import { LocalProvider } from '../../client/src/data/local-provider.js';
 const fixture = JSON.parse(await readFile('shared/fixtures/initial-snapshot.json', 'utf8'));
 let server;
-test.beforeEach(async () => { server = await startServer({ seedPath: 'shared/fixtures/initial-snapshot.json' }); });
-test.afterEach(async () => { await server?.stop(); });
+const test = base.extend({
+  _ownedServer: [async ({}, use) => {
+    server = null;
+    const owned = await startServer({ seedPath: 'shared/fixtures/initial-snapshot.json' });
+    server = owned;
+    try { await use(); }
+    finally { server = null; await owned.stop(); }
+  // Startup and cleanup have their own budget; API assertions and bodies keep 30s.
+  }, { auto: true, timeout: 60000 }],
+});
 async function ready(page) { await expect.poll(() => page.evaluate(() => Boolean(window.__timelineDebug?.queryId))).toBe(true); await expect(page.locator('.busy-indicator')).toHaveCount(0); }
 async function open(page, mode) {
   const errors = []; page.on('pageerror', error => errors.push(error.message)); page.on('dialog', dialog => dialog.accept());
-  // Capture the bounded bootstrap probe without logging request headers or data.
-  await page.addInitScript(() => {
-    const fetch = window.fetch;
-    window.__bootstrapDiagnostic = [];
-    window.fetch = function (input, options) {
-      'use strict';
-      const args = [input, options];
-      if (args[0] !== '/api/v1/bootstrap') return Reflect.apply(fetch, this, args);
-      const probe = { startedAt: performance.now() };
-      window.__bootstrapDiagnostic.push(probe);
-      const failed = error => {
-        Object.assign(probe, { elapsedMs: performance.now() - probe.startedAt, error: error.name, message: error.message });
-        throw error;
-      };
-      try {
-        return Reflect.apply(fetch, this, args).then(response => {
-          Object.assign(probe, { elapsedMs: performance.now() - probe.startedAt, status: response.status });
-          return response;
-        }, failed);
-      } catch (error) { return failed(error); }
-    };
-  });
-  await openContractFixture(page, server.baseUrl);
-  try { await ready(page); }
+  await observeBootstrap(page);
+  try { await openContractFixture(page, server.baseUrl); await ready(page); }
   catch (error) {
-    await test.info().attach('bootstrap-diagnostic', {
-      body: JSON.stringify(await page.evaluate(() => window.__bootstrapDiagnostic)), contentType: 'application/json',
-    });
+    await attachBootstrapDiagnostic(page, test.info());
     throw error;
   }
   if (mode === 'server') {
@@ -84,7 +69,8 @@ test('cold bootstrap can take more than two seconds without premature sample dat
   });
   const opening = open(page, 'local');
   try {
-    await requested;
+    // A failed bootstrap must reject the opening, not leave this gate pending.
+    expect(await Promise.race([requested.then(() => true), opening.then(() => false)])).toBe(true);
     expect(await page.evaluate(() => Boolean(window.__timelineDebug?.queryId))).toBe(false);
     await expect(page.locator('.record-label')).toHaveCount(0);
   } finally { release(); }

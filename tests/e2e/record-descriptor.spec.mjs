@@ -1,4 +1,4 @@
-import { test, expect } from '@playwright/test';
+import { test as base, expect } from '@playwright/test';
 import { mkdir, writeFile, readFile } from 'node:fs/promises';
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
@@ -6,14 +6,25 @@ import { startLegacyServer, legacyDomain } from '../integration/legacy-server-fi
 import { ServerProvider } from '../../client/src/data/server-provider.js';
 
 let server, snapshot;
-test.beforeEach(async () => {
-  server = await startLegacyServer();
-  const provider = new ServerProvider({ baseUrl: server.baseUrl, token: server.token });
-  await provider.initialize(); snapshot = await provider.exportSnapshot(); await provider.dispose();
+const test = base.extend({
+  _legacyServer: [async ({}, use) => {
+    server = null; snapshot = null;
+    const owned = await startLegacyServer();
+    server = owned;
+    try { await use(); }
+    finally {
+      server = null; snapshot = null;
+      try { for (const [filename, original] of owned.originals) expect(await readFile(filename)).toEqual(original); }
+      finally { await owned.stop(); }
+    }
+  // Shared setup/teardown slot: 30s readiness + 5s close + up to 7.8s file cleanup,
+  // with room for fixture I/O. beforeEach/API assertions and test bodies stay at 30s.
+  }, { auto: true, timeout: 60000 }],
 });
-test.afterEach(async () => {
-  try { for (const [filename, original] of server?.originals || []) expect(await readFile(filename)).toEqual(original); }
-  finally { await server?.stop(); }
+test.beforeEach(async () => {
+  const provider = new ServerProvider({ baseUrl: server.baseUrl, token: server.token });
+  try { await provider.initialize(); snapshot = await provider.exportSnapshot(); }
+  finally { await provider.dispose(); }
 });
 
 const target = () => snapshot.records.find(record => record.extensions.legacy.id === 'long');

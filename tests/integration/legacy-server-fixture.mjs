@@ -5,6 +5,7 @@ import { once } from 'node:events';
 import net from 'node:net';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { waitForFixtureReady } from './fixture-readiness.mjs';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '../..');
 export const legacyDomain = { from: '2024-03-01T00:00:00.000Z', to: '2024-03-02T00:00:00.000Z' };
@@ -18,7 +19,7 @@ export async function startLegacyServer({ recordsBySource, preferences = false }
   await new Promise(resolve => listener.close(resolve));
   const token = 'legacy-parity-test-token-not-for-production';
   const executable = path.join(root, '.venv', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python');
-  let child, exit, output = '';
+  let child, exit, spawnError, output = '';
   async function events(source, day, items) {
     const filename = path.join(authority, source, day, 'events.json');
     await mkdir(path.dirname(filename), { recursive: true });
@@ -65,7 +66,17 @@ export async function startLegacyServer({ recordsBySource, preferences = false }
   const originals = new Map(await Promise.all(files.map(async filename => [filename, await readFile(filename)])));
   const baseUrl = `http://127.0.0.1:${port}`;
   async function stop() {
-    if (child && child.exitCode === null && child.signalCode === null) { child.kill(); await exit; }
+    if (child?.pid && child.exitCode === null && child.signalCode === null && !child.kill()) {
+      throw new Error(`Legacy fixture could not stop PID ${child.pid}; preserving ${directory}`);
+    }
+    if (child) {
+      let timer;
+      try {
+        await Promise.race([exit, new Promise((_, reject) => {
+          timer = setTimeout(() => reject(new Error(`Legacy fixture PID ${child.pid ?? 'not spawned'} did not close; preserving ${directory}`)), 5000);
+        })]);
+      } finally { clearTimeout(timer); }
+    }
     const resolved = path.resolve(directory);
     if (path.dirname(resolved) === path.resolve(tmpdir()) && path.basename(resolved).startsWith('openbexi-legacy-parity-')) {
       await rm(resolved, { recursive: true, force: true, maxRetries: 12, retryDelay: 100 });
@@ -75,21 +86,28 @@ export async function startLegacyServer({ recordsBySource, preferences = false }
     const args = preferences ? ['scripts/serve-legacy.py', '--yaml', yaml] : ['scripts/serve-legacy.py', '--source-yaml', yaml, '--legacy-root', legacy,
       '--allow-root', authority, '--path-map', `/archive=${authority}`, '--model', model,
       '--namespace-grouping', '--state-root', path.join(directory, 'state'), '--port', String(port)];
-    child = spawn(executable, args, {
+    // Emit a flushed interpreter checkpoint before importing the application.
+    // A future failure can distinguish process startup from app/ASGI readiness.
+    child = spawn(executable, ['-u', '-c', 'import runpy,sys; print("Legacy fixture interpreter started", flush=True); script=sys.argv.pop(1); runpy.run_path(script, run_name="__main__")', ...args], {
       cwd: root, windowsHide: true, env: { ...process.env, OPENBEXI_API_TOKEN: token }, stdio: ['ignore', 'pipe', 'pipe'],
     });
     child.stdout.on('data', value => { output = (output + value).slice(-32000); });
     child.stderr.on('data', value => { output = (output + value).slice(-32000); });
-    exit = once(child, 'exit');
-    for (let attempt = 0; attempt < 120; attempt++) {
-      if (child.exitCode !== null) throw new Error(`Legacy Python fixture exited: ${output}`);
-      try {
-        if ((await fetch(`${baseUrl}/api/v1/health`, { signal: AbortSignal.timeout(250) })).ok) {
-          return { baseUrl, token, directory, stop, originals, logs: () => output };
-        }
-      } catch { /* Await bounded ASGI readiness. */ }
-      await new Promise(resolve => setTimeout(resolve, 100));
-    }
-    throw new Error(`Legacy Python fixture did not become ready: ${output}`);
-  } catch (error) { await stop(); throw error; }
+    child.on('error', error => { spawnError = error.code || error.name; });
+    exit = new Promise(resolve => { child.once('close', resolve); });
+    await waitForFixtureReady({ name: 'Legacy Python fixture',
+      childState: () => ({ pid: child.pid ?? null, exitCode: child.exitCode, signalCode: child.signalCode, spawnError: spawnError ?? null }),
+      logs: () => output,
+      probe: async signal => {
+        const response = await fetch(`${baseUrl}/api/v1/health`, { signal });
+        await response.arrayBuffer();
+        return response.status;
+      },
+    });
+    return { baseUrl, token, directory, stop, originals, logs: () => output };
+  } catch (error) {
+    try { await stop(); }
+    catch (cleanupError) { throw new AggregateError([error, cleanupError], error.message); }
+    throw error;
+  }
 }

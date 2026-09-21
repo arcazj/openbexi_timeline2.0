@@ -1,22 +1,39 @@
-import { test, expect } from '@playwright/test';
+import { test as base, expect } from '@playwright/test';
 import { startServer } from '../integration/server-fixture.mjs';
 import { ServerProvider } from '../../client/src/data/server-provider.js';
+import { observeBootstrap, attachBootstrapDiagnostic } from './bootstrap-diagnostic.mjs';
 
 let server, remote, snapshot, parent, child;
+const test = base.extend({
+  _ownedServer: [async ({}, use) => {
+    server = null; remote = null; snapshot = null; parent = null; child = null;
+    const owned = await startServer({ seedPath: 'shared/fixtures/initial-snapshot.json' });
+    server = owned;
+    try { await use(); }
+    finally { server = null; await owned.stop(); }
+  // Startup and cleanup have their own budget; API setup and bodies keep 30s.
+  }, { auto: true, timeout: 60000 }],
+});
 test.beforeEach(async () => {
-  server = await startServer({ seedPath: 'shared/fixtures/initial-snapshot.json' }); remote = new ServerProvider(server); await remote.initialize();
+  remote = new ServerProvider(server); await remote.initialize();
   const create = async (title, sourceId, parentSessionId = null) => (await remote.executeCommand({ type: 'create', generation: remote.metadata.generation,
     clientCommandId: crypto.randomUUID(), payload: { title, kind: parentSessionId ? 'event' : 'session', start: '2026-09-12T12:00:00.000Z',
       end: parentSessionId ? null : '2026-09-12T13:00:00.000Z', sourceId, parentSessionId } })).record;
   parent = await create('Review parent', 'operations'); child = await create('Review child', 'operations', parent.id);
   snapshot = await remote.exportSnapshot();
 });
-test.afterEach(async () => { remote?.dispose(); await server?.stop(); });
+test.afterEach(async () => {
+  const completed = remote;
+  remote = null; snapshot = null; parent = null; child = null;
+  await completed?.dispose();
+});
 
 const ready = page => expect.poll(() => page.evaluate(() => window.__timelineDebug?.ready)).toBe(true);
 async function open(page, mode) {
   page.on('dialog', dialog => dialog.accept());
-  await page.goto(server.baseUrl); await ready(page);
+  await observeBootstrap(page);
+  try { await page.goto(server.baseUrl); await ready(page); }
+  catch (error) { await attachBootstrapDiagnostic(page, test.info()); throw error; }
   await page.locator('[data-action=sources]').first().click();
   if (mode === 'server') {
     await page.locator('#server-form [name=baseUrl]').fill(server.baseUrl); await page.locator('#server-form [name=token]').fill(server.token);
