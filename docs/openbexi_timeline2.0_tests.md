@@ -101,6 +101,16 @@ passes do not establish the cause of the hosted failure.
 The final six fixture checks and native cold-start case in Chromium, Firefox
 and Edge passed locally.
 
+A demo sharing failure exposed a reviewed Apply button remaining enabled during
+a background viewport relayout. The application correctly rejected the busy
+operation, but the test mistook the original view becoming ready for a successful
+apply. Apply now follows loading and pending work, preserving the reviewed link;
+a changed query scope still requires reopening Help. A held real layout response
+reproduces the old enabled-button defect. The regression requires Apply to be
+disabled during the resize, restored availability afterward, explicit application, a new
+query and the exact reviewed range. The demo also requires the review dialog to
+close and the replacement query to be adopted before checking that range.
+
 Firefox CI also checks WebGL2 before running the application suite. Linux uses
 Mesa software rendering; the preflight compiles shaders, draws a triangle and
 checks the resulting pixel. All twelve Windows/Linux interpreter jobs passed
@@ -113,7 +123,7 @@ server tests. One server test was skipped because the local account cannot
 create symbolic links. Focused Python 3.9 checks also passed. These results
 describe the local implementation checks; the full CI matrix below separately
 qualifies each operating system and interpreter combination.
-The final application build passed all 251 local Edge browser cases and all 16
+The preceding application build passed all 251 local Edge browser cases and all 16
 static-demo cases. Focused resize, date-navigation and stale-response coverage
 passed 42 cases across Chromium, Firefox and Edge. The delayed smart-drag test
 also accepts a valid immediately ready layout allocation before explicitly

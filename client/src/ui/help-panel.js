@@ -18,21 +18,24 @@ export function openHelpPanel(host, initialLink = '', initialTab = 'help') {
   const body = dialog.querySelector('.help-body'), status = dialog.querySelector('.help-status');
   const controller = new AbortController();
   let section = '', previewUrl = null, previewBlob = null, pending = false, paintIntent = 0, waitingForView = false;
+  let updateApply = () => {};
   const current = () => dialog.isConnected && !controller.signal.aborted && host.isCurrent();
   const message = value => { if (dialog.isConnected) status.textContent = value; };
   const revoke = () => { if (previewUrl) URL.revokeObjectURL(previewUrl); previewUrl = null; previewBlob = null; };
   const ready = () => {
     if (waitingForView && current() && section === 'share' && host.shareReady && !pending && !body.querySelector('.help-import textarea')?.value) share();
+    updateApply();
   };
   document.addEventListener('timeline-ready', ready);
-  dialog.addEventListener('dialog-close', () => { controller.abort(); revoke(); document.removeEventListener('timeline-ready', ready); }, { once: true });
+  document.addEventListener('timeline-busy', ready);
+  dialog.addEventListener('dialog-close', () => { controller.abort(); revoke(); document.removeEventListener('timeline-ready', ready); document.removeEventListener('timeline-busy', ready); updateApply = () => {}; }, { once: true });
   async function run(action) {
     if (pending) return;
     if (!current()) { message('The active view changed. Close and reopen Help to use the current view.'); return; }
-    pending = true; body.setAttribute('aria-busy', 'true'); message('');
+    pending = true; body.setAttribute('aria-busy', 'true'); message(''); updateApply();
     try { await action(); }
     catch (error) { if (dialog.isConnected && error.name !== 'AbortError') message(error.message || 'The operation could not be completed.'); }
-    finally { pending = false; body.removeAttribute('aria-busy'); }
+    finally { pending = false; body.removeAttribute('aria-busy'); updateApply(); }
   }
   async function copyText(value, fallback) {
     try {
@@ -44,7 +47,7 @@ export function openHelpPanel(host, initialLink = '', initialTab = 'help') {
   }
   const paint = html => {
     const restoreFocus = body.contains(document.activeElement);
-    ++paintIntent; body.innerHTML = html; message(''); host.updateIcons();
+    ++paintIntent; updateApply = () => {}; body.innerHTML = html; message(''); host.updateIcons();
     if (restoreFocus) body.querySelector('button:not(:disabled),a[href],textarea,iframe')?.focus();
   };
   function documentView(path) {
@@ -145,16 +148,21 @@ export function openHelpPanel(host, initialLink = '', initialTab = 'help') {
     });
     const form = body.querySelector('form'), input = form.elements.link, apply = form.querySelector('[data-help="apply-link"]');
     let reviewed = null;
+    updateApply = () => {
+      apply.disabled = !reviewed || pending || !current() || !host.shareReady;
+      if (reviewed && !pending && !current()) message('The active view changed. Close and reopen Help to use the current view.');
+    };
     form.onsubmit = event => event.preventDefault();
-    input.oninput = () => { reviewed = null; apply.disabled = true; form.querySelector('pre').hidden = true; };
+    input.oninput = () => { reviewed = null; updateApply(); form.querySelector('pre').hidden = true; };
     const review = () => {
       reviewed = null; apply.disabled = true;
       try {
         const view = decodeSharedView(input.value.trim());
         const pre = form.querySelector('pre'); pre.hidden = false;
         pre.textContent = JSON.stringify({ range: view.range, view: view.view, filters: view.filters, search: view.search, selectedId: view.selectedId, sourceGeneration: view.generation }, null, 2);
-        reviewed = view; apply.disabled = !host.shareReady;
+        reviewed = view;
         message(view.generation !== host.generation ? 'This link references a different snapshot. Only records available in the active dataset can be shown.' : 'Review these settings, then apply to the active dataset.');
+        updateApply();
       } catch (cause) { message(cause.message); }
     };
     form.querySelector('[data-help="review-link"]').onclick = review;

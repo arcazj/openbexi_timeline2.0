@@ -97,6 +97,67 @@ test('Share restores range, filters, search and selection only after explicit re
   await page.screenshot({ path: info.outputPath('restored-view.png'), fullPage: true });
 });
 
+test('reviewed Apply waits for a pending resize without losing the shared view', async ({ page }) => {
+  const server = await startLocalPathsServer(), errors = [];
+  let release;
+  const held = new Promise(resolve => { release = resolve; });
+  try {
+    page.on('pageerror', error => errors.push(error.message));
+    await page.goto(server.baseUrl);
+    await expect.poll(async () => { const value = await debug(page); return value.localPaths && value.ready; }).toBe(true);
+    const original = await debug(page);
+    await help(page, 'share');
+    const capturedLink = page.getByRole('textbox', { name: 'View link', exact: true });
+    await expect(capturedLink).toHaveValue(/#view=/);
+    const link = await capturedLink.inputValue();
+    await page.keyboard.press('Escape');
+    await page.locator('[data-action=zoom-in]').click();
+    await expect.poll(async () => (await debug(page)).fromMs).not.toBe(original.fromMs);
+    await expect.poll(async () => (await debug(page)).ready).toBe(true);
+    await help(page, 'share');
+    const input = page.getByRole('textbox', { name: 'Shared view link', exact: true });
+    await input.fill(link); await page.locator('[data-help=review-link]').click();
+    const review = page.locator('.help-review'), apply = page.locator('[data-help=apply-link]');
+    await expect(review).toBeVisible(); await expect(apply).toBeEnabled();
+    const reviewText = await review.textContent(), before = await debug(page);
+    let intercepting = false, received = false;
+    await page.route(`**/query-sessions/${before.queryId}/layouts`, async route => {
+      if (intercepting || route.request().method() !== 'POST') { await route.continue(); return; }
+      intercepting = true;
+      // API-side route.fetch does not synthesize the browser's Fetch Metadata.
+      const response = await route.fetch({ headers: { ...await route.request().allHeaders(), 'sec-fetch-site': 'same-origin' } });
+      expect([200, 202]).toContain(response.status());
+      received = true; await held;
+      await route.fulfill({ response });
+    });
+    const viewport = page.viewportSize();
+    // Height alone requests a layout while retaining the reviewed query scope.
+    await page.setViewportSize({ width: viewport.width, height: viewport.height + 40 });
+    await expect.poll(() => received).toBe(true);
+    await expect(page.locator('.busy-indicator')).toBeVisible();
+    expect((await debug(page)).ready).toBe(false);
+    await expect(apply).toBeDisabled();
+    await expect(input).toHaveValue(link); await expect(review).toHaveText(reviewText);
+    expect((await debug(page)).queryId).toBe(before.queryId);
+    expect((await debug(page)).fromMs).toBe(before.fromMs);
+    release(); await page.unrouteAll({ behavior: 'wait' });
+    await expect.poll(async () => (await debug(page)).ready).toBe(true);
+    await expect(apply).toBeEnabled();
+    await expect(input).toHaveValue(link); await expect(review).toHaveText(reviewText);
+    await apply.click();
+    await expect(page.getByRole('dialog', { name: 'Help and sharing' })).toHaveCount(0);
+    await expect.poll(async () => (await debug(page)).queryId).not.toBe(before.queryId);
+    await expect.poll(async () => (await debug(page)).ready).toBe(true);
+    const restored = await debug(page);
+    expect({ fromMs: restored.fromMs, toMs: restored.toMs }).toEqual({ fromMs: original.fromMs, toMs: original.toMs });
+    expect(errors).toEqual([]);
+  } finally {
+    release();
+    try { await page.unrouteAll({ behavior: 'wait' }); }
+    finally { try { await page.close(); } finally { await server.stop(); } }
+  }
+});
+
 test('invalid or unavailable shared views leave the current timeline untouched', async ({ page }) => {
   await open(page); const before = await debug(page), link = await captureLink(page);
   const value = JSON.parse(Buffer.from(link.slice(6), 'base64url').toString('utf8'));

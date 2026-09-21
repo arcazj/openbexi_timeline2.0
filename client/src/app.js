@@ -806,7 +806,7 @@ function setBusy(value) {
   emptyDatesController?.update();
   updateToolbarStatus();
   if (!value) { queueMicrotask(() => document.dispatchEvent(new Event('timeline-ready'))); navigation?.warm(); }
-  if (value) { const node = document.createElement('div'); node.className = 'busy-indicator'; node.setAttribute('role', 'status'); node.textContent = 'Updating timeline...'; $('.workspace').append(node); }
+  if (value) { const node = document.createElement('div'); node.className = 'busy-indicator'; node.setAttribute('role', 'status'); node.textContent = 'Updating timeline...'; $('.workspace').append(node); document.dispatchEvent(new Event('timeline-busy')); }
   updateTimeControls();
   for (const id of ['local-scale', 'scale-strategy']) {
     const node = $(`#${id}`);

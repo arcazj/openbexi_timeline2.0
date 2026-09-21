@@ -111,7 +111,11 @@ test('demo sharing retains the dataset and waits for review before applying the 
   expect(await page.evaluate(() => window.__timelineDebug.testDatasetId)).toBe('jfk');
   await expect(page.locator('.help-review')).toBeVisible();
   expect(await page.evaluate(() => window.__timelineDebug.fromMs)).not.toBe(fromMs);
-  await page.locator('[data-help=apply-link]').click(); await ready(page);
+  const previousQuery = await page.evaluate(() => window.__timelineDebug.queryId);
+  await page.locator('[data-help=apply-link]').click();
+  await expect(page.getByRole('dialog', { name: 'Help and sharing' })).toHaveCount(0);
+  await expect.poll(() => page.evaluate(() => window.__timelineDebug.queryId)).not.toBe(previousQuery);
+  await ready(page);
   expect(await page.evaluate(() => window.__timelineDebug.fromMs)).toBe(fromMs);
 });
 
