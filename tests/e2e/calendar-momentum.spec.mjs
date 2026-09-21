@@ -78,23 +78,34 @@ test('adaptive calendar centers the selected UTC instant and keeps filters on th
 
 for (const direction of [-1, 1]) test(`long glide and click-stop keep the displayed position (${direction})`, async ({ page }, info) => {
   const errors = []; page.on('pageerror', error => errors.push(error.message));
-  await open(page);
-  const before = await debug(page), plot = await page.locator('.plot-wrap').boundingBox();
-  const x = plot.x + plot.width * .5, y = plot.y + plot.height * .8;
-  await page.mouse.move(x, y); await page.mouse.down();
-  await page.mouse.move(x + direction * 240, y, { steps: 4 }); await page.mouse.up();
-  await expect.poll(async () => (await debug(page)).navigationPhase).toBe('coasting');
-  await expect.poll(async () => Math.abs((await debug(page)).navigationOffset)).toBeGreaterThan(550);
-  await page.mouse.move(x, y); await page.mouse.down();
-  const stopped = await debug(page);
-  await page.waitForTimeout(160);
-  expect((await debug(page)).navigationOffset).toBe(stopped.navigationOffset);
-  await page.mouse.up(); await ready(page);
-  const after = await debug(page), span = Number(before.toMs) - Number(before.fromMs);
-  const expected = Number(before.fromMs) - stopped.navigationOffset / before.layoutWidth * span;
-  expect(Math.abs(Number(after.fromMs) - expected)).toBeLessThan(1);
-  expect(after.selectedId).toBeUndefined(); expect(after.dirty).toBe(false); expect(errors).toEqual([]);
-  await page.screenshot({ path: info.outputPath(`glide-stop-${direction}.png`), fullPage: true });
+  await page.clock.install({ time: new Date('2026-09-12T00:00:00.000Z') });
+  try {
+    await open(page);
+    await page.clock.pauseAt(await page.evaluate(() => Date.now() + 5000));
+    const before = await debug(page), plot = await page.locator('.plot-wrap').boundingBox();
+    const x = plot.x + plot.width * .5, y = plot.y + plot.height * .8;
+    await page.mouse.move(x, y); await page.mouse.down();
+    // Control gesture timing, not production physics or performance measurements.
+    for (let step = 1; step <= 4; step++) {
+      await page.clock.runFor(16); await page.mouse.move(x + direction * step * 60, y);
+    }
+    await page.clock.runFor(8); await page.mouse.up();
+    expect((await debug(page)).navigationPhase).toBe('coasting');
+    await page.clock.runFor(250);
+    expect(Math.abs((await debug(page)).navigationOffset)).toBeGreaterThan(550);
+    await page.mouse.move(x, y); await page.mouse.down();
+    const stopped = await debug(page);
+    await page.clock.runFor(160);
+    expect((await debug(page)).navigationOffset).toBe(stopped.navigationOffset);
+    await page.mouse.up(); await page.clock.resume(); await ready(page);
+    const after = await debug(page), span = Number(before.toMs) - Number(before.fromMs);
+    const expected = Number(before.fromMs) - stopped.navigationOffset / before.layoutWidth * span;
+    expect(Math.abs(Number(after.fromMs) - expected)).toBeLessThan(1);
+    expect(after.selectedId).toBeUndefined(); expect(after.dirty).toBe(false); expect(errors).toEqual([]);
+    await page.screenshot({ path: info.outputPath(`glide-stop-${direction}.png`), fullPage: true });
+  } finally {
+    try { await page.mouse.up(); } finally { await page.clock.resume(); }
+  }
 });
 
 test('long mobile coast keeps time grids and the rolling overview visible beyond the original query', async ({ page }, info) => {
