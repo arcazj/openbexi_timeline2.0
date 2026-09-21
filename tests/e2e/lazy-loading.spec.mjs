@@ -3,6 +3,17 @@ import { startLocalPathsServer } from '../integration/local-paths-server-fixture
 
 const debug = page => page.evaluate(() => window.__timelineDebug);
 const ready = page => expect.poll(async () => (await debug(page))?.ready).toBe(true);
+const inspectSessionCanvas = canvas => {
+  const gl = canvas.getContext('webgl2');
+  const result = { hasContext: !!gl, lost: gl?.isContextLost() ?? true, width: canvas.width, height: canvas.height, sessionPixels: 0, error: null };
+  if (!gl || result.lost || !canvas.width || !canvas.height) return result;
+  const pixels = new Uint8Array(canvas.width * canvas.height * 4);
+  gl.readPixels(0, 0, canvas.width, canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
+  result.error = gl.getError();
+  // Authored fixture session color #3e9e56; tolerate small output rounding.
+  for (let i = 0; i < pixels.length; i += 4) if (pixels[i + 3] && Math.abs(pixels[i] - 62) <= 3 && Math.abs(pixels[i + 1] - 158) <= 3 && Math.abs(pixels[i + 2] - 86) <= 3) result.sessionPixels++;
+  return result;
+};
 
 for (const width of [1600, 390]) test(`cold archive loads real viewport before indexing and prefetches during navigation (${width}px)`, async ({ page }, info) => {
   test.setTimeout(60000);
@@ -28,14 +39,12 @@ for (const width of [1600, 390]) test(`cold archive loads real viewport before i
     expect(loading.metrics.indexFilesRead).toBe(0);
     expect(loading.metrics.bytesRead).toBeLessThan(100000);
     expect(loading.metrics.cacheBytes).toBeLessThanOrEqual(loading.metrics.cacheLimitBytes);
+    await expect(page.locator('.plot-wrap .record-label').filter({ hasText: 'SOURCE1 session' })).toBeVisible();
     for (const selector of ['.plot-wrap canvas', '.overview-plot canvas']) {
-      const colors = await page.locator(selector).evaluate(canvas => {
-        const gl = canvas.getContext('webgl2'), pixels = new Uint8Array(canvas.width * canvas.height * 4), colors = new Set();
-        gl.readPixels(0, 0, canvas.width, canvas.height, gl.RGBA, gl.UNSIGNED_BYTE, pixels);
-        for (let i = 0; i < pixels.length; i += 4) if (pixels[i + 3]) colors.add(`${pixels[i]},${pixels[i + 1]},${pixels[i + 2]}`);
-        return colors.size;
-      });
-      expect(colors).toBeGreaterThan(8);
+      const rendered = await page.locator(selector).evaluate(inspectSessionCanvas);
+      expect(rendered, selector).toMatchObject({ hasContext: true, lost: false, error: 0 });
+      expect(rendered.width, selector).toBeGreaterThan(0); expect(rendered.height, selector).toBeGreaterThan(0);
+      expect(rendered.sessionPixels, `${selector} renders fixture session bars`).toBeGreaterThan(0);
     }
     await page.screenshot({ path: info.outputPath(`lazy-real-${width}.png`), fullPage: true });
     const plot = await page.locator('.plot-wrap').boundingBox(), x = plot.x + plot.width * .75, y = plot.y + plot.height * .7;
