@@ -121,7 +121,9 @@ def test_an_own_commit_invalidates_a_concurrent_old_file_observation(repository,
         def acquire(self, *args, **kwargs):
             if threading.current_thread().name == "test-integrity-read":
                 entered.set()
-                assert release.wait(3)
+                # The test owner releases this gate in finally after the real commit;
+                # disk latency must not end the deliberately held observation.
+                release.wait()
             return original_lock.acquire(*args, **kwargs)
 
         def release(self):
