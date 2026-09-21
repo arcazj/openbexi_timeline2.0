@@ -1,6 +1,6 @@
 # OpenBEXI Timeline 2.0 — tests and acceptance
 
-Updated: 2026-09-20. Implementation results and qualification limits are recorded below.
+Updated: 2026-09-21. Implementation results and qualification limits are recorded below.
 Current checks are separated from the retained documentation checkpoints.
 Feature tests do not by themselves establish every supported-scale release target.
 
@@ -100,6 +100,16 @@ HTTP prototype passed one local Windows software-rendering comparison; those
 passes do not establish the cause of the hosted failure.
 The final six fixture checks and native cold-start case in Chromium, Firefox
 and Edge passed locally.
+A later Windows Firefox native-HTTP run received no bootstrap request at either
+the server or the browser observer. The main document transferred in 4.59 seconds,
+but navigation completed after 15.90 seconds with startup already unavailable;
+the delayed response handler never ran. Source discovery now completes before
+explicit font loading and graphics construction. The regression holds the real
+bootstrap response while checking the initial loading status and zero successful
+WebGL contexts, then requires the delayed 404, query and rendered canvases.
+It fails against the preceding ordering, which created two contexts first.
+This separates startup work without changing the five-second deadline; the
+underlying hosted browser/network cause remains unproven.
 
 A demo sharing failure exposed a reviewed Apply button remaining enabled during
 a background viewport relayout. The application correctly rejected the busy

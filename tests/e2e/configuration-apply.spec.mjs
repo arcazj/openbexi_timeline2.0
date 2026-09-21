@@ -60,6 +60,18 @@ const filter = { sourceIds: ['operations'], kinds: ['session'], schemaRefs: [], 
 // the ordinary 30-second budget; startupTarget retains its native five seconds.
 base('cold bootstrap can take more than two seconds without premature sample data', async ({ page }, info) => {
   const errors = [], requests = [], responses = [];
+  let graphicsBeforeResponse;
+  await page.addInitScript(() => {
+    const getContext = HTMLCanvasElement.prototype.getContext;
+    window.__coldBootstrapGraphics = [];
+    HTMLCanvasElement.prototype.getContext = function (...args) {
+      const startedAt = performance.now(), context = Reflect.apply(getContext, this, args);
+      if (context && ['webgl', 'webgl2', 'experimental-webgl'].includes(args[0])) {
+        window.__coldBootstrapGraphics.push({ type: args[0], startedAt, startedEpochMs: performance.timeOrigin + startedAt, completedAt: performance.now() });
+      }
+      return context;
+    };
+  });
   page.on('pageerror', error => errors.push(error.message));
   page.on('dialog', dialog => dialog.accept());
   page.on('request', request => { if (new URL(request.url()).pathname === '/api/v1/bootstrap') requests.push(request); });
@@ -70,6 +82,10 @@ base('cold bootstrap can take more than two seconds without premature sample dat
     try {
       // A failed opening must not strand the server-side inspection gate.
       expect(await Promise.race([owned.requested.then(() => true), opening.then(() => false)])).toBe(true);
+      // Source discovery must precede graphics initialization, even on a cold browser.
+      graphicsBeforeResponse = await page.evaluate(() => window.__coldBootstrapGraphics);
+      expect(graphicsBeforeResponse).toHaveLength(0);
+      await expect(page.locator('.boot-status')).toHaveText('Opening timeline...');
       expect(await page.evaluate(() => Boolean(window.__timelineDebug?.queryId))).toBe(false);
       await expect(page.locator('.record-label')).toHaveCount(0);
     } finally { owned.release(); }
@@ -85,13 +101,24 @@ base('cold bootstrap can take more than two seconds without premature sample dat
     expect(owned.report.receipts).toHaveLength(1);
     expect(owned.report.receipts[0].elapsedMs).toBeGreaterThanOrEqual(2500);
     expect(await page.evaluate(() => window.__timelineDebug.providerKind)).toBe('local');
+    expect(await page.evaluate(() => window.__coldBootstrapGraphics.length)).toBeGreaterThanOrEqual(2);
+    expect(await page.evaluate(() => window.__timelineDebug.recordCount)).toBe(48);
+    await expect(page.locator('.plot-wrap canvas')).toBeVisible();
+    await expect(page.locator('.overview-plot canvas')).toBeVisible();
     expect(owned.report.errors).toEqual([]);
   } finally {
     owned.release();
     await opening.catch(() => {}); // Drain the opening if a pending-state assertion failed.
     await owned.stop();
+    const browser = await page.evaluate(() => {
+      const timing = entry => ({ startTime: entry.startTime, duration: entry.duration, requestStart: entry.requestStart,
+        responseStart: entry.responseStart, responseEnd: entry.responseEnd, transferSize: entry.transferSize });
+      return { timeOrigin: performance.timeOrigin, graphics: window.__coldBootstrapGraphics,
+        navigation: performance.getEntriesByType('navigation').map(timing),
+        bootstrapTimings: performance.getEntriesByType('resource').filter(entry => new URL(entry.name).pathname === '/api/v1/bootstrap').map(timing) };
+    }).catch(error => ({ diagnosticUnavailable: error.name }));
     await info.attach('native-http-bootstrap', {
-      body: JSON.stringify({ ...owned.report, pageErrors: errors,
+      body: JSON.stringify({ ...owned.report, pageErrors: errors, graphicsBeforeResponse, browser,
         requests: requests.map(request => ({ path: new URL(request.url()).pathname, timing: request.timing() })),
         statuses: responses.map(response => response.status()) }, null, 2), contentType: 'application/json',
     });

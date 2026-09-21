@@ -2654,9 +2654,10 @@ Object.defineProperty(window, '__timelineDebug', { get: () => Object.freeze({
 }) });
 (async () => {
   try {
+    // Finish bounded source discovery before font and graphics initialization.
+    const target = await startupTarget();
     for (const style of ['normal', 'italic']) for (const weight of [400, 700]) await document.fonts.load(`${style} ${weight} 13px "Noto Sans"`, 'Timeline \u0101\u010c\u0142');
     shell();
-    const target = await startupTarget();
     if (target.mode !== 'standalone') await startConfiguredServer(target);
     else {
       const requested = new URLSearchParams(location.search).getAll('dataset');
